@@ -4,8 +4,9 @@ from src.model.core import Metric
 
 
 class DataEntry:
+    path: str
+    timestamp: time
+    metrics: [Metric]
 
     def __init__(self):
-        self.path = str
-        self.timestamp = time
-        self.metrics = [Metric]
+        pass

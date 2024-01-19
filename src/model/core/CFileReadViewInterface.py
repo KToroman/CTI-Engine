@@ -14,9 +14,9 @@ class CFileReadViewInterface(ABC):
         pass
 
     @abstractmethod
-    def get_max(self, metric=MetricName) -> float:
+    def get_max(self, metric: MetricName) -> float:
         pass
 
     @abstractmethod
-    def get_metrics(self, metric=MetricName) -> [float]:
+    def get_metrics(self, metric: MetricName) -> [float]:
         pass

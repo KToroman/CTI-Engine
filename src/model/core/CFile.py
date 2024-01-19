@@ -6,11 +6,12 @@ from src.model.core.CFileReadViewInterface import CFileReadViewInterface
 
 
 class CFile(ABC, CFileReadViewInterface):
+    path: str
+    data_entries: [DataEntry]
+    header: [Header]
 
     def __init__(self):
-        self.path = str
-        self.data_entries = [DataEntry]
-        self.header = [Header]
+        pass
 
     def get_name(self) -> str:
         return self.path
@@ -34,9 +35,19 @@ class CFile(ABC, CFileReadViewInterface):
 
         return temp_high.time() - temp_low.time()
 
+    def get_max(self, metric: MetricName) -> float:
+        max_entry_value = 0
+        for entry in self.data_entries:
+            if entry.name == metric:
+                if entry.value > max_entry_value:
+                    max_entry = entry.value
 
-    def get_max(self, metric=MetricName) -> float:
-        pass
+        return max_entry_value
 
-    def get_metrics(self, metric=MetricName) -> [float]:
-        pass
+    def get_metrics(self, metric: MetricName) -> [float]:
+        metric_list = []
+        for entry in self.data_entries:
+            if entry.name == metric:
+                metric_list.append(entry.value)
+
+        return metric_list
