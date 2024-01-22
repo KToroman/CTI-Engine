@@ -10,5 +10,3 @@ class ProcessPoint:
     timestamp: time
     metrics: [Metric]
 
-    def __init__(self):
-        pass

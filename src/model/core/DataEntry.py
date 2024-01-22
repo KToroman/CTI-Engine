@@ -8,5 +8,3 @@ class DataEntry:
     timestamp: time
     metrics: [Metric]
 
-    def __init__(self):
-        pass
