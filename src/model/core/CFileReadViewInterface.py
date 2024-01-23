@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 
-from src.model.core import MetricName
-
+import MetricName
 
 class CFileReadViewInterface(ABC):
 

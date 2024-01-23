@@ -1,3 +1,4 @@
 .devcontainer
 axii_workspace
+__pycache__
 .idea
