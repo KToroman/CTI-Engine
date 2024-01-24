@@ -1,0 +1,11 @@
+[project]
+name = "CTI Engine"
+version = "1.0.0"
+requires-python = ">=3.11"
+authors = [
+    { name = "Jannik Brente"},
+    { name = "Marie Schneider"},
+    { name = "Sebastian Sauer"},
+    { name = "Caspar von Heusinger"},
+    { name = "Katarina Toroman"},
+]
