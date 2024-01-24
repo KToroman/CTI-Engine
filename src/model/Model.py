@@ -1,3 +1,5 @@
+from typing import List
+
 from ModelReadViewInterface import ModelReadViewInterface
 from model.core.CFileReadViewInterface import CFileReadViewInterface
 from core.DataEntry import DataEntry
@@ -17,7 +19,7 @@ class Model(ModelReadViewInterface):
         return name
 
     def get_cfiles(self) -> list[CFileReadViewInterface]:
-        cfiles_view: list[CFileReadViewInterface] = list(CFileReadViewInterface)
+        cfiles_view: List[CFileReadViewInterface] = list(CFileReadViewInterface)
         cfiles_view.extend(self.current_project.source_files)
         return cfiles_view
 
