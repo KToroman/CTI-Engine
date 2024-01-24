@@ -9,4 +9,4 @@ class CPUObserver(ObserverInterface):
     metric_name: MetricName.CPU
 
     def observe(self, process: psutil.Process) -> Metric:
-        pass
+        return Metric(process.cpu_percent(), self.metric_name)

@@ -1,10 +1,11 @@
 import time
+from typing import List
 
 from src.model.core import Metric
 
 
 class DataEntry:
     path: str
-    timestamp: time
-    metrics: [Metric]
+    timestamp: float
+    metrics: List[Metric]
 
