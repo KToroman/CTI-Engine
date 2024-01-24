@@ -1,13 +1,11 @@
-import abc
-from abc import ABC
+from typing import Protocol
 
 import psutil
 
 from src.model.core.Metric import Metric
 
 
-class ObserverInterface(ABC):
+class ObserverInterface(Protocol):
 
-    @abc.abstractmethod
     def observe(self, process: psutil.Process) -> Metric:
-        pass
+        """Observes the give process for a metric."""
