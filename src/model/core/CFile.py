@@ -1,17 +1,16 @@
-import time
-from abc import ABC
-from typing import List
+from typing import List, Protocol
 
 from src.model.core.CFileReadViewInterface import CFileReadViewInterface
 from src.model.core.DataEntry import DataEntry
-from src.model.core.Header import Header
 from src.model.core.MetricName import MetricName
 
 
-class CFile(ABC, CFileReadViewInterface):
-    path: str
+class CFile(CFileReadViewInterface, Protocol):
     data_entries: List[DataEntry]
-    header: List[Header]
+    header: List[CFileReadViewInterface]
+
+    def __init__(self, path: str):
+        self.path = path
 
     def get_name(self) -> str:
         return self.path
