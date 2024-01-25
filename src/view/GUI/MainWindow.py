@@ -104,6 +104,7 @@ class MainWindow(QMainWindow):
         # Insert Displayables into TableWidget
         self.table_widget.insert_values(displayables)
 
+        # Update Widgets
         self.setup_connections()
         """Statusbar muss hier geupdatet werden"""
 
