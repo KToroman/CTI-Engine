@@ -1,6 +1,6 @@
-from typing import Protocol
+from typing import Protocol, List
 
-from src.model.core import MetricName
+from src.model.core.MetricName import MetricName
 
 
 class CFileReadViewInterface(Protocol):
@@ -14,5 +14,5 @@ class CFileReadViewInterface(Protocol):
     def get_max(self, metric: MetricName) -> float:
         """Gets the maximum value of the given metric, which has been tracked."""
 
-    def get_metrics(self, metric: MetricName) -> [float]:
+    def get_metrics(self, metric: MetricName) -> List[float]:
         """Gets all values of the given metric."""
