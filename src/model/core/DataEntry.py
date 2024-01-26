@@ -7,4 +7,3 @@ class DataEntry:
     path: str
     timestamp: time
     metrics: [Metric]
-

@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 import MetricName
 
+
 class CFileReadViewInterface(ABC):
 
     @abstractmethod
