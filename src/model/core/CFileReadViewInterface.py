@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import List
 
 import MetricName
 
@@ -19,3 +20,6 @@ class CFileReadViewInterface(ABC):
     @abstractmethod
     def get_metrics(self, metric: MetricName) -> [float]:
         pass
+
+    def get_timestamps() -> List[float]:
+        raise NotImplementedError
