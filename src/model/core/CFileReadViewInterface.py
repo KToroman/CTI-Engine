@@ -1,22 +1,22 @@
-from typing import Protocol, List
+from abc import ABC, abstractmethod
 
-from src.model.core.MetricName import MetricName
+from src.model.core import MetricName
 
 
-class CFileReadViewInterface(Protocol):
+class CFileReadViewInterface(ABC):
 
+    @abstractmethod
     def get_name(self) -> str:
-        """Gets the name of the CFile"""
+        pass
 
+    @abstractmethod
     def get_total_time(self) -> float:
-        """Gets the total time, which the CFile needed to build."""
+        pass
 
+    @abstractmethod
     def get_max(self, metric: MetricName) -> float:
-        """Gets the maximum value of the given metric, which has been tracked."""
+        pass
 
-    def get_metrics(self, metric: MetricName) -> List[float]:
-        """Gets all values of the given metric."""
-
-    def get_timestamps(self) -> List[float]:
-        raise NotImplementedError
-
+    @abstractmethod
+    def get_metrics(self, metric: MetricName) -> [float]:
+        pass
