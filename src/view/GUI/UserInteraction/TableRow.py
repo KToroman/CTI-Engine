@@ -1,3 +1,5 @@
+from typing import List
+
 from Displayable import Displayable
 from PyQt5.QtWidgets import QCheckBox, QPushButton, QWidget, QHBoxLayout, QTableWidgetItem
 
@@ -5,7 +7,7 @@ from PyQt5.QtWidgets import QCheckBox, QPushButton, QWidget, QHBoxLayout, QTable
 class TableRow:
     def __init__(self, displayable: Displayable):
         self.displayable: Displayable = displayable
-        self.children : list[TableRow] = []
+        self.children : List[TableRow] = []
         self.custom_cell: CustomCellWidget = CustomCellWidget(self.displayable.name)
 
     def add_child(self, child):
