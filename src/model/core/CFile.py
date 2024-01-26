@@ -6,8 +6,8 @@ from src.model.core.MetricName import MetricName
 
 
 class CFile(CFileReadViewInterface, Protocol):
-    data_entries: List[DataEntry] = []
-    header: List[CFileReadViewInterface] = []
+    data_entries: List[DataEntry] = list()
+    header: List[CFileReadViewInterface] = list()
 
     def __init__(self, path: str):
         self.path = path
@@ -29,7 +29,7 @@ class CFile(CFileReadViewInterface, Protocol):
         return max_entry_value
 
     def get_metrics(self, metric: MetricName) -> List[float]:
-        metric_list = []
+        metric_list: List[float] = list()
         for entry in self.data_entries:
             for metric in entry.metrics:
                 if metric.name == metric:
