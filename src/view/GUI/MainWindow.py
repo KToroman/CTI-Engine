@@ -9,6 +9,7 @@ from UserInteraction.MenuBar import MenuBar
 from UserInteraction.TableWidget import TableWidget
 from UserInteraction.Displayable import Displayable
 from UserInteraction.TableRow import TableRow
+from UserInteraction.MetricBar import MetricBar
 
 
 class MainWindow(QMainWindow):
