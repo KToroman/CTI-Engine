@@ -16,3 +16,7 @@ class CFileReadViewInterface(Protocol):
 
     def get_metrics(self, metric: MetricName) -> List[float]:
         """Gets all values of the given metric."""
+
+    def get_timestamps(self) -> List[float]:
+        raise NotImplementedError
+
