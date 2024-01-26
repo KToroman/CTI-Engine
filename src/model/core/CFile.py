@@ -28,7 +28,7 @@ class CFile(CFileReadViewInterface, Protocol):
 
         return max_entry_value
 
-    def get_metrics(self, metric: MetricName) -> [float]:
+    def get_metrics(self, metric: MetricName) -> List[float]:
         metric_list = []
         for entry in self.data_entries:
             for metric in entry.metrics:
