@@ -7,7 +7,7 @@ from src.model.core import Metric
 
 
 class ProcessPoint:
-    metrics: List[Metric]
+    metrics: List[Metric] = []
 
     def __init__(self, process: psutil.Process,
                  timestamp: float):

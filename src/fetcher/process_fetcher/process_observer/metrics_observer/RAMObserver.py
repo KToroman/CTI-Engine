@@ -6,7 +6,7 @@ from src.model.core.MetricName import MetricName
 
 
 class RAMObserver(ObserverInterface):
-    metric_name: MetricName.RAM
+    metric_name = MetricName.RAM
 
     def observe(self, process: psutil.Process) -> Metric:
         return Metric(process.memory_info().rss, self.metric_name)

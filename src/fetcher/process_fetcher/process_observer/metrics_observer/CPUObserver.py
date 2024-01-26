@@ -6,7 +6,7 @@ from src.model.core.MetricName import MetricName
 
 
 class CPUObserver(ObserverInterface):
-    metric_name: MetricName.CPU
+    metric_name = MetricName.CPU
 
     def observe(self, process: psutil.Process) -> Metric:
         return Metric(process.cpu_percent(), self.metric_name)
