@@ -18,12 +18,13 @@ A model consists of an arbitrary number of projects,
         self.projects = list(Project)
 
     def get_project_name(self) -> str:
+        '''returns the name of the current project'''
         name: str = self.current_project.working_dir + \
             str(self.current_project.origin_pid)
         return name
 
     def get_cfiles(self) -> list[CFileReadViewInterface]:
-        '''returns '''
+        '''returns view only on all cfiles in current project'''
         cfiles_view: List[CFileReadViewInterface] = list(
             CFileReadViewInterface)
         cfiles_view.extend(self.current_project.source_files)

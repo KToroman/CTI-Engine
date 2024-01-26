@@ -4,6 +4,8 @@ from model.core.CFile import CFile
 
 
 class FileDictionary:
+    '''a simple wrapper for a dictionary that stores the cfiles according to name'''
+
     def __init__(self):
         self.dictionary: Dict[str, CFile] = dict()
 
