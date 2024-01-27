@@ -1,5 +1,8 @@
 import sys
 
+import random
+from typing import List
+
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QWidget,
                              QStackedWidget, QCheckBox, QApplication, QHBoxLayout, QSplitter)
@@ -10,6 +13,8 @@ from UserInteraction.TableWidget import TableWidget
 from UserInteraction.Displayable import Displayable
 from UserInteraction.TableRow import TableRow
 from UserInteraction.MetricBar import MetricBar
+from src.view.GUI.Graph.Plot import Plot
+from src.model.core.MetricName import MetricName
 
 
 class MainWindow(QMainWindow):
@@ -69,6 +74,49 @@ class MainWindow(QMainWindow):
         self.table_widget.add_row(TableRow(self.dis))
         self.table_widget.add_row(TableRow(self.dis))
         self.table_widget.add_row(TableRow(self.dis))
+
+    def visualize(self, model):
+
+        # Give name of current project to TableWidget
+        self.table_widget.add_new_project(model.get_project_name())
+
+        # Create Displayable for every cfile and insert into TableWidget
+        cfile_list = model.get_cfiles()
+        for cfile in cfile_list:
+            # Collect data for Displayable
+            name = cfile.get_name()
+            ram_peak = cfile.get_max(MetricName.RAM)
+            cpu_peak = cfile.get_max(MetricName.CPU)
+
+            # Create Graph Plots
+            x_values = cfile.get_timestamp()
+            ram_y_values = cfile.get_metrics(MetricName.RAM)
+            cpu_y_values = cfile.get_metrics(MetricName.CPU)
+            runtime = [cfile.get_total_time()]
+            color = self.generate_random_color()
+            ram_plot = Plot(name, color, x_values, ram_y_values)
+            cpu_plot = Plot(name, color, x_values, cpu_y_values)
+            runtime_plot = Plot(name, color, runtime, None)
+
+            # Create header list for current Displayable
+            headers: List[Displayable] = list()
+            for header in cfile.header:
+                headers.append(header.get_name())
+
+            # Create Displayable and insert into TableWidget
+            self.table_widget.insert_values(Displayable(name, ram_plot, cpu_plot, runtime_plot, ram_peak, cpu_peak, headers))
+
+        # Update Widgets
+        self.setup_connections()
+        """Statusbar muss hier geupdatet werden"""
+
+    # Generate Random Color for plot
+    def generate_random_color(self):
+        random_color = "#{:06X}".format(random.randint(0, 0xFFFFFF))
+        return random_color
+
+    def setup_connections(self):
+        """to be implemented"""
 
 
 if __name__ == "__main__":
