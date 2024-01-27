@@ -1,22 +1,23 @@
 from typing import List, Protocol
 
-from src.model.core.CFileReadViewInterface import CFileReadViewInterface
-from src.model.core.DataEntry import DataEntry
-from src.model.core.MetricName import MetricName
+from CFileReadViewInterface import CFileReadViewInterface
+from DataEntry import DataEntry
+from MetricName import MetricName
 
 
 class CFile(CFileReadViewInterface, Protocol):
-    data_entries: List[DataEntry] = list()
-    header: List[CFileReadViewInterface] = list()
-
-    def __init__(self, path: str):
-        self.path = path
+    data_entries: List[DataEntry] = None
+    header: List[CFileReadViewInterface] = None
+    path: str = None
 
     def get_name(self) -> str:
         return self.path
 
     def get_total_time(self) -> float:
-        return self.data_entries[len(self.data_entries)-1].timestamp - self.data_entries[0].timestamp
+        return (
+            self.data_entries[len(self.data_entries) - 1].timestamp
+            - self.data_entries[0].timestamp
+        )
 
     def get_max(self, metric: MetricName) -> float:
         max_entry_value = 0
