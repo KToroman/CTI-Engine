@@ -26,7 +26,7 @@ class Model(ModelReadViewInterface):
 
     def get_cfiles(self) -> List[CFileReadViewInterface]:
         """returns view only on all cfiles in current project"""
-        cfiles_view: List[CFileReadViewInterface] = list(CFileReadViewInterface)
+        cfiles_view: List[CFileReadViewInterface] = list()
         cfiles_view.extend(self.current_project.source_files)
         return cfiles_view
 
