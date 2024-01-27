@@ -23,18 +23,18 @@ class PassiveDataFetcher(DataFetcher):
     def __check_for_project(self, process: psutil.Process) -> bool:
         return self.process_collector.check(process)
 
-    def add_data_entry(self, process_point: ProcessPoint) -> DataEntry:
+    def add_data_entry(self, process_point: ProcessPoint):
+        entry_list: List[DataEntry] = list()
         path: str = os.path.abspath(process_point.process.cmdline()[1])
         entry = DataEntry(path, process_point.timestamp, process_point.metrics)
-        return entry
+        entry_list.append(entry)
 
     def fetch_metrics(self, process: psutil.Process) -> ProcessPoint:
         return self.data_observer.observe(process)
 
     def update_project(self) -> bool:
         processes = self.process_collector.catch_processes()
-        if processes.__len__() != 0:
-            entries: List[DataEntry] = list()
+        if not processes:
             for proc in processes:
                 if not self.__check_for_project(proc):
                     ppid: int = proc.ppid()
@@ -42,9 +42,8 @@ class PassiveDataFetcher(DataFetcher):
                     working_dir: str = psutil.Process(parent_ppid).cwd()
                     self.model.add_project(Project(working_dir, parent_ppid, self.path_to_save))
 
-                entries.append(self.add_data_entry(self.fetch_metrics(proc)))
+                self.add_data_entry(self.fetch_metrics(proc))
 
-            self.model.insert_datapoints(entries)
             return True
 
         return False
