@@ -1,0 +1,4 @@
+
+
+class PassiveDataFetcher(DataFetcher):
+    pass
