@@ -1,8 +1,10 @@
-from src.model.core.CFile import CFile
+from CFile import CFile
 
 
 class SourceFile(CFile):
     compile_command: str
 
     def __init__(self, path: str):
-        super(SourceFile, self).__init__(path)
+        self.path = path
+        self.data_entries = list()
+        self.header = list()

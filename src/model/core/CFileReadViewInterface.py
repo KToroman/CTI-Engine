@@ -1,7 +1,7 @@
 
 from typing import Protocol, List
 
-from src.model.core.MetricName import MetricName
+from MetricName import MetricName
 
 
 class CFileReadViewInterface(Protocol):

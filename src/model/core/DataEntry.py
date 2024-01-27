@@ -1,6 +1,6 @@
 from typing import List
 
-from src.model.core.Metric import Metric
+from Metric import Metric
 
 
 class DataEntry:

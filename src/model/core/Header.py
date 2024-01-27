@@ -6,7 +6,9 @@ from src.model.core.CFile import CFile
 class Header(CFile):
 
     def __init__(self, path: str):
-        super(Header, self).__init__(path)
+        self.path = path
+        self.data_entries = list()
+        self.header = list()
 
     def get_timestamps(self) -> List[float]:
         timestamps: List[float] = list()
