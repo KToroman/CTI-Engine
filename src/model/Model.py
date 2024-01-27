@@ -13,9 +13,9 @@ class Model(ModelReadViewInterface):
 Model class keeps score of all measured data and files
 A model consists of an arbitrary number of projects,
 '''
-    def __init__(self):
-        self.current_project = None
-        self.projects = list(Project)
+    def __init__(self) -> None:
+        self.current_project: Project = None
+        self.projects: List[Project] = list()
 
     def get_project_name(self) -> str:
         '''returns the name of the current project'''
@@ -23,7 +23,7 @@ A model consists of an arbitrary number of projects,
             str(self.current_project.origin_pid)
         return name
 
-    def get_cfiles(self) -> list[CFileReadViewInterface]:
+    def get_cfiles(self) -> List[CFileReadViewInterface]:
         '''returns view only on all cfiles in current project'''
         cfiles_view: List[CFileReadViewInterface] = list(
             CFileReadViewInterface)
@@ -36,7 +36,7 @@ A model consists of an arbitrary number of projects,
             cfile: CFile = self.current_project.get_cfile(data_point.path)
             cfile.data_entries.append(data_point)
 
-    def add_project(self, project: Project):
+    def add_project(self, project: Project) -> None:
         '''adds new project to model'''
         self.projects.append(project)
         self.current_project = project
