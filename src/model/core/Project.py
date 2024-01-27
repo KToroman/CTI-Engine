@@ -4,7 +4,7 @@ from src.model.core import SourceFile
 
 
 class Project(object):
-    source_files: [SourceFile]
+    source_files: [SourceFile] = list()
 
     def __init__(self, working_dir: str,
                  origin_pid: int,
