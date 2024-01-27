@@ -1,11 +1,9 @@
-
 from typing import Protocol, List
 
 from MetricName import MetricName
 
 
 class CFileReadViewInterface(Protocol):
-
     def get_name(self) -> str:
         pass
 

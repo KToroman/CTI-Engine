@@ -1,14 +1,15 @@
 from typing import List
 
-from src.model.core.CFile import CFile
+from CFileReadViewInterface import CFileReadViewInterface
+from DataEntry import DataEntry
+from CFile import CFile
 
 
 class Header(CFile):
-
     def __init__(self, path: str):
-        self.path = path
-        self.data_entries = list()
-        self.header = list()
+        self.path: str = path
+        self.data_entries: List[DataEntry] = list()
+        self.header: List[CFileReadViewInterface] = list()
 
     def get_timestamps(self) -> List[float]:
         timestamps: List[float] = list()
