@@ -2,14 +2,14 @@ from PyQt5.QtWidgets import QPushButton, QInputDialog
 
 
 class MenuBar:
-    def __init__(self, menu_bar_frame, menu_bar_layout, main_window):
-        self.load_file_button = QPushButton("Load file", menu_bar_frame)
+    def __init__(self, menu_bar_layout, main_window):
+        self.load_file_button : QPushButton = QPushButton("Load file")
         self.load_file_button.clicked.connect(lambda: self.show_input_dialog(main_window))
 
-        self.pause_resume_button = QPushButton("Pause", menu_bar_frame)
+        self.pause_resume_button : QPushButton = QPushButton("Pause")
         self.pause_resume_button.clicked.connect(lambda: ...)
 
-        self.cancel_button = QPushButton("Cancel", menu_bar_frame)
+        self.cancel_button : QPushButton = QPushButton("Cancel")
         self.cancel_button.clicked.connect(lambda: ...)
 
         menu_bar_layout.addWidget(self.load_file_button)

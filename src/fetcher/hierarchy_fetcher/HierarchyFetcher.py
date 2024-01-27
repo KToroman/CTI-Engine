@@ -1,3 +1,5 @@
+from typing import List
+
 from fetcher.FetcherInterface import FetcherInterface
 from GCCCommandExecutor import GCCCommandExecutor
 from CompileCommandGetter import CompileCommandGetter
@@ -36,16 +38,16 @@ class HierarchyFetcher(FetcherInterface):
         hierarchy_command : str = self.command_getter.generate_hierarchy_command(source_file)
         hierarchy_result: str = self.__gcc_command_executor.execute(hierarchy_command)
 
-        lines_to_append : list[str] = list()
+        lines_to_append : List[str] = list()
         for line in hierarchy_result.splitlines():
             if line.startswith(".") and line.endswith(".h"):
                 lines_to_append.append(line)
-        hierarchy : list[self.__HeaderDepthWrapper] = []
+        hierarchy : List[self.__HeaderDepthWrapper] = []
         for line in lines_to_append:
             self.__append_header_recursive(line, hierarchy, source_file)
 
 
-    def __append_header_recursive(self, line : str, hierarchy: list(__HeaderDepthWrapper), source_file : SourceFile) -> None:
+    def __append_header_recursive(self, line : str, hierarchy: List(__HeaderDepthWrapper), source_file : SourceFile) -> None:
         line_depth : int = self.__get_depth(line)
         path : str = self.__get_path_from_line(line)
         if not hierarchy:
