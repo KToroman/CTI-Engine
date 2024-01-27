@@ -35,6 +35,7 @@ class PassiveDataFetcher(DataFetcher):
                 path += name[1]  # file ending (cpp/cc/...)
         entry = DataEntry(path, process_point.timestamp, process_point.metrics)
         entry_list.append(entry)
+        self.model.insert_datapoints(entry_list)
 
     def fetch_metrics(self, process: psutil.Process) -> ProcessPoint:
         return self.data_observer.observe(process)
