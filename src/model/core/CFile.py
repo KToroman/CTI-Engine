@@ -8,6 +8,7 @@ from MetricName import MetricName
 class CFile(CFileReadViewInterface, Protocol):
     data_entries: List[DataEntry] = None
     header: List[CFileReadViewInterface] = None
+    path: str = None
 
     def get_name(self) -> str:
         return self.path
