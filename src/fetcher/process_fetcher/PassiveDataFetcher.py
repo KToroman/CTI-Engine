@@ -25,7 +25,14 @@ class PassiveDataFetcher(DataFetcher):
 
     def add_data_entry(self, process_point: ProcessPoint):
         entry_list: List[DataEntry] = list()
-        path: str = os.path.abspath(process_point.process.cmdline()[1])
+        path: str = self.model.current_project.working_dir
+        cmdline: List[str] = process_point.process.cmdline()
+        for entry in cmdline:
+            if entry.endswith(".o"):
+                name: List[str] = entry.split(".dir/")[-1].split(".")
+                path += name[0]  # name of cfile
+                path += "."
+                path += name[1]  # file ending (cpp/cc/...)
         entry = DataEntry(path, process_point.timestamp, process_point.metrics)
         entry_list.append(entry)
 
