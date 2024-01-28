@@ -12,8 +12,9 @@ from src.model.core.ProcessPoint import ProcessPoint
 
 class DataFetcher(FetcherInterface, Protocol):
 
-    process_collector: ProcessCollector = None
-    data_observer: DataObserver = None
+    __process_collector: ProcessCollector = None
+    __data_observer: DataObserver = None
+    __model: Model = None
 
     def add_data_entry(self, process_point: ProcessPoint):
         raise NotImplemented
