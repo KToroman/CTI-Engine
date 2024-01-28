@@ -6,6 +6,7 @@ from model.core.CFileReadViewInterface import CFileReadViewInterface
 from core.DataEntry import DataEntry
 from core.Project import Project
 from model.core.FileDictionary import FileDictionary
+from model.core.SourceFile import SourceFile
 
 
 class Model(ModelReadViewInterface):
@@ -40,3 +41,6 @@ class Model(ModelReadViewInterface):
         """adds new project to model"""
         self.projects.append(project)
         self.current_project = project
+
+    def get_sourcefile_by_name(self, name: str) -> SourceFile:
+        return self.current_project.get_sourcefile(name)

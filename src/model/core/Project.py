@@ -12,5 +12,5 @@ class Project(object):
         self.path_to_save = path_to_save
         self.file_dict = FileDictionary()
 
-    def get_cfile(self, name: str) -> CFile:
+    def get_sourcefile(self, name: str) -> SourceFile:
         return self.file_dict.get_file_by_name(name)
