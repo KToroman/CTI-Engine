@@ -1,4 +1,5 @@
 import os.path
+import time
 from typing import List
 
 import psutil
@@ -19,6 +20,8 @@ class PassiveDataFetcher(DataFetcher):
         self.__process_collector: ProcessCollector = ProcessCollector(-1)
         self.__data_observer: DataObserver = DataObserver()
         self.path_to_save = path_to_save
+        self.__seconds_to_wait: int = 5
+        self.__time_till_false: float = 0
 
     def __check_for_project(self, process: psutil.Process) -> bool:
         return self.__process_collector.check(process)
@@ -40,18 +43,30 @@ class PassiveDataFetcher(DataFetcher):
     def fetch_metrics(self, process: psutil.Process) -> ProcessPoint:
         return self.__data_observer.observe(process)
 
+    def __time_counter(self) -> bool:
+        if self.__time_till_false == 0:
+            self.__time_till_false = time.time() + self.__seconds_to_wait
+            return False
+        elif self.__time_till_false <= time.time():
+            self.__time_till_false = 0
+            return True
+        return False
+
     def update_project(self) -> bool:
         processes: List[psutil.Process] = self.__process_collector.catch_processes()
         if not processes:
-            for proc in processes:
-                if not self.__check_for_project(proc):
-                    ppid: int = proc.ppid()
-                    parent_ppid: int = psutil.Process(ppid).ppid()
-                    working_dir: str = psutil.Process(ppid).cwd()
-                    self.__model.add_project(Project(working_dir, parent_ppid, self.path_to_save))
-
-                self.add_data_entry(self.fetch_metrics(proc))
-
+            if self.__time_counter():
+                return False
             return True
 
-        return False
+        for proc in processes:
+            if not self.__check_for_project(proc):
+                ppid: int = proc.ppid()
+                parent_ppid: int = psutil.Process(ppid).ppid()
+                working_dir: str = psutil.Process(ppid).cwd()
+                self.__model.add_project(Project(working_dir, parent_ppid, self.path_to_save))
+
+            self.add_data_entry(self.fetch_metrics(proc))
+
+        self.__time_till_false = 0
+        return True
