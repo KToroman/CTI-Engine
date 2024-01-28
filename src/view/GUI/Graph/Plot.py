@@ -1,9 +1,12 @@
+from typing import List
+
+
 class Plot:
 
     name: str
     color: str
-    x_values: list[:float]
-    y_values: list[:float]
+    x_values: List[float] = list()
+    y_values: List[float] = list()
     visibility: bool
     visibility = False
 

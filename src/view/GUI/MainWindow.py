@@ -84,7 +84,7 @@ class MainWindow(QMainWindow):
         self.table_widget.set_insertion_point(model.get_project_name())
 
         # Update TableWidget for each cfile
-        cfile_list = model.get_cfiles()
+        cfile_list: List[CFileReadViewInterface] = model.get_cfiles()
         for cfile in cfile_list:
             self.update_table(cfile)
 
@@ -95,11 +95,11 @@ class MainWindow(QMainWindow):
     # Possibly some mistakes here, needs testing
     def visualize_active(self, model: ModelReadViewInterface):
         # Find file used for active build
-        active_row = self.table_widget.insertion_point
+        active_row: str = self.table_widget.insertion_point
         active_file: CFileReadViewInterface
         for cfile in model.get_cfiles():
             active_file = self.get_hierachy(cfile, active_row)
-            if active_file == active_row:
+            if active_file.get_name() == active_row:
                 break
 
         # Update TableWidget for said file
@@ -121,16 +121,16 @@ class MainWindow(QMainWindow):
     # Create Displayable for every cfile and insert into TableWidget
     def update_table(self, cfile: CFileReadViewInterface):
         # Collect data for Displayable
-        name = cfile.get_name()
-        ram_peak = cfile.get_max(MetricName.RAM)
-        cpu_peak = cfile.get_max(MetricName.CPU)
+        name: str = cfile.get_name()
+        ram_peak: float = cfile.get_max(MetricName.RAM)
+        cpu_peak: float = cfile.get_max(MetricName.CPU)
 
         # Create Graph Plots
-        x_values = cfile.get_timestamp()
-        ram_y_values = cfile.get_metrics(MetricName.RAM)
-        cpu_y_values = cfile.get_metrics(MetricName.CPU)
-        runtime = [cfile.get_total_time()]
-        color = self.generate_random_color()
+        x_values: List[float] = cfile.get_timestamp()
+        ram_y_values: List[float] = cfile.get_metrics(MetricName.RAM)
+        cpu_y_values: List[float] = cfile.get_metrics(MetricName.CPU)
+        runtime: List[float] = [cfile.get_total_time()]
+        color: str = self.generate_random_color()
         ram_plot = Plot(name, color, x_values, ram_y_values)
         cpu_plot = Plot(name, color, x_values, cpu_y_values)
         runtime_plot = Plot(name, color, runtime, None)
@@ -146,7 +146,7 @@ class MainWindow(QMainWindow):
 
     # Generate Random Color for plot
     def generate_random_color(self):
-        random_color = "#{:06X}".format(random.randint(0, 0xFFFFFF))
+        random_color: str = "#{:06X}".format(random.randint(0, 0xFFFFFF))
         return random_color
 
     def setup_connections(self):
