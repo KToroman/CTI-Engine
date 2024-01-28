@@ -15,28 +15,46 @@ from model.core.SourceFile import SourceFile
 
 
 class ActiveDataFetcher(FetcherInterface):
-    def update_project() -> bool:
-        pass
+    def update_project(self) -> bool:
+        more_to_build: bool = self.__compiling_tool.build()
+        found_header: bool = True
+        while found_header:
+            processes: List[psutil.Process] = self.__process_collector.catch_processes()
+            for process in processes:
+                
+    
+    def filter_for_str(process: psutil.Process, string: str):
+        cmdline: List[str] = process.cmdline()
+        for entry in cmdline:
+            if string in entry and entry.endswith(".o"):
+                return True
+        return False
+    
+    def __init__(
+        self, source_file_name: str, model: Model, build_dir_path: str
+    ) -> None:
+        self.__model = model
+        self.__source_file: SourceFile = model.get_sourcefile_by_name(source_file_name)
+        self.__data_observer = DataObserver()
+        self.__process_collector = ProcessCollector(-1)
+        self.__compiling_tool: BuilderInterface = CompilingTool(
+            self.__source_file, build_dir_path
+        )  # TODO
 
-    def __init__(self, source_file_name: str, model: Model, build_dir_path: str) -> None:
-        self.model = model
-        self.source_file: SourceFile = model.get_sourcefile_by_name(source_file_name)
-        self.data_observer = DataObserver()
-        self.process_collector = ProcessCollector(-1)
-        self.compiling_tool: BuilderInterface = CompilingTool(self.source_file, build_dir_path)  # TODO
-
-    def fetch_metrics(self, process: psutil.Process) -> ProcessPoint:
+    def __fetch_metrics(self, process: psutil.Process) -> ProcessPoint:
         return self.data_observer.observe(process)
 
-    def add_data_entry(self, process_point: ProcessPoint):
-        path: str = self.model.current_project.working_dir
+    def __add_data_entry(self, process_point: ProcessPoint):
+        path: str = self.__model.current_project.working_dir
         cmdline: List[str] = process_point.process.cmdline()
         for entry in cmdline:
             if entry.endswith(".o"):
                 name: List[str] = entry.split(".dir/")[-1].split(".")
                 path += name[0]  # name of cfile
                 path += "."
-                path += name[1]  # file ending (cpp/cc/...) # TODO get header file ending from source file or builder
-        self.model.insert_datapoints(
+                path += name[
+                    1
+                ]  # file ending (cpp/cc/...) # TODO get header file ending from source file or builder
+        self.__model.insert_datapoints(
             [DataEntry(path, process_point.metrics, process_point.timestamp)]
         )
