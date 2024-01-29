@@ -4,7 +4,7 @@ from model.core.FileDictionary import FileDictionary
 from src.model.core.SourceFile import SourceFile
 
 
-class Project(object):
+class Project:
     """Project models a CMake-Project and represents a tracked project with its tracked CFiles."""
     source_files: List[SourceFile] = list()
 

@@ -21,3 +21,4 @@ class FileDictionary:
 
     def pop_file_by_name(self, name: str) -> CFile:
         return self.dictionary.pop(name)
+
