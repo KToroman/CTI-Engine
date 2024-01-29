@@ -1,11 +1,12 @@
+from typing import List
 from model.core.CFile import CFile
 from model.core.FileDictionary import FileDictionary
-from src.model.core import SourceFile
+from src.model.core.SourceFile import SourceFile
 
 
 class Project(object):
     """Project models a CMake-Project and represents a tracked project with its tracked CFiles."""
-    source_files: [SourceFile] = list()
+    source_files: List[SourceFile] = list()
 
     def __init__(self, working_dir: str, origin_pid: int, path_to_save: str):
         self.working_dir = working_dir

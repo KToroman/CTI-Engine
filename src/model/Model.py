@@ -34,7 +34,7 @@ class Model(ModelReadViewInterface):
     def insert_datapoints(self, data_points: List[DataEntry]):
         """inserts datapoints according to their paths to the current project"""
         for data_point in data_points:
-            cfile: CFile = self.current_project.get_cfile(data_point.path)
+            cfile: CFile = self.current_project.get_sourcefile(data_point.path)
             cfile.data_entries.append(data_point)
 
     def add_project(self, project: Project) -> None:
