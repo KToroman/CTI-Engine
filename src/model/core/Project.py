@@ -15,4 +15,8 @@ class Project:
         self.file_dict = FileDictionary()
 
     def get_sourcefile(self, name: str) -> SourceFile:
-        return self.file_dict.get_file_by_name(name)
+        file_exists: bool = self.file_dict.isInDictionary(name)
+        source_file: SourceFile = self.file_dict.get_file_by_name(name)
+        if not file_exists:
+            self.source_files.append(source_file)
+        return source_file

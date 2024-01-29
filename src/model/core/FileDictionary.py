@@ -10,7 +10,7 @@ class FileDictionary:
     def __init__(self):
         self.dictionary: Dict[str, CFile] = {}
 
-    def add_file(self, cfile: CFile):
+    def add_file(self, cfile: CFile) -> CFile:
         self.dictionary.update({cfile.get_name(): cfile})
         return cfile
 
@@ -22,3 +22,7 @@ class FileDictionary:
     def pop_file_by_name(self, name: str) -> CFile:
         return self.dictionary.pop(name)
 
+    def isInDictionary(self, name: str) -> bool:
+        if name in self.dictionary:
+            return True
+        return False
