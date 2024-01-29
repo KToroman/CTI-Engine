@@ -133,7 +133,7 @@ class MainWindow(QMainWindow):
         color: str = self.generate_random_color()
         ram_plot = Plot(name, color, x_values, ram_y_values)
         cpu_plot = Plot(name, color, x_values, cpu_y_values)
-        runtime_plot = Plot(name, color, runtime, None)
+        runtime_plot = Plot(name, color, None, runtime)
 
         # Create header list for current Displayable
         headers: List[Displayable] = list()
