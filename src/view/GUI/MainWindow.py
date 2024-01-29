@@ -116,7 +116,7 @@ class MainWindow(QMainWindow):
         elif not cfile.get_headers():
             return None
         for header in cfile.get_headers():
-            self.get_hierachy(header)
+            self.get_hierachy(header, active_row)
 
     # Create Displayable for every cfile and insert into TableWidget
     def update_table(self, cfile: CFileReadViewInterface):
