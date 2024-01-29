@@ -1,4 +1,5 @@
 import os
+from time import time
 from typing import List
 import psutil
 from builder.BuilderInterface import BuilderInterface
@@ -15,11 +16,12 @@ from model.core.SourceFile import SourceFile
 
 
 class ActiveDataFetcher(FetcherInterface):
+    __seconds__to_move_on = 1
+
     def update_project(self) -> bool:
-        self.__header_name: str = self.__compiling_tool.get_next_header_name()
-        more_to_build: bool = self.__compiling_tool.build()
         found_header: bool = True
         self.__header_proc: psutil.Process = None
+        self.__move_on_to_next_header()
         found_header = self.search_for_header()
         while found_header:
             found_header = self.search_for_header()
@@ -27,6 +29,16 @@ class ActiveDataFetcher(FetcherInterface):
                 process_point: ProcessPoint = self.__fetch_metrics(
                     self.__header_proc)
                 self.__add_data_entry(process_point)
+                self.__time_header_last_found = time()
+            elif self.__time_header_last_found + ActiveDataFetcher.__seconds__to_move_on < time():
+                self.__move_on_to_next_header()
+                found_header = True
+
+    def __move_on_to_next_header(self) -> None:
+        if self.__more_to_build:
+            self.__header_name: str = self.__compiling_tool.get_next_header_name()
+            self.__more_to_build: bool = self.__compiling_tool.build()
+
 
     def search_for_header(self) -> bool:
         processes: List[psutil.Process] = self.__process_collector.catch_processes(
@@ -56,6 +68,7 @@ class ActiveDataFetcher(FetcherInterface):
         self.__compiling_tool: BuilderInterface = CompilingTool(
             self.__source_file, build_dir_path
         )  # TODO
+        self.__time_header_last_found: float = 0
 
     def __fetch_metrics(self, process: psutil.Process) -> ProcessPoint:
         return self.data_observer.observe(process)
