@@ -6,6 +6,7 @@ from src.model.core.MetricName import MetricName
 
 
 class CPUObserver(ObserverInterface):
+    """CPUObserver gets the RAM usage from a process."""
     metric_name = MetricName.CPU
 
     def observe(self, process: psutil.Process) -> Metric:

@@ -15,14 +15,14 @@ class ProcessCollector:
         for entry in cmdline:
             if entry.endswith(".o"):
                 return True
-
+        return False
     '''catches all build processes that produce .o files'''
 
     def catch_processes(self) -> List[psutil.Process]:
         build_processes: List[psutil.Process] = list()
         for process in psutil.process_iter(['pid', 'name', 'username']):
             if process.name() == self.PROC_NAME_FILTER:
-                valid: bool = self.__check_for_object_file(process.cmdline())
+                valid: bool = ProcessCollector.__check_for_object_file(process.cmdline())
             if valid:
                 build_processes.append(process)
         return build_processes
