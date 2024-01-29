@@ -4,6 +4,7 @@ from src.model.core import SourceFile
 
 
 class Project(object):
+    """Project models a CMake-Project and represents a tracked project with its tracked CFiles."""
     source_files: [SourceFile] = list()
 
     def __init__(self, working_dir: str, origin_pid: int, path_to_save: str):

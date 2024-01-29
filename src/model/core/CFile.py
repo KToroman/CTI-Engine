@@ -6,6 +6,7 @@ from MetricName import MetricName
 
 
 class CFile(CFileReadViewInterface, Protocol):
+    """Models CFile and is used for representing a tracked CFile in program"""
     data_entries: List[DataEntry] = None
     header: List[CFileReadViewInterface] = None
     path: str = None
@@ -15,8 +16,8 @@ class CFile(CFileReadViewInterface, Protocol):
 
     def get_total_time(self) -> float:
         return (
-            self.data_entries[len(self.data_entries) - 1].timestamp
-            - self.data_entries[0].timestamp
+                self.data_entries[len(self.data_entries) - 1].timestamp
+                - self.data_entries[0].timestamp
         )
 
     def get_max(self, metric: MetricName) -> float:

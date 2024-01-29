@@ -6,6 +6,7 @@ from CFile import CFile
 
 
 class Header(CFile):
+    """Header is a CFile, models a c-header and is used to represent a tracked header in program."""
     def __init__(self, path: str):
         self.path: str = path
         self.data_entries: List[DataEntry] = list()
