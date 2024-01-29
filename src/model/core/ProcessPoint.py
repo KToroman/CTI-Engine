@@ -6,6 +6,7 @@ from src.model.core.Metric import Metric
 
 
 class ProcessPoint:
+    """ProcessPoint stores a psutil process and its measured values."""
     def __init__(
         self, process: psutil.Process, timestamp: float, metrics: List[Metric]
     ):
