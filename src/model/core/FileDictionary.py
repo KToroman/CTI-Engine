@@ -1,7 +1,7 @@
 from typing import Dict
 
-from CFile import CFile
-from SourceFile import SourceFile
+from src.model.core.CFile import CFile
+from src.model.core.SourceFile import SourceFile
 
 
 class FileDictionary:

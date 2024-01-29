@@ -1,6 +1,6 @@
 from typing import List
-from model.core.CFile import CFile
-from model.core.FileDictionary import FileDictionary
+from src.model.core.CFile import CFile
+from src.model.core.FileDictionary import FileDictionary
 from src.model.core.SourceFile import SourceFile
 
 

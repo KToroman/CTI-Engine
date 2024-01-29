@@ -1,7 +1,7 @@
 from typing import List
-from CFile import CFile
-from CFileReadViewInterface import CFileReadViewInterface
-from DataEntry import DataEntry
+from src.model.core.CFile import CFile
+from src.model.core.CFileReadViewInterface import CFileReadViewInterface
+from src.model.core.DataEntry import DataEntry
 
 
 class SourceFile(CFile):

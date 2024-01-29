@@ -1,7 +1,7 @@
 from typing_extensions import Protocol
 from typing import List
 
-from core.CFileReadViewInterface import CFileReadViewInterface
+from src.model.core.CFileReadViewInterface import CFileReadViewInterface
 
 
 class ModelReadViewInterface(Protocol):

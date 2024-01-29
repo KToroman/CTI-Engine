@@ -1,18 +1,17 @@
-import os
 from time import time
 from typing import List
 import psutil
-from builder.BuilderInterface import BuilderInterface
-from builder.header_builder.CompilingTool import CompilingTool
-from fetcher.FetcherInterface import FetcherInterface
-from fetcher.process_fetcher.process_observer.ProcessCollector import ProcessCollector
-from fetcher.process_fetcher.process_observer.metrics_observer.DataObserver import (
+from src.builder.BuilderInterface import BuilderInterface
+from src.builder.header_builder.CompilingTool import CompilingTool
+from src.fetcher.FetcherInterface import FetcherInterface
+from src.fetcher.process_fetcher.process_observer.ProcessCollector import ProcessCollector
+from src.fetcher.process_fetcher.process_observer.metrics_observer.DataObserver import (
     DataObserver,
 )
-from model.Model import Model
-from model.core.DataEntry import DataEntry
-from model.core.ProcessPoint import ProcessPoint
-from model.core.SourceFile import SourceFile
+from src.model.Model import Model
+from src.model.core.DataEntry import DataEntry
+from src.model.core.ProcessPoint import ProcessPoint
+from src.model.core.SourceFile import SourceFile
 
 
 class ActiveDataFetcher(FetcherInterface):
@@ -38,7 +37,6 @@ class ActiveDataFetcher(FetcherInterface):
         if self.__more_to_build:
             self.__header_name: str = self.__compiling_tool.get_next_header_name()
             self.__more_to_build: bool = self.__compiling_tool.build()
-
 
     def search_for_header(self) -> bool:
         processes: List[psutil.Process] = self.__process_collector.catch_processes(

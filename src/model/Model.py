@@ -1,12 +1,12 @@
 from typing import List
 
-from ModelReadViewInterface import ModelReadViewInterface
-from model.core.CFile import CFile
-from model.core.CFileReadViewInterface import CFileReadViewInterface
-from core.DataEntry import DataEntry
-from core.Project import Project
-from model.core.FileDictionary import FileDictionary
-from model.core.SourceFile import SourceFile
+from src.model.ModelReadViewInterface import ModelReadViewInterface
+from src.model.core.CFile import CFile
+from src.model.core.CFileReadViewInterface import CFileReadViewInterface
+from src.model.core.DataEntry import DataEntry
+from src.model.core.Project import Project
+from src.model.core.FileDictionary import FileDictionary
+from src.model.core.SourceFile import SourceFile
 
 
 class Model(ModelReadViewInterface):
