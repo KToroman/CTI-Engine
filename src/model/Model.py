@@ -1,11 +1,12 @@
 from typing import List
 
-from ModelReadViewInterface import ModelReadViewInterface
-from model.core.CFile import CFile
-from model.core.CFileReadViewInterface import CFileReadViewInterface
-from core.DataEntry import DataEntry
-from core.Project import Project
-from model.core.FileDictionary import FileDictionary
+from src.model.ModelReadViewInterface import ModelReadViewInterface
+from src.model.core.CFile import CFile
+from src.model.core.CFileReadViewInterface import CFileReadViewInterface
+from src.model.core.DataEntry import DataEntry
+from src.model.core.Project import Project
+from src.model.core.FileDictionary import FileDictionary
+from src.model.core.SourceFile import SourceFile
 
 
 class Model(ModelReadViewInterface):
@@ -33,10 +34,13 @@ class Model(ModelReadViewInterface):
     def insert_datapoints(self, data_points: List[DataEntry]):
         """inserts datapoints according to their paths to the current project"""
         for data_point in data_points:
-            cfile: CFile = self.current_project.get_cfile(data_point.path)
+            cfile: CFile = self.current_project.get_sourcefile(data_point.path)
             cfile.data_entries.append(data_point)
 
     def add_project(self, project: Project) -> None:
         """adds new project to model"""
         self.projects.append(project)
         self.current_project = project
+
+    def get_sourcefile_by_name(self, name: str) -> SourceFile:
+        return self.current_project.get_sourcefile(name)

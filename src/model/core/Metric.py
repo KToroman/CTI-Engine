@@ -1,4 +1,4 @@
-from MetricName import MetricName
+from src.model.core.MetricName import MetricName
 
 
 class Metric:

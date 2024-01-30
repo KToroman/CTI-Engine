@@ -1,8 +1,8 @@
 from typing import List, Protocol
 
-from CFileReadViewInterface import CFileReadViewInterface
-from DataEntry import DataEntry
-from MetricName import MetricName
+from src.model.core.CFileReadViewInterface import CFileReadViewInterface
+from src.model.core.DataEntry import DataEntry
+from src.model.core.MetricName import MetricName
 
 
 class CFile(CFileReadViewInterface, Protocol):

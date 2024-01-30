@@ -1,6 +1,6 @@
 from typing import Protocol, List
 
-from MetricName import MetricName
+from src.model.core.MetricName import MetricName
 
 '''This interface provides a view on a CFile'''
 
