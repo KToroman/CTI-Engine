@@ -46,6 +46,6 @@ class FileLoader(FetcherInterface):
         for file in os.listdir(self.__path):
             if "json" in file:
                 if isfile(join(self.__path, file)):
-                    self.__path += "\\" + file
+                    self.__path = join(self.__path, file)
                     return True
         return False
