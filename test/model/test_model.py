@@ -61,7 +61,15 @@ class TestModel(unittest.TestCase):
         self.assertEqual(jsonpickle.encode(test_result.projects[0]), jsonpickle.encode(test_project))
 
     def test_current_project(self):
-        pass
+        test_model: Model = Model()
+        test_project: Project = Project("", 123, "")
+        test_model.projects.append(test_project)
+
+        test_result: Model = Model()
+        test_result.add_project(Project("", 1234, ""))
+        test_result.add_project(test_project)
+
+        self.assertEqual(jsonpickle.encode(test_result.current_project), jsonpickle.encode(test_project))
 
     def test_get_sourcefile_by_name(self):
         pass
@@ -75,6 +83,3 @@ class TestModel(unittest.TestCase):
     def test_two_projects(self):
         pass
 
-
-t = TestModel()
-t.test_insert_datapoints_for_existing_cfile()
