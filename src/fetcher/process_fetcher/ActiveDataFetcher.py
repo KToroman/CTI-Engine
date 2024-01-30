@@ -32,11 +32,12 @@ class ActiveDataFetcher(FetcherInterface):
             elif self.__time_header_last_found + ActiveDataFetcher.__seconds__to_move_on < time():
                 self.__move_on_to_next_header()
                 found_header = True
+        return self.__done_building
 
     def __move_on_to_next_header(self) -> None:
-        if self.__more_to_build:
+        if self.__done_building:
             self.__header_name: str = self.__compiling_tool.get_next_header_name()
-            self.__more_to_build: bool = self.__compiling_tool.build()
+            self.__done_building: bool = self.__compiling_tool.build()
 
     def search_for_header(self) -> bool:
         processes: List[psutil.Process] = self.__process_collector.catch_processes(
@@ -69,11 +70,10 @@ class ActiveDataFetcher(FetcherInterface):
         self.__time_header_last_found: float = 0
 
     def __fetch_metrics(self, process: psutil.Process) -> ProcessPoint:
-        return self.data_observer.observe(process)
+        return self.__data_observer.observe(process)
 
     def __add_data_entry(self, process_point: ProcessPoint):
         path: str = self.__model.current_project.working_dir
-        cmdline: List[str] = process_point.process.cmdline()
         path = self.__header_name
         self.__model.insert_datapoints(
             [DataEntry(path, process_point.metrics, process_point.timestamp)]
