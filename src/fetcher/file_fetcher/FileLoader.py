@@ -1,5 +1,5 @@
-
 import os
+from os.path import isfile, join
 
 import jsonpickle
 
@@ -15,9 +15,14 @@ class FileLoader(FetcherInterface):
         self.__model = model
 
     def update_project(self) -> bool:
-        if self.__is_valid_path():
+        if self.__is_valid_file():
             self.__model.add_project(self.__create_project())
             return True
+
+        elif self.__is_valid_path() and self.__search_json():
+            self.__model.add_project(self.__create_project())
+            return True
+
         return False
 
     def __create_project(self) -> Project:
@@ -33,3 +38,14 @@ class FileLoader(FetcherInterface):
 
     def __is_valid_path(self) -> bool:
         return os.path.isdir(self.__path)
+
+    def __is_valid_file(self) -> bool:
+        return os.path.isfile(self.__path)
+
+    def __search_json(self) -> bool:
+        for file in os.listdir(self.__path):
+            if "json" in file:
+                if isfile(join(self.__path, file)):
+                    self.__path += "\\" + file
+                    return True
+        return False
