@@ -2,19 +2,19 @@ from PyQt5.QtWidgets import QLabel, QWidget, QHBoxLayout
 
 class StatusBar(QWidget):
 
-    WINDOW_SIZE = 20
-    SPACING = 10
-    STATUS_TEXT = "Status: "
+    WINDOW_SIZE: int = 20
+    SPACING: int = 10
+    STATUS_TEXT: str = "Status: "
     # Colors
-    WHITE = "#FFFFFF"
-    ORANGE = "#FFA500"
-    GREEN = "#00FF00"
-    RED = "#FF0000"
+    WHITE: str = "#FFFFFF"
+    ORANGE: str = "#FFA500"
+    GREEN: str = "#00FF00"
+    RED: str = "#FF0000"
     # Status Settings
-    WAITING = "waiting"
-    MEASURING = "measuring"
-    FINISHED = "finished"
-    FAILED = "build failed"
+    WAITING: str = "waiting"
+    MEASURING: str = "measuring"
+    FINISHED: str = "finished"
+    FAILED: str = "build failed"
 
     def __init__(self):
         super().__init__()

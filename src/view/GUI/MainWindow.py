@@ -1,5 +1,8 @@
 import sys
 
+import random
+from typing import List
+
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QWidget,
                              QStackedWidget, QCheckBox, QApplication, QHBoxLayout, QSplitter)
@@ -10,6 +13,12 @@ from UserInteraction.TableWidget import TableWidget
 from UserInteraction.Displayable import Displayable
 from UserInteraction.TableRow import TableRow
 from UserInteraction.MetricBar import MetricBar
+from src.model.Model import Model
+from src.model.ModelReadViewInterface import ModelReadViewInterface
+from src.model.core.CFile import CFile
+from src.model.core.CFileReadViewInterface import CFileReadViewInterface
+from src.view.GUI.Graph.Plot import Plot
+from src.model.core.MetricName import MetricName
 
 
 class MainWindow(QMainWindow):
@@ -69,6 +78,79 @@ class MainWindow(QMainWindow):
         self.table_widget.add_row(TableRow(self.dis))
         self.table_widget.add_row(TableRow(self.dis))
         self.table_widget.add_row(TableRow(self.dis))
+
+    def visualize(self, model):
+        # Select spot for Displayables to be inserted into
+        self.table_widget.set_insertion_point(model.get_project_name())
+
+        # Update TableWidget for each cfile
+        cfile_list: List[CFileReadViewInterface] = model.get_cfiles()
+        for cfile in cfile_list:
+            self.update_table(cfile)
+
+        # Update other Widgets
+        self.setup_connections()
+        """Statusbar muss hier geupdatet werden"""
+
+    # Possibly some mistakes here, needs testing
+    def visualize_active(self, model: ModelReadViewInterface):
+        # Find file used for active build
+        active_row: str = self.table_widget.insertion_point
+        active_file: CFileReadViewInterface
+        for cfile in model.get_cfiles():
+            active_file = self.get_hierachy(cfile, active_row)
+            if active_file.get_name() == active_row:
+                break
+
+        # Update TableWidget for said file
+        self.update_table(active_file)
+
+        # Update other Widgets
+        self.setup_connections()
+        """Statusbar muss hier geupdatet werden"""
+
+    # Find cfile which started active mode
+    def get_hierachy(self, cfile: CFileReadViewInterface, active_row: str) -> CFileReadViewInterface:
+        if cfile.get_name() == active_row:
+            return cfile
+        elif not cfile.get_headers():
+            return None
+        for header in cfile.get_headers():
+            self.get_hierachy(header, active_row)
+
+    # Create Displayable for every cfile and insert into TableWidget
+    def update_table(self, cfile: CFileReadViewInterface):
+        # Collect data for Displayable
+        name: str = cfile.get_name()
+        ram_peak: float = cfile.get_max(MetricName.RAM)
+        cpu_peak: float = cfile.get_max(MetricName.CPU)
+
+        # Create Graph Plots
+        x_values: List[float] = cfile.get_timestamp()
+        ram_y_values: List[float] = cfile.get_metrics(MetricName.RAM)
+        cpu_y_values: List[float] = cfile.get_metrics(MetricName.CPU)
+        runtime: List[float] = [cfile.get_total_time()]
+        color: str = self.generate_random_color()
+        ram_plot = Plot(name, color, x_values, ram_y_values)
+        cpu_plot = Plot(name, color, x_values, cpu_y_values)
+        runtime_plot = Plot(name, color, None, runtime)
+
+        # Create header list for current Displayable
+        headers: List[Displayable] = list()
+        for header in cfile.get_headers():
+            headers.append(header.get_name())
+
+        # Create Displayable and insert into TableWidget
+        self.table_widget.insert_values(
+            Displayable(name, ram_plot, cpu_plot, runtime_plot, ram_peak, cpu_peak, headers))
+
+    # Generate Random Color for plot
+    def generate_random_color(self):
+        random_color: str = "#{:06X}".format(random.randint(0, 0xFFFFFF))
+        return random_color
+
+    def setup_connections(self):
+        """to be implemented"""
 
 
 if __name__ == "__main__":

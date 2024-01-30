@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QMessageBox
 
 class ErrorWindow(QMessageBox):
 
-    WINDOW_TITLE = "Error"
+    WINDOW_TITLE: str = "Error"
 
     def __init__(self, error_message):
         super().__init__()
