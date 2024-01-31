@@ -1,10 +1,22 @@
+from typing import List
+
 from matplotlib.backends.backend_template import FigureCanvas
 from PyQt5.QtWidgets import QVBoxLayout, QWidget
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
+from src.view.GUI.Graph.Plot import Plot
+
 
 class BarWidget(QWidget):
+
+    X_AXIS: str = "Sourcefiles"
+    Y_AXIS: str = "Runtime"
+
+    categories: List[str] = []
+    values: List[float] = []
+    colors: List[str] = []
+
     def __init__(self):
         super(BarWidget, self).__init__()
 
@@ -15,22 +27,36 @@ class BarWidget(QWidget):
         layout.addWidget(self.canvas)
         self.plot_bar_chart()
 
-    # Auch nur Beispiel
-    def plot_bar_chart(self):
-        # Daten für das Säulendiagramm
-        categories = ['Category 1', 'Category 2', 'Category 3', 'Category 4', 'Category 5']
-        values = [5, 12, 8, 15, 10]
+    def add_bar(self, plot: Plot):
+        self.categories.append(plot.name)
+        self.values.append(plot.y_values[0])
+        self.colors.append(plot.color)
 
-        # Erstelle einen Subplot für das Säulendiagramm
+        # Update chart
+        self.plot_bar_chart()
+
+    def remove_bar(self, plot: Plot):
+
+        self.categories.remove(plot.name)
+        self.values.remove(plot.y_values[0])
+        self.colors.remove(plot.color)
+
+        # Update chart
+        self.plot_bar_chart()
+
+    def plot_bar_chart(self):
+        # Remove previous axes labels
+        self.figure.clear()
+
+        # Create subplot for bar chart
         ax = self.figure.add_subplot(111)
 
-        # Erstelle das Säulendiagramm
-        ax.bar(categories, values, color='blue')
+        # Create bar chart
+        ax.bar(self.categories, self.values, color=self.colors)
 
-        # Beschriftungen und Titel hinzufügen
-        ax.set_xlabel('Categories')
-        ax.set_ylabel('Values')
-        ax.set_title('Bar Chart Example')
+        # Add title and labels for axes
+        ax.set_xlabel(self.X_AXIS)
+        ax.set_ylabel(self.Y_AXIS)
 
-        # Zeichne das Diagramm auf das Canvas
+        # Draw diagram on canvas
         self.canvas.draw()
