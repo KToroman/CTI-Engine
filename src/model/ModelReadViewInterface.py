@@ -1,14 +1,13 @@
-from typing_extensions import Protocol
-from typing import List
+from typing import List, Protocol
 
 from src.model.core.CFileReadViewInterface import CFileReadViewInterface
 
 
 class ModelReadViewInterface(Protocol):
-    def get_project_name() -> str:
+    def get_project_name(self) -> str:
         """getter for project's name"""
         raise NotImplementedError
 
-    def get_cfiles() -> List[CFileReadViewInterface]:
+    def get_cfiles(self) -> List[CFileReadViewInterface]:
         """getter for a view on all cFiles contained in the current project"""
         raise NotImplementedError
