@@ -2,9 +2,9 @@ from typing import List
 from psutil import Process
 import time
 
-from metrics_observer.RAMObserver import RAMObserver
-from metrics_observer.CPUObserver import CPUObserver
-from metrics_observer.ObserverInterface import ObserverInterface
+from src.fetcher.process_fetcher.process_observer.metrics_observer.RAMObserver import RAMObserver
+from src.fetcher.process_fetcher.process_observer.metrics_observer.CPUObserver import CPUObserver
+from src.fetcher.process_fetcher.process_observer.metrics_observer.ObserverInterface import ObserverInterface
 from src.model.core.Metric import Metric
 from src.model.core.ProcessPoint import ProcessPoint
 

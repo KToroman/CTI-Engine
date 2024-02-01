@@ -1,5 +1,5 @@
 from typing import Protocol
-from model.ModelReadViewInterface import ModelReadViewInterface
+from src.model.ModelReadViewInterface import ModelReadViewInterface
 
 class UIInterface(Protocol):
     """provides an Interface for Implemetations of a User Interface. All contained Methods must be implemented by subclasses."""

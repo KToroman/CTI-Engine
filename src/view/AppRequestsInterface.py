@@ -1,4 +1,4 @@
-from typing_extensions import Protocol
+from typing import Protocol
 
 '''An interface for passing requests to the App'''
 class AppRequestsInterface(Protocol):
@@ -7,7 +7,7 @@ class AppRequestsInterface(Protocol):
         raise NotImplementedError
     
     '''starts the active measurement for given cFile'''
-    def start_active_measurement(source_file_name: str):
+    def run_active_measurement(source_file_name: str):
         raise NotImplementedError
 
     '''quits any measurement, passive or active'''

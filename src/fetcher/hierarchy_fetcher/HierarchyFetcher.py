@@ -1,8 +1,8 @@
 from typing import List, Optional
 
 from src.fetcher import FetcherInterface
-from GCCCommandExecutor import GCCCommandExecutor
-from CompileCommandGetter import CompileCommandGetter
+from src.fetcher.hierarchy_fetcher.GCCCommandExecutor import GCCCommandExecutor
+from src.fetcher.hierarchy_fetcher.CompileCommandGetter import CompileCommandGetter
 from src.model.Model import Model
 from src.model.core.Project import Project
 from src.model.core.SourceFile import SourceFile
