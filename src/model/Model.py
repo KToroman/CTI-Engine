@@ -1,3 +1,5 @@
+import copy
+import time
 from typing import List
 
 from src.model.ModelReadViewInterface import ModelReadViewInterface
@@ -17,6 +19,8 @@ class Model(ModelReadViewInterface):
     def __init__(self) -> None:
         self.current_project: Project = None
         self.projects: List[Project] = list()
+        self.save_project: Project = None
+        self.new_project = False
 
     def get_project_name(self) -> str:
         """returns the name of the current project"""
@@ -41,6 +45,17 @@ class Model(ModelReadViewInterface):
         """adds new project to model"""
         self.projects.append(project)
         self.current_project = project
+        self.new_project = True
 
     def get_sourcefile_by_name(self, name: str) -> SourceFile:
         return self.current_project.get_sourcefile(name)
+
+    def update_save_project(self):
+        if self.new_project and self.projects.__len__() >= 2:
+            self.save_project = copy.deepcopy(self.projects[self.projects.__len__() - 2])
+            self.new_project = False
+            return
+        self.save_project = copy.deepcopy(self.current_project)
+
+    def get_current_project(self) -> Project:
+        return self.save_project

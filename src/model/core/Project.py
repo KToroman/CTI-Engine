@@ -6,10 +6,11 @@ from src.model.core.SourceFile import SourceFile
 
 class Project:
     """Project models a CMake-Project and represents a tracked project with its tracked CFiles."""
-    source_files: List[SourceFile] = list(
-    )  # TODO maybe we should just delete the list altogether...
+
+    # TODO maybe we should just delete the list altogether...
 
     def __init__(self, working_dir: str, origin_pid: int, path_to_save: str):
+        self.source_files: List[SourceFile] = list()
         self.working_dir = working_dir
         self.origin_pid = origin_pid
         self.path_to_save = path_to_save

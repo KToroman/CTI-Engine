@@ -2,6 +2,7 @@ import os.path
 import time
 from typing import List
 
+import jsonpickle
 import psutil
 
 from src.fetcher.process_fetcher.DataFetcher import DataFetcher
@@ -44,7 +45,7 @@ class PassiveDataFetcher(DataFetcher):
         return self.__data_observer.observe(process)
 
     def __time_counter(self) -> bool:
-        if self.__time_till_false == 0:
+        if 0 <= self.__time_till_false >= time.time():
             self.__time_till_false = time.time() + self.__seconds_to_wait
             return False
         elif self.__time_till_false <= time.time():

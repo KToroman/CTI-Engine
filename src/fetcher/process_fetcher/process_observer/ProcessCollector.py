@@ -19,6 +19,7 @@ class ProcessCollector:
     '''catches all build processes that produce .o files'''
 
     def catch_processes(self) -> List[psutil.Process]:
+        valid = False
         build_processes: List[psutil.Process] = list()
         for process in psutil.process_iter(['pid', 'name', 'username']):
             if process.name() == self.PROC_NAME_FILTER:
