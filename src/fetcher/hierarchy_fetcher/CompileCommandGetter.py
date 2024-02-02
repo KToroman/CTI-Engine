@@ -46,4 +46,3 @@ class CompileCommandGetter:
             return origin_command.replace("c++", "gpp -H", 1)
         else:
             raise self.CompileCommandError(f"the stored command is not a recognized command\n {origin_command}")
-
