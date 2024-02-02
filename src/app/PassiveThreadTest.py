@@ -54,7 +54,8 @@ class PassiveThread:
             self.saver.save_project(tmep_pro)
             print("saving")
             time.sleep(0.4)
-            if tmep_pro.source_files.__len__() != self.__model.get_current_project(project.origin_pid).source_files.__len__():
+            if tmep_pro.source_files.__len__() != self.__model.get_current_project(
+                    project.origin_pid).source_files.__len__():
                 timer = time.time() + 5
         print("saver closed")
 
@@ -91,8 +92,9 @@ class PassiveThread:
             counter += 1
             conter = 0
             for c in p.source_files:
-                conter +=1
-                print(conter.__str__() + " " +p.origin_pid.__str__() + " " + c.path + ": " + c.data_entries.__len__().__str__())
+                conter += 1
+                print(
+                    conter.__str__() + " " + p.origin_pid.__str__() + " " + c.path + ": " + c.data_entries.__len__().__str__())
                 counter += 1 + c.data_entries.__len__()
 
         print("insgesamt: " + counter.__str__())
@@ -104,6 +106,7 @@ p.main_loop()
 
 time.sleep(1)
 p.length()
+
 
 """
 m = Model()

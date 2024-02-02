@@ -21,19 +21,22 @@ class PassiveDataFetcher(DataFetcher):
         self.__model = model
         self.__process_collector: ProcessCollector = ProcessCollector(-1)
         self.__data_observer: DataObserver = DataObserver()
+
         self.path_to_save = path_to_save
+
         self.__seconds_to_wait: int = 5
         self.__time_till_false: float = 0
-        self.run_catcher: bool = False
+
         self.process_queue: List[psutil.Process] = list()
         self.catcher_thread = Thread(target=self.catch_process, daemon=True)
         self.collector_thread = Thread(target=self.collector, daemon=True)
-        self.got_started = False
+
         self.current_origin_pid: int = -1
         self.pid_list: List[int] = list()
+        self.time_till_quit = time.time()
 
-    def __check_for_project(self, process: psutil.Process) -> bool:
-        return self.__process_collector.check(process)
+        self.is_running = True
+        self.got_started = False
 
     def add_data_entry(self, process_point: ProcessPoint):
         pid = psutil.Process(psutil.Process(process_point.process.ppid()).ppid()).ppid()
@@ -51,7 +54,7 @@ class PassiveDataFetcher(DataFetcher):
         self.__model.insert_datapoints(entry_list, pid)
 
     def catch_process(self):
-        while self.run_catcher:
+        while self.is_running:
             for process in psutil.process_iter(['pid', 'name', 'username']):
                 proc = self.__process_collector.catch_processes(process)
                 if proc is not None and self.not_in_queue(proc):
@@ -87,9 +90,10 @@ class PassiveDataFetcher(DataFetcher):
             time.sleep(0.01)
 
     def collector(self):
-        while True:
+        while self.is_running:
             if self.process_queue.__len__() != 0:
-                Thread(target=self.get_data, args=[self.process_queue.pop()], daemon=True).start()
+                proc = self.process_queue.pop()
+                Thread(target=self.get_data, args=[proc], daemon=True).start()
                 time.sleep(0.1)
 
     def update_project(self) -> bool:
@@ -99,6 +103,12 @@ class PassiveDataFetcher(DataFetcher):
             self.collector_thread.start()
             self.catcher_thread.start()
 
+        self.time_till_quit = time.time() + 3
+        self.time_keeper()
         if self.__time_counter():
             return False
         return True
+
+    def time_keeper(self):
+        if self.time_till_quit <= time.time():
+            self.is_running = False
