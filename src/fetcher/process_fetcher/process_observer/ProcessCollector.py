@@ -18,10 +18,12 @@ class ProcessCollector:
     '''catches all build processes that produce .o files'''
 
     def catch_processes(self) -> List[psutil.Process]:
+        valid: bool = False
         build_processes: List[psutil.Process] = list()
         for process in psutil.process_iter(['pid', 'name', 'username']):
             if process.name() == self.PROC_NAME_FILTER:
-                valid: bool = ProcessCollector.__check_for_object_file(process.cmdline())
+                valid: bool = ProcessCollector.__check_for_object_file(
+                    process.cmdline())
             if valid:
                 build_processes.append(process)
         return build_processes
@@ -30,8 +32,8 @@ class ProcessCollector:
         ppid: int = process.ppid()
         parent_ppid: int = psutil.Process(ppid).ppid()
         parent_parent_proc = psutil.Process(parent_ppid)
-        if parent_parent_proc.name() != "gcc":
-            raise ValueError  # root of process is not gcc
+        # if parent_parent_proc.name() != "gcc":
+        #     raise ValueError  # root of process is not gcc
         if parent_ppid == self.current_origin_pid:
             return True
         return False
