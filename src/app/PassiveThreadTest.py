@@ -1,10 +1,6 @@
-import copy
 import time
 from threading import Thread
 from typing import List
-
-import jsonpickle
-import picklejson
 
 from src.fetcher.FetcherInterface import (FetcherInterface)
 from src.fetcher.file_fetcher.FileLoader import FileLoader
@@ -26,29 +22,15 @@ class PassiveThread:
         self.__passive_fetch_finished: bool = False
         self.__is_fetching_passive_data: bool = False
         self.is_running = True
+        self.is_saved_bool: bool = False
         self.saver: SaveToJSON = SaveToJSON()
 
-        self.__model.add_project(Project("", 69, ""))
-
     def __fetch_passive_data(self):
-        project_time = time.time() + 5
-
         while not self.__passive_fetch_finished:
-            # self.__is_fetching_passive_data = self.__passive_data_fetcher.update_project()
+            self.__is_fetching_passive_data = self.__passive_data_fetcher.update_project()
             time.sleep(0.0001)
-            metrics_ram: Metric = Metric(12, MetricName.RAM)
-            metrics_cpu: Metric = Metric(16, MetricName.CPU)
-            metr_list: List[Metric] = [metrics_ram, metrics_cpu]
-            entrys: List[DataEntry] = [
-                DataEntry("sourcefile" + (time.time()/10
-                                          ).__int__().__str__(), time.time(), metr_list)]
-            self.__model.insert_datapoints(entrys)
-            if project_time <= time.time():
-                self.__model.add_project(Project("", time.time().__int__(), ""))
-                project_time = time.time() + 600
-                print("new Project")
 
-            self.__is_fetching_passive_data = True
+
         self.__model.save_project = self.__model.current_project
         self.__is_fetching_passive_data = False
         self.__passive_fetch_finished = True
@@ -58,7 +40,7 @@ class PassiveThread:
         self.__model.time_left = time.time() + 1
         time_to_save = time.time() + 3
         while self.is_running or not self.is_saved_bool:
-            if time_to_save <= time.time():
+            if time_to_save <= time.time() and self.__model.save_project is not None:
                 self.__model.update_save_project()
                 time_to_save = time.time() + 3
                 self.saver.save_project(self.__model.get_current_project())
@@ -80,10 +62,11 @@ class PassiveThread:
         sver_t = Thread(target=self.save)
         sver_t.start()
         while self.is_running:
-            pass
+            time.sleep(10)
+            print(self.__is_fetching_passive_data)
 
         time.sleep(1)
-        print("fin in time: " + (time.time()-start).__str__())
+        print("fin in time: " + (time.time() - start).__str__())
 
     def length(self):
         counter = 0

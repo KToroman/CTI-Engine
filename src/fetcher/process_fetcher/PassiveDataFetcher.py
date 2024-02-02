@@ -28,6 +28,7 @@ class PassiveDataFetcher(DataFetcher):
         return self.__process_collector.check(process)
 
     def add_data_entry(self, process_point: ProcessPoint):
+        print("making entry")
         entry_list: List[DataEntry] = list()
         path: str = self.__model.current_project.working_dir
         cmdline: List[str] = process_point.process.cmdline()
@@ -45,22 +46,20 @@ class PassiveDataFetcher(DataFetcher):
         return self.__data_observer.observe(process)
 
     def __time_counter(self) -> bool:
-        if 0 <= self.__time_till_false >= time.time():
-            self.__time_till_false = time.time() + self.__seconds_to_wait
-            return False
-        elif self.__time_till_false <= time.time():
-            self.__time_till_false = 0
+        if time.time() >= self.__time_till_false:
             return True
         return False
 
     def update_project(self) -> bool:
         processes: List[psutil.Process] = self.__process_collector.catch_processes()
         if not processes:
+            print("in timer")
             if self.__time_counter():
                 return False
             return True
 
         for proc in processes:
+            print("in proc list")
             if not self.__check_for_project(proc):
                 ppid: int = proc.ppid()
                 parent_ppid: int = psutil.Process(ppid).ppid()
@@ -69,5 +68,5 @@ class PassiveDataFetcher(DataFetcher):
 
             self.add_data_entry(self.fetch_metrics(proc))
 
-        self.__time_till_false = 0
+        self.__time_till_false = time.time() + self.__seconds_to_wait
         return True
