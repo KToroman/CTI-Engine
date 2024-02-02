@@ -11,11 +11,8 @@ from Graph.GraphWidget import GraphWidget
 from UserInteraction.MenuBar import MenuBar
 from UserInteraction.TableWidget import TableWidget
 from UserInteraction.Displayable import Displayable
-from UserInteraction.TableRow import TableRow
 from UserInteraction.MetricBar import MetricBar
-from src.model.Model import Model
 from src.model.ModelReadViewInterface import ModelReadViewInterface
-from src.model.core.CFile import CFile
 from src.model.core.CFileReadViewInterface import CFileReadViewInterface
 from src.view.GUI.Graph.Plot import Plot
 from src.model.core.MetricName import MetricName
@@ -76,10 +73,14 @@ class MainWindow(QMainWindow):
         self.metric_bar: MetricBar = MetricBar(self.metric_bar_frame_layout, self.stacked_widget)
 
         # Test nur als Beispiel
-        self.dis = Displayable("test123", ..., ..., ..., 39, 123, 123)
-        self.table_widget.add_row(TableRow(self.dis))
-        self.table_widget.add_row(TableRow(self.dis))
-        self.table_widget.add_row(TableRow(self.dis))
+        self.dis = Displayable("abc", ..., ..., ..., 39, 123, 123)
+        self.dis1 = Displayable("def", ..., ..., ..., 39, 123, 123)
+        self.dis2 = Displayable("xyz", ..., ..., ..., 39, 123, 123)
+
+        self.table_widget.insert_values(self.dis)
+        self.table_widget.insert_values(self.dis1)
+        self.table_widget.insert_values(self.dis2)
+
 
     def visualize(self, model):
         # Select spot for Displayables to be inserted into
