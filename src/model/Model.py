@@ -35,11 +35,20 @@ class Model(ModelReadViewInterface):
         cfiles_view.extend(self.current_project.source_files)
         return cfiles_view
 
-    def insert_datapoints(self, data_points: List[DataEntry]):
+    def insert_datapoints(self, data_points: List[DataEntry], pid: int):
+
         """inserts datapoints according to their paths to the current project"""
+        project = self.get_project(pid)
+
         for data_point in data_points:
-            cfile: CFile = self.current_project.get_sourcefile(data_point.path)
+            cfile: CFile = project.get_sourcefile(data_point.path)
             cfile.data_entries.append(data_point)
+
+    def get_project(self, pid: int) -> Project:
+        for p in self.projects:
+            if p.origin_pid == pid:
+                return p
+        return None
 
     def add_project(self, project: Project) -> None:
         """adds new project to model"""
@@ -50,12 +59,5 @@ class Model(ModelReadViewInterface):
     def get_sourcefile_by_name(self, name: str) -> SourceFile:
         return self.current_project.get_sourcefile(name)
 
-    def update_save_project(self):
-        if self.new_project and self.projects.__len__() >= 2:
-            self.save_project = copy.deepcopy(self.projects[self.projects.__len__() - 2])
-            self.new_project = False
-            return
-        self.save_project = copy.deepcopy(self.current_project)
-
-    def get_current_project(self) -> Project:
-        return self.save_project
+    def get_current_project(self, pid: int) -> Project:
+        return copy.deepcopy(self.get_project(pid))

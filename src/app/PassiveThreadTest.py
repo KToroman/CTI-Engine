@@ -24,12 +24,14 @@ class PassiveThread:
         self.is_running = True
         self.is_saved_bool: bool = False
         self.saver: SaveToJSON = SaveToJSON()
+        self.list_of_saved_projects_pid: List[int] = list()
 
     def __fetch_passive_data(self):
         while not self.__passive_fetch_finished:
+            self.is_saved_bool = False
             self.__is_fetching_passive_data = self.__passive_data_fetcher.update_project()
-            time.sleep(0.0001)
 
+            time.sleep(0.001)
 
         self.__model.save_project = self.__model.current_project
         self.__is_fetching_passive_data = False
@@ -37,16 +39,29 @@ class PassiveThread:
         self.is_saved_bool = False
 
     def save(self):
-        self.__model.time_left = time.time() + 1
-        time_to_save = time.time() + 3
         while self.is_running or not self.is_saved_bool:
-            if time_to_save <= time.time() and self.__model.save_project is not None:
-                self.__model.update_save_project()
-                time_to_save = time.time() + 3
-                self.saver.save_project(self.__model.get_current_project())
-                print(self.__model.get_current_project().origin_pid)
-                self.is_saved_bool = True
-                print("Saved")
+            for pro in self.__model.projects:
+                if not self.project_saved(pro):
+                    self.list_of_saved_projects_pid.append(pro.origin_pid)
+                    print("new saver")
+                    Thread(target=self.save_project, args=[pro], daemon=True).start()
+                    time.sleep(0.8)
+
+    def save_project(self, project: Project):
+        timer = time.time() + 5
+        while timer >= time.time():
+            tmep_pro = self.__model.get_current_project(project.origin_pid)
+            self.saver.save_project(tmep_pro)
+            print("saving")
+            time.sleep(0.4)
+            if tmep_pro.source_files.__len__() != self.__model.get_current_project(project.origin_pid).source_files.__len__():
+                timer = time.time() + 5
+        print("saver closed")
+
+    def project_saved(self, project: Project) -> bool:
+        if project.origin_pid in self.list_of_saved_projects_pid:
+            return True
+        return False
 
     def stop_programm(self):
         input("press button \n")
@@ -74,8 +89,10 @@ class PassiveThread:
         for p in self.__model.projects:
             print(p.origin_pid.__str__() + ": " + p.source_files.__len__().__str__())
             counter += 1
+            conter = 0
             for c in p.source_files:
-                print(p.origin_pid.__str__() + " " + c.path + ": " + c.data_entries.__len__().__str__())
+                conter +=1
+                print(conter.__str__() + " " +p.origin_pid.__str__() + " " + c.path + ": " + c.data_entries.__len__().__str__())
                 counter += 1 + c.data_entries.__len__()
 
         print("insgesamt: " + counter.__str__())

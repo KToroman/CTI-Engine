@@ -32,12 +32,9 @@ class SaveToJSON(SaveInterface):
         writer.close()
 
     def __set_name(self, project: Project):
-        if self.current_project_pid != project.origin_pid:
-            time_int: int = time.time().__int__()
-            self.current_project_pid = project.origin_pid
-
-            self.__current_project_name = ("CTI_ENGINE_SAVE " + self.current_project_pid.__str__() + " " +
-                                           time_int.__str__())
+        time_int = time.time().__int__()
+        self.__current_project_name = ("CTI_ENGINE_SAVE " + project.origin_pid.__str__() + " " +
+                                       time_int.__str__())
 
     def __set_path(self, path: str = None):
         if path is None or path == "":
