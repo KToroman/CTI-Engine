@@ -2,7 +2,7 @@ from typing import List
 
 from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QInputDialog, QWidget, QHBoxLayout
 
-from src.view.AppRequestsInterface import AppRequestsInterface
+#from src.view.AppRequestsInterface import AppRequestsInterface
 from src.view.GUI.UserInteraction.Displayable import Displayable
 from src.view.GUI.UserInteraction.TableRow import TableRow
 
@@ -31,6 +31,7 @@ class TableWidget(QTableWidget):
         self.rows.append(row)
 
         self.fill_row(row, row_pos)
+        self.setRowHeight(self.rows.index(row), 40)
 
         row.toggle_button.clicked.connect(lambda: self.toggle_row_vis(row))
         row.name_button.clicked.connect(lambda: self.show_input_dialog_active(row.displayable.name))
@@ -50,6 +51,7 @@ class TableWidget(QTableWidget):
         self.setHorizontalHeaderLabels([self.COLUMN_1_LABEL, self.COLUMN_2_LABEL,
                                         self.COLUMN_3_LABEL, self.COLUMN_4_LABEL])
         for new_row in self.rows:
+            self.setRowHeight(self.rows.index(new_row), 40)
             self.fill_row(new_row, self.rows.index(new_row))
 
     def fill_row(self, row, index):

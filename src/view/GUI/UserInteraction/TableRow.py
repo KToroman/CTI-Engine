@@ -13,8 +13,4 @@ class TableRow:
         self.toggle_button.setMaximumWidth(20)
         self.name_button: QPushButton = QPushButton(displayable.name)
 
-        self.layout: QHBoxLayout = QHBoxLayout()
-        self.layout.addWidget(self.checkbox)
-        self.layout.addWidget(self.name_button)
-        self.layout.addWidget(self.toggle_button)
 
