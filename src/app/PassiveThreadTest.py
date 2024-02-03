@@ -17,12 +17,10 @@ class PassiveThread:
 
     def __init__(self):
         self.__model: Model = Model()
-        self.__passive_thread = None
         self.__passive_data_fetcher: FetcherInterface = PassiveDataFetcher(self.__model, "")
         self.__passive_fetch_finished: bool = False
         self.__is_fetching_passive_data: bool = False
         self.is_running = True
-        self.is_saved_bool: bool = False
         self.saver: SaveToJSON = SaveToJSON()
         self.list_of_saved_projects_pid: List[int] = list()
 
@@ -36,10 +34,9 @@ class PassiveThread:
         self.__model.save_project = self.__model.current_project
         self.__is_fetching_passive_data = False
         self.__passive_fetch_finished = True
-        self.is_saved_bool = False
 
     def save(self):
-        while self.is_running or not self.is_saved_bool:
+        while self.is_running:
             for pro in self.__model.projects:
                 if not self.project_saved(pro):
                     self.list_of_saved_projects_pid.append(pro.origin_pid)
@@ -48,12 +45,15 @@ class PassiveThread:
                     time.sleep(0.8)
 
     def save_project(self, project: Project):
+        local_saver = SaveToJSON()
         timer = time.time() + 5
         while timer >= time.time():
             tmep_pro = self.__model.get_current_project(project.origin_pid)
-            self.saver.save_project(tmep_pro)
+            local_saver.save_project(tmep_pro)
+
             print("saving")
             time.sleep(0.4)
+
             if tmep_pro.source_files.__len__() != self.__model.get_current_project(
                     project.origin_pid).source_files.__len__():
                 timer = time.time() + 5
@@ -71,12 +71,9 @@ class PassiveThread:
 
     def main_loop(self):
         start = time.time()
-        t1 = Thread(target=self.stop_programm)
-        self.__passive_thread = Thread(target=self.__fetch_passive_data)
-        t1.start()
-        self.__passive_thread.start()
-        sver_t = Thread(target=self.save)
-        sver_t.start()
+        Thread(target=self.stop_programm).start()
+        Thread(target=self.__fetch_passive_data).start()
+        Thread(target=self.save).start()
         while self.is_running:
             time.sleep(10)
             print(self.__is_fetching_passive_data)
@@ -106,7 +103,6 @@ p.main_loop()
 
 time.sleep(1)
 p.length()
-
 
 """
 m = Model()

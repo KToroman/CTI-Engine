@@ -1,4 +1,5 @@
 import os.path
+import subprocess
 import time
 from threading import Thread
 from typing import List
@@ -28,8 +29,6 @@ class PassiveDataFetcher(DataFetcher):
         self.__time_till_false: float = 0
 
         self.process_queue: List[psutil.Process] = list()
-        self.catcher_thread = Thread(target=self.catch_process, daemon=True)
-        self.collector_thread = Thread(target=self.collector, daemon=True)
 
         self.current_origin_pid: int = -1
         self.pid_list: List[int] = list()
@@ -53,14 +52,22 @@ class PassiveDataFetcher(DataFetcher):
         entry_list.append(entry)
         self.__model.insert_datapoints(entry_list, pid)
 
+    def process_catcher(self, processes: List[str]):
+        proc: List[psutil.Process] = self.__process_collector.catch_processes(processes)
+        if proc is not None and proc not in self.process_queue:
+            self.__time_till_false = time.time() + self.__seconds_to_wait
+            print("got process")
+            self.process_queue.extend(proc)
+
     def catch_process(self):
+        ps = subprocess.Popen(['ps', '-ef'], stdout=subprocess.PIPE)
+        grep = subprocess.Popen(['grep', 'CMakeFiles'], stdin=ps.stdout, stdout=subprocess.PIPE, encoding='utf-8')
+        ps.stdout.close()
+
         while self.is_running:
-            for process in psutil.process_iter(['pid', 'name', 'username']):
-                proc = self.__process_collector.catch_processes(process)
-                if proc is not None and self.not_in_queue(proc):
-                    self.__time_till_false = time.time() + self.__seconds_to_wait
-                    print("got process")
-                    self.process_queue.append(proc)
+            output, _ = grep.communicate()
+            processes = output.split('\n')
+            Thread(target=self.process_catcher, args=[processes])
 
     def not_in_queue(self, process: psutil.Process):
         for p in self.process_queue:
@@ -99,9 +106,8 @@ class PassiveDataFetcher(DataFetcher):
     def update_project(self) -> bool:
         if not self.got_started:
             self.got_started = True
-            self.run_catcher = True
-            self.collector_thread.start()
-            self.catcher_thread.start()
+            Thread(target=self.catch_process, daemon=True).start()
+            Thread(target=self.collector, daemon=True).start()
 
         self.time_till_quit = time.time() + 3
         self.time_keeper()
@@ -112,3 +118,4 @@ class PassiveDataFetcher(DataFetcher):
     def time_keeper(self):
         if self.time_till_quit <= time.time():
             self.is_running = False
+            self.got_started = False
