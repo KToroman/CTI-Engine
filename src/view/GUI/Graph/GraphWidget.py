@@ -34,41 +34,62 @@ class GraphWidget(QWidget):
         self.canvas.draw()
 
     def add_ram_plot(self, plot: Plot):
-        line, = self.ax.plot(plot.x_values, plot.y_values, label=plot.name)
+        """adds ram plot to graph widget"""
+        line, = self.ax.plot(plot.x_values, plot.y_values, label=plot.name, color=plot.color)
 
         # Update graph
-        self.ax.legend()
+        if not self.ax.get_yaxis().get_visible():
+            line.set_visible(False)
         self.canvas.draw()
 
         # Add line to ram list
         self.ram_lines.append(line)
 
     def add_cpu_plot(self, plot: Plot):
-        line, = self.ax2.plot(plot.x_values, plot.y_values, label=plot.name)
+        """adds cpu plot to graph widget"""
+        line, = self.ax2.plot(plot.x_values, plot.y_values, label=plot.name, color=plot.color)
 
         # Update graph
-        self.ax2.legend()
+        if not self.ax2.get_yaxis().get_visible():
+            line.set_visible(False)
         self.canvas.draw()
 
         # Add line to cpu list
         self.cpu_lines.append(line)
 
     def remove_ram_plot(self, plot: Plot):
-        # Find ram line belonging to Plot and remove said ram line
+        """removes ram plot from graph widget"""
         for line in self.ram_lines:
             if line.get_label() == plot.name:
                 line.remove()
                 self.ram_lines.remove(line)
-                self.ax.legend()
                 self.canvas.draw()
                 break
 
     def remove_cpu_plot(self, plot: Plot):
-        # Find cpu line belonging to Plot and remove said cpu line
+        """removes cpu plot from graph widget"""
         for line in self.cpu_lines:
             if line.get_label() == plot.name:
                 line.remove()
                 self.cpu_lines.remove(line)
-                self.ax2.legend()
                 self.canvas.draw()
                 break
+
+    def toggle_ram(self):
+        """shows or hides ram plots"""
+        visibility = not self.ax.get_yaxis().get_visible()
+        self.ax.get_yaxis().set_visible(visibility)
+        self.__update_plot_visibility(self.ram_lines, visibility)
+        self.canvas.draw()
+
+    def toggle_cpu(self):
+        """shows or hides cpu plots"""
+        visibility = not self.ax2.get_yaxis().get_visible()
+        self.ax2.get_yaxis().set_visible(visibility)
+        self.__update_plot_visibility(self.cpu_lines, visibility)
+        self.canvas.draw()
+
+    def __update_plot_visibility(self, lines, visible):
+        """updates visibility for given lines"""
+        for line in lines:
+            line.set_visible(visible)
