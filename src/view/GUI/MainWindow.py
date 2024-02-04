@@ -31,8 +31,8 @@ class MainWindow(QMainWindow):
     __cpu: bool = False
     __runtime: bool = False
 
-    def __init__(self):
-        self.__app = QApplication(sys.argv)
+    def __init__(self, q_application: QApplication):
+        self.__q_application: QApplication = q_application
         super().__init__()
         self.setWindowTitle(self.WINDOWTITLE)
         self.resize(self.WINDOWSIZE1, self.WINDOWSIZE2)
@@ -235,6 +235,9 @@ class MainWindow(QMainWindow):
         self.graph_widget.remove_ram_plot(displayable.ram_plot)
         self.graph_widget.remove_cpu_plot(displayable.cpu_plot)
         self.bar_chart_widget.remove_bar(displayable.runtime_plot)
+
+    def close(self):
+        self.__q_application.exit()
 
 if __name__ == "__main__":
 

@@ -4,7 +4,7 @@ from src.model.Model import Model
 from src.fetcher.FetcherInterface import FetcherInterface
 from src.fetcher.process_fetcher.PassiveDataFetcher import PassiveDataFetcher
 from src.view.AppRequestsInterface import AppRequestsInterface
-from src.view.GUI.MainWindow import MainWindow
+from src.view.GUI.prepare_gui import prepare_gui
 from src.view.UIInterface import UIInterface
 
 
@@ -15,7 +15,7 @@ class App(AppRequestsInterface):
     def __init__(self, start_with_gui: bool = DEFAULT_GUI, cti_dir_path: str = CTI_DIR_PATH) -> None:
         self.__active_mode = False
         if start_with_gui:
-            self.__UI: UIInterface = MainWindow()
+            self.__UI: UIInterface = prepare_gui()
         # else:
         #     self.__UI: UIInterface = CommandLineInterpreter()
         self.__model = Model()
