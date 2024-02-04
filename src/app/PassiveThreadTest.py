@@ -1,10 +1,8 @@
 import copy
+from enum import Flag
 import time
 from threading import Thread
 from typing import List
-
-import jsonpickle
-import picklejson
 
 from src.fetcher.FetcherInterface import (FetcherInterface)
 from src.fetcher.file_fetcher.FileLoader import FileLoader
@@ -22,33 +20,34 @@ class PassiveThread:
     def __init__(self):
         self.__model: Model = Model()
         self.__passive_thread = None
-        self.__passive_data_fetcher: FetcherInterface = PassiveDataFetcher(self.__model, "")
+        self.__passive_data_fetcher: FetcherInterface = PassiveDataFetcher(
+            self.__model, "")
         self.__passive_fetch_finished: bool = False
         self.__is_fetching_passive_data: bool = False
         self.is_running = True
         self.saver: SaveToJSON = SaveToJSON()
+        self.is_saved_bool = False
 
-        self.__model.add_project(Project("", 69, ""))
 
     def __fetch_passive_data(self):
         project_time = time.time() + 5
 
         while not self.__passive_fetch_finished:
-            # self.__is_fetching_passive_data = self.__passive_data_fetcher.update_project()
+            self.__is_fetching_passive_data = self.__passive_data_fetcher.update_project()
             time.sleep(0.0001)
-            metrics_ram: Metric = Metric(12, MetricName.RAM)
-            metrics_cpu: Metric = Metric(16, MetricName.CPU)
-            metr_list: List[Metric] = [metrics_ram, metrics_cpu]
-            entrys: List[DataEntry] = [
-                DataEntry("sourcefile" + (time.time()/10
-                                          ).__int__().__str__(), time.time(), metr_list)]
-            self.__model.insert_datapoints(entrys)
-            if project_time <= time.time():
-                self.__model.add_project(Project("", time.time().__int__(), ""))
-                project_time = time.time() + 600
-                print("new Project")
+            # metrics_ram: Metric = Metric(12, MetricName.RAM)
+            # metrics_cpu: Metric = Metric(16, MetricName.CPU)
+            # metr_list: List[Metric] = [metrics_ram, metrics_cpu]
+            # entrys: List[DataEntry] = [
+            #     DataEntry("sourcefile" + (time.time()/10
+            #                               ).__int__().__str__(), time.time(), metr_list)]
+            # self.__model.insert_datapoints(entrys)
+            # if project_time <= time.time():
+            #     self.__model.add_project(Project("", time.time().__int__(), ""))
+            #     project_time = time.time() + 600
+            #     print("new Project")
 
-            self.__is_fetching_passive_data = True
+            # self.__is_fetching_passive_data = True
         self.__model.save_project = self.__model.current_project
         self.__is_fetching_passive_data = False
         self.__passive_fetch_finished = True
@@ -58,7 +57,7 @@ class PassiveThread:
         self.__model.time_left = time.time() + 1
         time_to_save = time.time() + 3
         while self.is_running or not self.is_saved_bool:
-            if time_to_save <= time.time():
+            if time_to_save <= time.time() and self.__model.save_project is not None:
                 self.__model.update_save_project()
                 time_to_save = time.time() + 3
                 self.saver.save_project(self.__model.get_current_project())
@@ -89,10 +88,12 @@ class PassiveThread:
         counter = 0
         print("Project Count: " + self.__model.projects.__len__().__str__())
         for p in self.__model.projects:
-            print(p.origin_pid.__str__() + ": " + p.source_files.__len__().__str__())
+            print(p.origin_pid.__str__() + ": " +
+                  p.source_files.__len__().__str__())
             counter += 1
             for c in p.source_files:
-                print(p.origin_pid.__str__() + " " + c.path + ": " + c.data_entries.__len__().__str__())
+                print(p.origin_pid.__str__() + " " + c.path +
+                      ": " + c.data_entries.__len__().__str__())
                 counter += 1 + c.data_entries.__len__()
 
         print("insgesamt: " + counter.__str__())

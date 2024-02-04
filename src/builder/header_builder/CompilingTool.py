@@ -1,8 +1,8 @@
 from src.builder.BuilderInterface import BuilderInterface
 from src.model.core.SourceFile import SourceFile
 from src.model.core.Header import Header
-from FileBuilder import FileBuilder
-from HeaderIterator import HeaderIterator
+from src.builder.header_builder.FileBuilder import FileBuilder
+from src.builder.header_builder.HeaderIterator import HeaderIterator
 
 from subprocess import Popen
 import shlex

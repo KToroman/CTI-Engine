@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from src.fetcher import FetcherInterface
+from src.fetcher.FetcherInterface import FetcherInterface
 from src.fetcher.hierarchy_fetcher.GCCCommandExecutor import GCCCommandExecutor
 from src.fetcher.hierarchy_fetcher.CompileCommandGetter import CompileCommandGetter
 from src.model.Model import Model
@@ -33,12 +33,15 @@ class HierarchyFetcher(FetcherInterface):
             self.depth: int = depth
 
     def __set_compile_command(self, source_file: SourceFile) -> None:
-        compile_command: str = self.command_getter.get_compile_command(source_file)
+        compile_command: str = self.command_getter.get_compile_command(
+            source_file)
         source_file.compile_command = compile_command
 
     def __update_headers(self, source_file: SourceFile) -> None:
-        hierarchy_command: str = self.command_getter.generate_hierarchy_command(source_file)
-        hierarchy_result: str = self.__gcc_command_executor.execute(hierarchy_command)
+        hierarchy_command: str = self.command_getter.generate_hierarchy_command(
+            source_file)
+        hierarchy_result: str = self.__gcc_command_executor.execute(
+            hierarchy_command)
 
         lines_to_append: List[str] = list()
         for line in hierarchy_result.splitlines():
@@ -52,10 +55,12 @@ class HierarchyFetcher(FetcherInterface):
         line_depth: int = self.__get_depth(line)
         path: str = self.__get_path_from_line(line)
         if not hierarchy:
-            new_header:  Header = self.__append_header_to_file(source_file, path)
+            new_header:  Header = self.__append_header_to_file(
+                source_file, path)
             hierarchy.append(self.__HeaderDepthWrapper(new_header, line_depth))
         elif line_depth > hierarchy[-1].depth:
-            new_header: Header = self.__append_header_to_file(hierarchy[-1].header, path)
+            new_header: Header = self.__append_header_to_file(
+                hierarchy[-1].header, path)
             hierarchy.append(self.__HeaderDepthWrapper(new_header, line_depth))
         else:
             hierarchy.pop()

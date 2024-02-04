@@ -1,14 +1,15 @@
 from typing import List
 
-from Displayable import Displayable
+from src.view.GUI.UserInteraction.Displayable import Displayable
 from PyQt5.QtWidgets import QCheckBox, QPushButton, QWidget, QHBoxLayout, QTableWidgetItem
 
 
 class TableRow:
     def __init__(self, displayable: Displayable):
         self.displayable: Displayable = displayable
-        self.children : List[TableRow] = []
-        self.custom_cell: CustomCellWidget = CustomCellWidget(self.displayable.name)
+        self.children: List[TableRow] = []
+        self.custom_cell: CustomCellWidget = CustomCellWidget(
+            self.displayable.name)
 
     def add_child(self, child):
         self.children.append(child)
@@ -21,7 +22,7 @@ class CustomCellWidget(QWidget):
         self.checkbox: QCheckBox = QCheckBox()
         self.toggle_button: QPushButton = QPushButton("v")
         self.toggle_button.setMaximumWidth(20)
-        self.name_button : QPushButton = QPushButton(name)
+        self.name_button: QPushButton = QPushButton(name)
         self.label: QTableWidgetItem = QTableWidgetItem()
         self.label.setText(name)
 

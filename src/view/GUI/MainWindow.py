@@ -6,13 +6,13 @@ from typing import List
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QWidget,
                              QStackedWidget, QCheckBox, QApplication, QHBoxLayout, QSplitter)
-from Graph.BarWidget import BarWidget
-from Graph.GraphWidget import GraphWidget
-from UserInteraction.MenuBar import MenuBar
-from UserInteraction.TableWidget import TableWidget
-from UserInteraction.Displayable import Displayable
-from UserInteraction.TableRow import TableRow
-from UserInteraction.MetricBar import MetricBar
+from src.view.GUI.Graph.BarWidget import BarWidget
+from src.view.GUI.Graph.GraphWidget import GraphWidget
+from src.view.GUI.UserInteraction.MenuBar import MenuBar
+from src.view.GUI.UserInteraction.TableWidget import TableWidget
+from src.view.GUI.UserInteraction.Displayable import Displayable
+from src.view.GUI.UserInteraction.TableRow import TableRow
+from src.view.GUI.UserInteraction.MetricBar import MetricBar
 from src.model.Model import Model
 from src.model.ModelReadViewInterface import ModelReadViewInterface
 from src.model.core.CFile import CFile
@@ -27,6 +27,7 @@ class MainWindow(QMainWindow):
     WINDOWTITLE = "CTI Engine"
 
     def __init__(self):
+        self.__app = QApplication(sys.argv)
         super().__init__()
         self.setWindowTitle(self.WINDOWTITLE)
         self.resize(self.WINDOWSIZE1, self.WINDOWSIZE2)
@@ -43,7 +44,8 @@ class MainWindow(QMainWindow):
         self.top_frame_layout.addLayout(self.user_interaction_frame_layout)
 
         self.status_bar_frame_layout: QHBoxLayout = QVBoxLayout()
-        self.status_bar_frame_layout.addWidget(QCheckBox())  # Hier anstatt Checkbox die Status Bar hin
+        # Hier anstatt Checkbox die Status Bar hin
+        self.status_bar_frame_layout.addWidget(QCheckBox())
         self.top_frame_layout.addLayout(self.status_bar_frame_layout)
 
         self.widget_frame_layout: QVBoxLayout = QVBoxLayout()
@@ -56,13 +58,17 @@ class MainWindow(QMainWindow):
 
         self.menu_bar_frame_layout: QHBoxLayout = QHBoxLayout()
 
-        self.user_interaction_frame_layout.addLayout(self.menu_bar_frame_layout)
-        self.user_interaction_frame_layout.addLayout(self.metric_bar_frame_layout)
+        self.user_interaction_frame_layout.addLayout(
+            self.menu_bar_frame_layout)
+        self.user_interaction_frame_layout.addLayout(
+            self.metric_bar_frame_layout)
 
         # Initialize the components
         self.stacked_widget: QStackedWidget = QStackedWidget()
-        self.page_1: GraphWidget = GraphWidget()  # Hier später die implementierte Version von GraphWidget
-        self.page_2: BarWidget = BarWidget()  # Hier später die implementierte Version von BarWidget
+        # Hier später die implementierte Version von GraphWidget
+        self.page_1: GraphWidget = GraphWidget()
+        # Hier später die implementierte Version von BarWidget
+        self.page_2: BarWidget = BarWidget()
         self.stacked_widget.addWidget(self.page_1)
         self.stacked_widget.addWidget(self.page_2)
         self.splitter1.addWidget(self.stacked_widget)
@@ -71,13 +77,16 @@ class MainWindow(QMainWindow):
         self.splitter1.addWidget(self.table_widget)
 
         self.menu_bar: MenuBar = MenuBar(self.menu_bar_frame_layout, self)
-        self.metric_bar: MetricBar = MetricBar(self.metric_bar_frame_layout, self.stacked_widget)
+        self.metric_bar: MetricBar = MetricBar(
+            self.metric_bar_frame_layout, self.stacked_widget)
 
         # Test nur als Beispiel
         self.dis = Displayable("test123", ..., ..., ..., 39, 123, 123)
         self.table_widget.add_row(TableRow(self.dis))
         self.table_widget.add_row(TableRow(self.dis))
         self.table_widget.add_row(TableRow(self.dis))
+
+        self.show()
 
     def visualize(self, model):
         # Select spot for Displayables to be inserted into
@@ -126,7 +135,7 @@ class MainWindow(QMainWindow):
         cpu_peak: float = cfile.get_max(MetricName.CPU)
 
         # Create Graph Plots
-        x_values: List[float] = cfile.get_timestamp()
+        x_values: List[float] = cfile.get_timestamps()
         ram_y_values: List[float] = cfile.get_metrics(MetricName.RAM)
         cpu_y_values: List[float] = cfile.get_metrics(MetricName.CPU)
         runtime: List[float] = [cfile.get_total_time()]
@@ -152,9 +161,10 @@ class MainWindow(QMainWindow):
     def setup_connections(self):
         """to be implemented"""
 
+    def close(self):
+        sys.exit(self.__app.exec_())
+
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
+
     window = MainWindow()
-    window.show()
-    sys.exit(app.exec_())

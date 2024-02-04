@@ -2,7 +2,7 @@ from typing import List
 
 from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem
 
-from TableRow import TableRow
+from src.view.GUI.UserInteraction.TableRow import TableRow
 
 
 class TableWidget(QTableWidget):
@@ -23,7 +23,11 @@ class TableWidget(QTableWidget):
         row_position: int = self.rowCount()
         self.insertRow(row_position)
 
-        self.setItem(row_position, 0, QTableWidgetItem(self.setCellWidget(row_position, 0, row.custom_cell)))
-        self.setItem(row_position, 1, QTableWidgetItem(str(row.displayable.ram_peak)))
-        self.setItem(row_position, 2, QTableWidgetItem(str(row.displayable.cpu_peak)))
-        self.setItem(row_position, 3, QTableWidgetItem(str(row.displayable.runtime)))
+        self.setItem(row_position, 0, QTableWidgetItem(
+            self.setCellWidget(row_position, 0, row.custom_cell)))
+        self.setItem(row_position, 1, QTableWidgetItem(
+            str(row.displayable.ram_peak)))
+        self.setItem(row_position, 2, QTableWidgetItem(
+            str(row.displayable.cpu_peak)))
+        self.setItem(row_position, 3, QTableWidgetItem(
+            str(row.displayable.runtime)))
