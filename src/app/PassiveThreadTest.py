@@ -26,7 +26,6 @@ class PassiveThread:
 
     def __fetch_passive_data(self):
         while not self.__passive_fetch_finished:
-            self.is_saved_bool = False
             self.__is_fetching_passive_data = self.__passive_data_fetcher.update_project()
 
             time.sleep(0.001)
