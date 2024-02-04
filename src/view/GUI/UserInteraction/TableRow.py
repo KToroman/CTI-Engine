@@ -12,5 +12,6 @@ class TableRow:
         self.toggle_button: QPushButton = QPushButton()
         self.toggle_button.setMaximumWidth(20)
         self.name_button: QPushButton = QPushButton(displayable.name)
+        self.connected: bool = False
 
 
