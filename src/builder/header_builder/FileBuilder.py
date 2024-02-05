@@ -21,7 +21,7 @@ class FileBuilder:
             new_source_file.close()
         return file_name
 
-    def __source_file_content(header: Header) -> str:
+    def __source_file_content(self, header: Header) -> str:
         content: str = f'#include "{header.path}"'
         return content
 
