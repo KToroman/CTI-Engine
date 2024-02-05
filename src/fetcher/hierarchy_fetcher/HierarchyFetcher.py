@@ -62,8 +62,7 @@ class HierarchyFetcher(FetcherInterface):
             self.__append_header_recursive(line, hierarchy, source_file)
 
     def __append_header_to_file(self, cfile: CFile, new_header_path: str) -> Header:
-        new_header = Header()
-        new_header.path = new_header_path
+        new_header = Header(new_header_path)
         cfile.header.append(new_header)
         return new_header
 

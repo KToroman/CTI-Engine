@@ -1,5 +1,6 @@
 import json
 from io import FileIO
+from os.path import join
 from src.model.core.SourceFile import SourceFile
 
 
@@ -14,9 +15,7 @@ class CompileCommandGetter:
         pass
 
     def __get_json(self, path: str) -> list[dict[str, str]]:
-        if not path.endswith("\\"):
-            path = path + "\\"
-        path = path + "compile_commands.json"
+        path = join(path, "compile_commands.json")
         json_file: FileIO
         try:
             with open(path, "r") as json_file:
@@ -32,8 +31,8 @@ class CompileCommandGetter:
             self.commands[command_object["file"]] = command_object["command"]
 
     def get_compile_command(self, source_file: SourceFile) -> str:
-        if source_file not in self.commands:
-            raise self.CompileCommandError("Source file does not have a stored command")
+        if source_file.path not in self.commands:
+            raise self.CompileCommandError(f"Source file {source_file.path} does not have a stored command")
         return self.commands[source_file.path]
     
     def generate_hierarchy_command(self, source_file: SourceFile) -> str:
