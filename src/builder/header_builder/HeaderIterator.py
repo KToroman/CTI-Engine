@@ -27,8 +27,12 @@ class HeaderIterator:
 
     def get_next_header(self) -> Header:
         """returns the next header from the source file"""
+        return self.headers[self.index]
+    
+    def pop_next_header(self) -> Header:
+        """returns the next header from the source file"""
         self.index += 1
-        return self.headers[self.index-1]
+        return self.headers[self.index - 1]
 
     def has_next_header(self) -> bool:
         """returns true if one or more headers can still be retrieved from the iterator"""
