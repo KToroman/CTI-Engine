@@ -10,6 +10,7 @@ from src.fetcher.process_fetcher.process_observer.metrics_observer.DataObserver 
 )
 from src.model.Model import Model
 from src.model.core.DataEntry import DataEntry
+from src.model.core.Header import Header
 from src.model.core.ProcessPoint import ProcessPoint
 from src.model.core.SourceFile import SourceFile
 
@@ -36,7 +37,7 @@ class ActiveDataFetcher(FetcherInterface):
 
     def __move_on_to_next_header(self) -> None:
         if self.__done_building:
-            self.__header_name: str = self.__compiling_tool.get_next_header_name()
+            self.__header: Header = self.__compiling_tool.get_next_header()
             self.__done_building: bool = self.__compiling_tool.build()
 
     def search_for_header(self) -> bool:
@@ -44,7 +45,7 @@ class ActiveDataFetcher(FetcherInterface):
         )
         for process in processes:
             if ActiveDataFetcher.filter_for_str(
-                    process, self.__header_name):
+                    process, self.__header.path):
                 self.__header_proc = process
                 return True
         return False
@@ -73,8 +74,7 @@ class ActiveDataFetcher(FetcherInterface):
         return self.__data_observer.observe(process)
 
     def __add_data_entry(self, process_point: ProcessPoint):
-        path: str = self.__model.current_project.working_dir
-        path = self.__header_name
-        self.__model.insert_datapoints(
-            [DataEntry(path, process_point.metrics, process_point.timestamp)]
+        data_entry: DataEntry = DataEntry(self.__header.path, process_point.metrics, process_point.timestamp)
+        self.__model.insert_datapoints_header(
+            [data_entry], self.__header
         )

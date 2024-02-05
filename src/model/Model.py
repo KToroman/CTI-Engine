@@ -6,21 +6,21 @@ from src.model.ModelReadViewInterface import ModelReadViewInterface
 from src.model.core.CFile import CFile
 from src.model.core.CFileReadViewInterface import CFileReadViewInterface
 from src.model.core.DataEntry import DataEntry
+from src.model.core.Header import Header
 from src.model.core.Project import Project
-from src.model.core.FileDictionary import FileDictionary
 from src.model.core.SourceFile import SourceFile
 
 
 class Model(ModelReadViewInterface):
     """
     Model class keeps score of all measured data and files
-    A model consists of an arbitrary number of projects,"""
+    A model consists of an arbitrary number of projects."""
 
     def __init__(self) -> None:
         self.current_project: Project = None
         self.projects: List[Project] = list()
         self.save_project: Project = None
-        self.new_project = False
+        self.new_project = False # TODO delete
 
     def get_project_name(self) -> str:
         """returns the name of the current project"""
@@ -36,10 +36,14 @@ class Model(ModelReadViewInterface):
         return cfiles_view
 
     def insert_datapoints(self, data_points: List[DataEntry]):
-        """inserts datapoints according to their paths to the current project"""
+        """inserts datapoints to sourcefile according to their paths to the current project"""
         for data_point in data_points:
             cfile: CFile = self.current_project.get_sourcefile(data_point.path)
             cfile.data_entries.append(data_point)
+
+    def insert_datapoints_header(self, data_points: List[DataEntry], header: Header):
+        for data_point in data_points:
+            header.data_entries.append(data_point)
 
     def add_project(self, project: Project) -> None:
         """adds new project to model"""
@@ -57,5 +61,6 @@ class Model(ModelReadViewInterface):
             return
         self.save_project = copy.deepcopy(self.current_project)
 
-    def get_current_project(self) -> Project:
+    def get_current_project(self) -> Project: # TODO why was this changed??
         return self.save_project
+
