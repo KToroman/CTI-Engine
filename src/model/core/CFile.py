@@ -2,13 +2,14 @@ from typing import List, Protocol
 
 from src.model.core.CFileReadViewInterface import CFileReadViewInterface
 from src.model.core.DataEntry import DataEntry
+from src.model.core.Header import Header
 from src.model.core.MetricName import MetricName
 
 
 class CFile(CFileReadViewInterface, Protocol):
     """Models CFile and is used for representing a tracked CFile in program"""
     data_entries: List[DataEntry] = None
-    header: List[CFileReadViewInterface] = None
+    headers: List[Header] = None
     path: str = None
 
     def get_name(self) -> str:
@@ -41,3 +42,9 @@ class CFile(CFileReadViewInterface, Protocol):
 
     def __str__(self) -> str:
         return f"Path: {self.path} \nHeaders: {[a.get_name()  for a in self.header]}"
+
+    def get_header_by_name(self, name: str) -> Header:
+        for header in self.headers:
+            if header.get_name is name:
+                return header
+        return None

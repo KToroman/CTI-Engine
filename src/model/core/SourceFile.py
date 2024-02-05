@@ -12,3 +12,9 @@ class SourceFile(CFile):
         self.data_entries: List[DataEntry] = list()
         self.header: List[CFileReadViewInterface] = list()
         self.compile_command: str = ""
+
+    def get_timestamps(self) -> List[float]:
+        timestamps: List[float] = list()
+        for datapoint in self.data_entries:
+            timestamps.append(datapoint.timestamp)
+        return timestamps

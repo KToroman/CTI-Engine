@@ -19,9 +19,12 @@ from src.model.core.CFileReadViewInterface import CFileReadViewInterface
 from src.view.GUI.Graph.Plot import Plot
 from src.model.core.MetricName import MetricName
 from src.view.GUI.Visuals.StatusBar import StatusBar
+from src.view.UIInterface import UIInterface
 
+class MainWindowMeta(type(QMainWindow), type(UIInterface)):
+    pass
 
-class MainWindow(QMainWindow):
+class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     WINDOWSIZE1: int = 800
     WINDOWSIZE2: int = 600
     WINDOWTITLE: str = "CTI Engine"
@@ -89,8 +92,12 @@ class MainWindow(QMainWindow):
         self.setup_resource_connections()
 
         # Test nur als Beispiel
-        self.dis = Displayable("test", Plot("marie2", "#FF0000", [1.2, 1.8, 2.9], [7.4, 2.6, 7.8]), Plot("marie", "#FF0000", [1.5, 2.3, 4.4], [6.4, 5.6, 7.8]), Plot("marie", "#FF0000", [], [7.4, 9.6, 2.8]), 5.4, 7.88, [])
-        self.dis1 = Displayable("asd", Plot("asd", "#0000FF", [1.2, 1.8, 2.9], [9.4, 5.6, 3.8]), Plot("asd", "#0000FF", [0.5, 1.3, 3.4], [7.4, 9.6, 2.8]), Plot("asd", "#0000FF", [], [3.4, 5.6, 3.8]), 7.4, 9.88, [])
+        self.dis = Displayable("test", Plot("marie2", "#FF0000", [1.2, 1.8, 2.9], [7.4, 2.6, 7.8]),
+                               Plot("marie", "#FF0000", [1.5, 2.3, 4.4], [6.4, 5.6, 7.8]),
+                               Plot("marie", "#FF0000", [], [7.4, 9.6, 2.8]), 5.4, 7.88, [])
+        self.dis1 = Displayable("asd", Plot("asd", "#0000FF", [1.2, 1.8, 2.9], [9.4, 5.6, 3.8]),
+                                Plot("asd", "#0000FF", [0.5, 1.3, 3.4], [7.4, 9.6, 2.8]),
+                                Plot("asd", "#0000FF", [], [3.4, 5.6, 3.8]), 7.4, 9.88, [])
 
         self.table_widget.insert_values(self.dis)
         self.table_widget.insert_values(self.dis1)
@@ -176,7 +183,8 @@ class MainWindow(QMainWindow):
         """sets up connections between table and graph widgets"""
         for row in self.table_widget.rows:
             if not row.connected:
-                row.checkbox.stateChanged.connect(lambda state, current_row=row: self.update_visibility(current_row.displayable))
+                row.checkbox.stateChanged.connect(
+                    lambda state, current_row=row: self.update_visibility(current_row.displayable))
                 row.connected = True
 
     def setup_resource_connections(self):
@@ -237,8 +245,4 @@ class MainWindow(QMainWindow):
         self.bar_chart_widget.remove_bar(displayable.runtime_plot)
 
     def close(self):
-        self.__q_application.exit()
-
-if __name__ == "__main__":
-
-    window = MainWindow()
+        self.q_application.exec()
