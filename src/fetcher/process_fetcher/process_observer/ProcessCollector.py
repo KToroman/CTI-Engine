@@ -1,4 +1,3 @@
-import os
 from typing import List
 import psutil
 
@@ -21,8 +20,13 @@ class ProcessCollector:
     def catch_processes(self) -> List[psutil.Process]:
         build_processes: List[psutil.Process] = list()
         for process in psutil.process_iter(['pid', 'name', 'username']):
-            if process.name() == self.PROC_NAME_FILTER:
-                valid: bool = ProcessCollector.__check_for_object_file(process.cmdline())
+            valid: bool = False
+            try:
+                if process.name() == self.PROC_NAME_FILTER:
+                    valid = ProcessCollector.__check_for_object_file(
+                        process.cmdline())
+            except psutil.NoSuchProcess:  # Catch the error caused by the process no longer existing
+                pass  # Ignore it
             if valid:
                 build_processes.append(process)
         return build_processes
@@ -30,9 +34,9 @@ class ProcessCollector:
     def check(self, process: psutil.Process) -> bool:
         ppid: int = process.ppid()
         parent_ppid: int = psutil.Process(ppid).ppid()
-        parent_parent_proc = psutil.Process(parent_ppid)
-        if parent_parent_proc.name() != "gcc":
-            raise ValueError  # root of process is not gcc
+        # parent_parent_proc = psutil.Process(parent_ppid)
+        # if parent_parent_proc.name() != "gcc":
+        #     raise ValueError  # root of process is not gcc
         if parent_ppid == self.current_origin_pid:
             return True
         return False

@@ -6,12 +6,14 @@ from typing import List
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QWidget,
                              QStackedWidget, QCheckBox, QApplication, QHBoxLayout, QSplitter)
-from Graph.BarWidget import BarWidget
-from Graph.GraphWidget import GraphWidget
-from UserInteraction.MenuBar import MenuBar
-from UserInteraction.TableWidget import TableWidget
-from UserInteraction.Displayable import Displayable
-from UserInteraction.MetricBar import MetricBar
+from src.view.GUI.Graph.BarWidget import BarWidget
+from src.view.GUI.Graph.GraphWidget import GraphWidget
+from src.view.GUI.UserInteraction.MenuBar import MenuBar
+from src.view.GUI.UserInteraction.TableWidget import TableWidget
+from src.view.GUI.UserInteraction.Displayable import Displayable
+from src.view.GUI.UserInteraction.TableRow import TableRow
+from src.view.GUI.UserInteraction.MetricBar import MetricBar
+from src.model.Model import Model
 from src.model.ModelReadViewInterface import ModelReadViewInterface
 from src.model.core.CFileReadViewInterface import CFileReadViewInterface
 from src.view.GUI.Graph.Plot import Plot
@@ -29,7 +31,8 @@ class MainWindow(QMainWindow):
     __cpu: bool = False
     __runtime: bool = False
 
-    def __init__(self):
+    def __init__(self, q_application: QApplication):
+        self.__q_application: QApplication = q_application
         super().__init__()
         self.setWindowTitle(self.WINDOWTITLE)
         self.resize(self.WINDOWSIZE1, self.WINDOWSIZE2)
@@ -61,8 +64,10 @@ class MainWindow(QMainWindow):
 
         self.menu_bar_frame_layout: QHBoxLayout = QHBoxLayout()
 
-        self.user_interaction_frame_layout.addLayout(self.menu_bar_frame_layout)
-        self.user_interaction_frame_layout.addLayout(self.metric_bar_frame_layout)
+        self.user_interaction_frame_layout.addLayout(
+            self.menu_bar_frame_layout)
+        self.user_interaction_frame_layout.addLayout(
+            self.metric_bar_frame_layout)
 
         # Initialize the components
         self.stacked_widget: QStackedWidget = QStackedWidget()
@@ -76,7 +81,8 @@ class MainWindow(QMainWindow):
         self.splitter1.addWidget(self.table_widget)
 
         self.menu_bar: MenuBar = MenuBar(self.menu_bar_frame_layout, self)
-        self.metric_bar: MetricBar = MetricBar(self.metric_bar_frame_layout, self.stacked_widget)
+        self.metric_bar: MetricBar = MetricBar(
+            self.metric_bar_frame_layout, self.stacked_widget)
 
         self.graph_widget.toggle_ram()
         self.graph_widget.toggle_cpu()
@@ -89,6 +95,8 @@ class MainWindow(QMainWindow):
         self.table_widget.insert_values(self.dis)
         self.table_widget.insert_values(self.dis1)
         self.setup_connections()
+
+        self.show()
 
     def visualize(self, model):
         """visualizes data from passive mode"""
@@ -143,7 +151,7 @@ class MainWindow(QMainWindow):
         cpu_peak: float = cfile.get_max(MetricName.CPU)
 
         # Create Graph Plots
-        x_values: List[float] = cfile.get_timestamp()
+        x_values: List[float] = cfile.get_timestamps()
         ram_y_values: List[float] = cfile.get_metrics(MetricName.RAM)
         cpu_y_values: List[float] = cfile.get_metrics(MetricName.CPU)
         runtime: List[float] = [cfile.get_total_time()]
@@ -228,8 +236,9 @@ class MainWindow(QMainWindow):
         self.graph_widget.remove_cpu_plot(displayable.cpu_plot)
         self.bar_chart_widget.remove_bar(displayable.runtime_plot)
 
+    def close(self):
+        self.__q_application.exit()
+
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
+
     window = MainWindow()
-    window.show()
-    sys.exit(app.exec_())
