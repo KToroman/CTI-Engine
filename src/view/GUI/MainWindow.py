@@ -19,9 +19,12 @@ from src.model.core.CFileReadViewInterface import CFileReadViewInterface
 from src.view.GUI.Graph.Plot import Plot
 from src.model.core.MetricName import MetricName
 from src.view.GUI.Visuals.StatusBar import StatusBar
+from src.view.UIInterface import UIInterface
 
+class MainWindowMeta(type(QMainWindow), type(UIInterface)):
+    pass
 
-class MainWindow(QMainWindow):
+class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     WINDOWSIZE1: int = 800
     WINDOWSIZE2: int = 600
     WINDOWTITLE: str = "CTI Engine"
