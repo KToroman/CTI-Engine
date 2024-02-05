@@ -23,20 +23,23 @@ class App(AppRequestsInterface):
         self.__hierarchy_fetcher = HierarchyFetcher(self.__model)
 
     def run(self):
-        if self.__active_mode:
-            self.run_active_measurement()
-        else:
-            self.run_passive_mode()
+        # if self.__active_mode:
+        #    self.run_active_measurement()
+        # else:
+        self.run_passive_mode()
 
     def run_passive_mode(self) -> None:
         self.__passive_fetcher: FetcherInterface = PassiveDataFetcher(
             self.__model, self.__cti_dir_path)
         continue_measuring: bool = True
-        while (continue_measuring):
+        while continue_measuring:
             # self.__UI.update_statusbar("measuring")
             continue_measuring = self.__passive_fetcher.update_project()
+            if not self.__model.projects:
+                continue_measuring = True
             # TODO fetch commands
         # self.__UI.update_statusbar("preparing data")
+
         self.finish_off_passive_measurement()
         self.__UI.visualize(self.__model)
 
