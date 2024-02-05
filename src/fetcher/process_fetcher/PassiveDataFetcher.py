@@ -26,51 +26,79 @@ class PassiveDataFetcher(DataFetcher):
 
         self.path_to_save = path_to_save
 
-        self.__seconds_to_wait: int = 5
+        self.__seconds_to_wait: int = 15
         self.__time_till_false: float = 0
 
         self.process_list: List[CProcess] = list()
 
         self.current_origin_pid: int = -1
-        self.pid_list: List[int] = list()
+        self.project_list: List[str] = list()
         self.time_till_quit = time.time()
+
+        self.entry_queue: List[DataEntry] = list()
 
         self.is_running = True
         self.got_started = False
+        self.processes_found = 0
+
+    def make_entry(self, process_point: ProcessPoint):
+        try:
+            cmdline: List[str] = process_point.process.cmdline()
+            path: str = ""
+            for line in cmdline:
+                if line.endswith(".o"):
+                    path = os.path.abspath(line)
+                    break
+            if path == "":
+                return
+            entry: DataEntry = DataEntry(path, process_point.timestamp, process_point.metrics)
+            self.entry_queue.append(entry)
+        except:
+            return
 
     def add_data_entry(self, process_point: ProcessPoint):
-        pid = psutil.Process(psutil.Process(process_point.process.ppid()).ppid()).ppid()
-        entry_list: List[DataEntry] = list()
-        path: str = self.__model.current_project.working_dir
-        cmdline: List[str] = process_point.process.cmdline()
-        for line in cmdline:
-            if line.endswith(".o"):
-                name: List[str] = line.split(".dir/")[-1].split(".")
-                path += name[0]  # name of cfile
-                path += "."
-                path += name[1]  # file ending (cpp/cc/...)
-        entry: DataEntry = DataEntry(path, process_point.timestamp, process_point.metrics)
-        entry_list.append(entry)
-        self.__model.insert_datapoints(entry_list, pid)
+        while self.is_running:
+            if self.entry_queue and self.__model.current_project is not None:
+                self.__time_till_false = time.time() + self.__seconds_to_wait
+                self.__model.insert_datapoints([self.entry_queue.pop()])
+
+    def proc_in_proc_list(self, proc: CProcess):
+        for process in self.process_list:
+            try:
+                if proc.pid == process.pid:
+                    return True
+            except:
+                continue
+        return False
+
+    def make_process(self, line: str):
+        process = self.__process_collector.catch_processes(line)
+        if not self.proc_in_proc_list(process) and process is not None:
+            self.process_list.append(process)
+            Thread(target=self.get_data, args=[process]).start()
 
     def process_catcher(self, processes):
-        proc: List[CProcess] = self.__process_collector.catch_processes(processes)
-        for process in proc:
-            if process not in self.process_list:
-                self.__time_till_false = time.time() + self.__seconds_to_wait
-                print("got process")
-                self.process_list.append(process)
+        for line in processes:
+            Thread(target=self.make_process, args=[line]).start()
+
+    def get_project_name(self, proc: CProcess) -> str:
+        if proc.working_dir.split("build").__len__() > 2:
+            return os.path.abspath(proc.working_dir.split("build")[1])
+        return proc.working_dir.split("build")[0]
+
+
+        return proc.cwd()
 
     def catch_process(self):
-
         while self.is_running:
-            ps = subprocess.Popen(['ps', '-ef'], stdout=subprocess.PIPE)
-            grep = subprocess.Popen(['grep', 'CMakeFiles'], stdin=ps.stdout, stdout=subprocess.PIPE)
-            ps.stdout.close()
-            grep.stdout.readline()
-            Thread(target=self.process_catcher, args=[grep.stdout])
 
-    def fetch_metrics(self, process: psutil.Process) -> ProcessPoint:
+            ps = subprocess.Popen(['ps', '-e'], stdout=subprocess.PIPE)
+            grep = subprocess.Popen(['grep', 'cc1plus'], stdin=ps.stdout, stdout=subprocess.PIPE, encoding='utf-8')
+            grep.stdout.readline()
+            Thread(target=self.process_catcher, args=[grep.stdout]).start()
+
+
+    def fetch_metrics(self, process: CProcess) -> ProcessPoint:
         return self.__data_observer.observe(process)
 
     def __time_counter(self) -> bool:
@@ -79,38 +107,50 @@ class PassiveDataFetcher(DataFetcher):
         return False
 
     def get_data(self, proc: CProcess):
-        print("data thread")
-
         try:
-            pid: int = psutil.Process(psutil.Process(proc.ppid()).ppid()).ppid()
-            if pid not in self.pid_list:
-                self.pid_list.append(pid)
-                print(psutil.Process(pid))
-                working_dir: str = psutil.Process().cwd()
-                self.__model.add_project(Project(working_dir, pid, self.path_to_save))
             while proc.is_running():
-                self.add_data_entry(self.fetch_metrics(proc))
-                time.sleep(0.01)
+                Thread(target=self.make_entry, args=[self.fetch_metrics(proc)], daemon=True).start()
             self.process_list.remove(proc)
         except:
             self.process_list.remove(proc)
 
-    def collector(self):
-
+    def project_checker(self):
         while self.is_running:
-            for proc in self.process_list:
-                if proc.gets_observed is False:
-                    proc.gets_observed = True
-                    Thread(target=self.get_data, args=[proc], daemon=True).start()
-                time.sleep(0.1)
+            try:
+                proc = self.process_list[-1]
+                project_name: str = self.get_project_name(proc)
+                if self.__model.current_project is None or project_name != self.__model.current_project.working_dir:
+                    self.project_list.append(project_name)
+                    self.__model.add_project(Project(project_name, proc.ppid(), self.path_to_save))
+            except:
+                continue
 
     def update_project(self) -> bool:
         if not self.got_started:
             self.got_started = True
+            Thread(target=self.add_data_entry, args=[None], daemon=True).start()
+            Thread(target=self.project_checker, daemon=True).start()
             Thread(target=self.catch_process, daemon=True).start()
-            Thread(target=self.collector, daemon=True).start()
+            time.sleep(0.1)
+            Thread(target=self.catch_process, daemon=True).start()
+            time.sleep(0.1)
+            Thread(target=self.catch_process, daemon=True).start()
+            time.sleep(0.1)
+            Thread(target=self.catch_process, daemon=True).start()
+            time.sleep(0.1)
+            Thread(target=self.catch_process, daemon=True).start()
+            time.sleep(0.1)
+            Thread(target=self.catch_process, daemon=True).start()
+            time.sleep(0.1)
+            Thread(target=self.catch_process, daemon=True).start()
+            time.sleep(0.1)
+            Thread(target=self.catch_process, daemon=True).start()
+            time.sleep(0.1)
+            Thread(target=self.catch_process, daemon=True).start()
+            time.sleep(0.1)
+            Thread(target=self.catch_process, daemon=True).start()
 
-        self.time_till_quit = time.time() + 3
+        self.time_till_quit = time.time() + 1
         self.time_keeper()
         if self.__time_counter():
             return False

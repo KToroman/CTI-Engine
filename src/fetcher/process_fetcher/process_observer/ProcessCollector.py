@@ -1,9 +1,9 @@
-import os
+
 import subprocess
 import time
+
 from re import split
-from typing import List
-import psutil
+
 
 from src.fetcher.process_fetcher.CProcess import CProcess
 
@@ -16,11 +16,14 @@ class ProcessCollector:
     def __init__(self, current_origin_pid: int) -> None:
         self.current_origin_pid = current_origin_pid
 
-    def catch_processes(self, processes) -> List[CProcess]:
-        process_list: List[CProcess] = list()
-        for line in processes:
-            proc_info = split(" *", line, 10)
-            process_list.append(CProcess(proc_info[1]))
-
-        return process_list
-
+    def catch_processes(self, line: str) -> CProcess:
+        try:
+            proc_info = split(" ", line, 10)
+            proc_id: str = proc_info[0]
+            process = CProcess(int(proc_id), "")
+            if process.name() == self.PROC_NAME_FILTER:
+                process.working_dir = process.cwd()
+                return process
+        except:
+            return None
+        return None

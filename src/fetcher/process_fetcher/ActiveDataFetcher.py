@@ -74,7 +74,7 @@ class ActiveDataFetcher(FetcherInterface):
 
     def __add_data_entry(self, process_point: ProcessPoint):
         path: str = self.__model.current_project.working_dir
-        path = self.__header_name
+        path += self.__header_name
         self.__model.insert_datapoints(
             [DataEntry(path, process_point.metrics, process_point.timestamp)]
         )

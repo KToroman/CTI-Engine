@@ -2,6 +2,7 @@ from typing import List
 from psutil import Process
 import time
 
+from src.fetcher.process_fetcher.CProcess import CProcess
 from src.fetcher.process_fetcher.process_observer.metrics_observer.CPUObserver import CPUObserver
 from src.fetcher.process_fetcher.process_observer.metrics_observer.ObserverInterface import ObserverInterface
 from src.fetcher.process_fetcher.process_observer.metrics_observer.RAMObserver import RAMObserver
@@ -15,7 +16,7 @@ class DataObserver:
         self.__observers.append(RAMObserver())
         self.__observers.append(CPUObserver())
 
-    def observe(self, process: Process) -> ProcessPoint:
+    def observe(self, process: CProcess) -> ProcessPoint:
         timestamps: List[float] = list()
         metrics: List[Metric] = list()
         # since typing doesn't work in for statements:
