@@ -38,3 +38,6 @@ class CFile(CFileReadViewInterface, Protocol):
                     metric_list.append(metric.value)
 
         return metric_list
+
+    def __str__(self) -> str:
+        return f"Path: {self.path} \nHeaders: {[a.get_name()  for a in self.header]}"
