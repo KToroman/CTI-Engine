@@ -14,13 +14,13 @@ from src.model.core.SourceFile import SourceFile
 class Model(ModelReadViewInterface):
     """
     Model class keeps score of all measured data and files
-    A model consists of an arbitrary number of projects,"""
+    A model consists of an arbitrary number of projects."""
 
     def __init__(self) -> None:
         self.current_project: Project = None
         self.projects: List[Project] = list()
         self.save_project: Project = None
-        self.new_project = False
+        self.new_project = False # TODO delete
 
     def get_project_name(self) -> str:
         """returns the name of the current project"""
@@ -57,5 +57,6 @@ class Model(ModelReadViewInterface):
             return
         self.save_project = copy.deepcopy(self.current_project)
 
-    def get_current_project(self) -> Project:
+    def get_current_project(self) -> Project: # TODO why was this changed??
         return self.save_project
+
