@@ -4,7 +4,9 @@ from typing import cast
 
 
 class HeaderIterator:
-    """iterator class for headers in a source file to a given depth"""
+    """iterator class for headers in a source file to a given depth
+
+    A depth of 0 returns only the headers directly included in the source file"""
 
     def __init__(self, source_file: SourceFile, depth: int):
         self.source_file: SourceFile = source_file
@@ -13,12 +15,12 @@ class HeaderIterator:
 
     def __get_all_headers(self, depth: int) -> list[Header]:
         all_headers: list[Header] = list()
-        header_ranks: list[list[Header]] = []
+        header_ranks: list[list[Header]] = [[] for x in range(depth + 1)]
         header_ranks[0] = cast(list[Header], self.source_file.header)
-
-        for x in range(1, depth + 1):
-            for header in header_ranks[x-1]:
-                header_ranks[x].extend(cast(list[Header], header.header))
+        if depth > 0:
+            for x in range(1, depth + 1):
+                for header in header_ranks[x-1]:
+                    header_ranks[x].extend(cast(list[Header], header.header))
 
         for rank in header_ranks:
             all_headers.extend(rank)
