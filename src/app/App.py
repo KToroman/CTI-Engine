@@ -33,10 +33,10 @@ class App(AppRequestsInterface):
             self.__model, self.__cti_dir_path)
         continue_measuring: bool = True
         while (continue_measuring):
-            self.__UI.update_statusbar("measuring")
+            # self.__UI.update_statusbar("measuring")
             continue_measuring = self.__passive_fetcher.update_project()
             # TODO fetch commands
-        self.__UI.update_statusbar("preparing data")
+        # self.__UI.update_statusbar("preparing data")
         self.finish_off_passive_measurement()
         self.__UI.visualize(self.__model)
 
@@ -48,10 +48,10 @@ class App(AppRequestsInterface):
             source_file_name, self.__model, self.__cti_dir_path)
         continue_measuring: bool = True
         while (continue_measuring):
-            self.__UI.update_statusbar("building and measuring")
+            # self.__UI.update_statusbar("building and measuring")
             continue_measuring = self.__active_fetcher.update_project()
             # TODO fetch commands
-        self.__UI.update_statusbar("preparing data")
+        # self.__UI.update_statusbar("preparing data")
         self.__UI.visualize(self.__model)
 
 
