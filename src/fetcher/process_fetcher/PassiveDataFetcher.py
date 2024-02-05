@@ -75,6 +75,7 @@ class PassiveDataFetcher(DataFetcher):
         process = self.__process_collector.catch_processes(line)
         if not self.proc_in_proc_list(process) and process is not None:
             self.process_list.append(process)
+            print("new Process")
             Thread(target=self.get_data, args=[process]).start()
 
     def process_catcher(self, processes):
@@ -90,8 +91,6 @@ class PassiveDataFetcher(DataFetcher):
         return proc.cwd()
 
     def catch_process(self):
-        while self.is_running:
-
             ps = subprocess.Popen(['ps', '-e'], stdout=subprocess.PIPE)
             grep = subprocess.Popen(['grep', 'cc1plus'], stdin=ps.stdout, stdout=subprocess.PIPE, encoding='utf-8')
             grep.stdout.readline()
@@ -130,25 +129,7 @@ class PassiveDataFetcher(DataFetcher):
             self.got_started = True
             Thread(target=self.add_data_entry, args=[None], daemon=True).start()
             Thread(target=self.project_checker, daemon=True).start()
-            Thread(target=self.catch_process, daemon=True).start()
-            time.sleep(0.1)
-            Thread(target=self.catch_process, daemon=True).start()
-            time.sleep(0.1)
-            Thread(target=self.catch_process, daemon=True).start()
-            time.sleep(0.1)
-            Thread(target=self.catch_process, daemon=True).start()
-            time.sleep(0.1)
-            Thread(target=self.catch_process, daemon=True).start()
-            time.sleep(0.1)
-            Thread(target=self.catch_process, daemon=True).start()
-            time.sleep(0.1)
-            Thread(target=self.catch_process, daemon=True).start()
-            time.sleep(0.1)
-            Thread(target=self.catch_process, daemon=True).start()
-            time.sleep(0.1)
-            Thread(target=self.catch_process, daemon=True).start()
-            time.sleep(0.1)
-            Thread(target=self.catch_process, daemon=True).start()
+        Thread(target=self.catch_process, daemon=True).start()
 
         self.time_till_quit = time.time() + 1
         self.time_keeper()
