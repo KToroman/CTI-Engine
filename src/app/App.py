@@ -1,3 +1,4 @@
+import sys
 import click
 
 from src.fetcher.file_fetcher.FileLoader import FileLoader
@@ -63,38 +64,24 @@ class App(AppRequestsInterface):
     def load_from_directory(self, path: str):
         self.__fetcher = FileLoader(path, self.__model)
         self.run()
-
-
-    @click.command("quit")
-    def quit_application_command(self) -> bool:
-        pass
-    
+  
     def quit_application(self) -> bool:
-        pass
-
-    @click.command("quit_measurement")
-    def quit_measurement_command(self) -> bool:
-        pass
+        sys.exit()
     
     @click.command("quit_measurement")
     def quit_measurement(self) -> bool:
         self.__cancel_measurement = True
         return True
     
-    @click.command("restart_measurement")
-    def restart_measurement_command(self) -> bool:
-        pass
 
     def restart_measurement(self) -> bool:
         self.__cancel_measurement = False
+        self.run()
 
     @click.group()
     def group():
         pass
 
-    group.add_command(restart_measurement_command)
-    group.add_command(quit_measurement_command)
-    group.add_command(quit_application_command, "quit")
     group.add_command(load_from_directory_command)
     group.add_command(start_active_measurement_command)
 
