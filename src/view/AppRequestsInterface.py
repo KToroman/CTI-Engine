@@ -18,10 +18,6 @@ class AppRequestsInterface(Protocol):
     def load_from_directory(self, path: str):
         raise NotImplementedError
     
-    '''pauses active measurement'''
-    def pause_active_measurement(self):
+    def restart_measurement(self) -> bool:
         raise NotImplementedError
     
-    '''resumes previously paused active measurement'''
-    def resume_active_measurement(self):
-        raise NotImplementedError

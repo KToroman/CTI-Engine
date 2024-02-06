@@ -4,6 +4,8 @@ from typing import List
 
 import jsonpickle
 import psutil
+from src.fetcher import hierarchy_fetcher
+from src.fetcher.hierarchy_fetcher.HierarchyFetcher import HierarchyFetcher
 
 from src.fetcher.process_fetcher.DataFetcher import DataFetcher
 from src.fetcher.process_fetcher.process_observer.ProcessCollector import ProcessCollector
@@ -57,7 +59,7 @@ class PassiveDataFetcher(DataFetcher):
         processes: List[psutil.Process] = self.__process_collector.catch_processes()
         if not processes:
             if self.__time_counter():
-                return False
+                return self.finish_measurment()
             return True
 
         for proc in processes:
@@ -70,4 +72,10 @@ class PassiveDataFetcher(DataFetcher):
             self.add_data_entry(self.fetch_metrics(proc))
 
         self.__time_till_false = 0
+        return True
+
+    def finish_measurment(self):
+        if self.__model.projects:
+            hierarchy_fetcher = HierarchyFetcher(self.__model)
+            return hierarchy_fetcher.update_project()
         return True
