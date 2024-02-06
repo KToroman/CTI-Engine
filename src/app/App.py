@@ -38,7 +38,9 @@ class App(AppRequestsInterface):
             self.__UI.visualize(self.__model)
 
 
-    
+    def passive_measurement(self):
+        while self.__continue_measuring:
+            self.__fetcher.update_project()
     @click.command()
     @click.option('--source_file_name', prompt='Enter a filepath', help = 'filepath for active measurement')
     @click.argument('source_file_name')
