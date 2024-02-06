@@ -45,7 +45,7 @@ class HierarchyFetcher(FetcherInterface):
 
         lines_to_append: List[str] = list()
         for line in hierarchy_result.splitlines():
-            if line.startswith(".") and line.endswith(".h"):
+            if line.startswith("."):
                 lines_to_append.append(line)
         hierarchy: List[HierarchyFetcher.__HeaderDepthWrapper] = []
         for line in lines_to_append:
@@ -63,12 +63,12 @@ class HierarchyFetcher(FetcherInterface):
                 hierarchy[-1].header, path)
             hierarchy.append(self.__HeaderDepthWrapper(new_header, line_depth))
         else:
-            hierarchy.pop()
+            lastElement: HierarchyFetcher.__HeaderDepthWrapper = hierarchy.pop()
             self.__append_header_recursive(line, hierarchy, source_file)
 
     def __append_header_to_file(self, cfile: CFile, new_header_path: str) -> Header:
         new_header = Header(new_header_path)
-        cfile.header.append(new_header)
+        cfile.headers.append(new_header)
         return new_header
 
     def __get_depth(self, line: str) -> int:
