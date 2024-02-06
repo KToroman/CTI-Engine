@@ -5,15 +5,14 @@ from typing import List
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QWidget,
-                             QStackedWidget, QCheckBox, QApplication, QHBoxLayout, QSplitter)
+                             QStackedWidget, QApplication, QHBoxLayout, QSplitter)
 from src.view.GUI.Graph.BarWidget import BarWidget
 from src.view.GUI.Graph.GraphWidget import GraphWidget
+from src.view.GUI.MainWindowMeta import MainWindowMeta
 from src.view.GUI.UserInteraction.MenuBar import MenuBar
 from src.view.GUI.UserInteraction.TableWidget import TableWidget
 from src.view.GUI.UserInteraction.Displayable import Displayable
-from src.view.GUI.UserInteraction.TableRow import TableRow
 from src.view.GUI.UserInteraction.MetricBar import MetricBar
-from src.model.Model import Model
 from src.model.ModelReadViewInterface import ModelReadViewInterface
 from src.model.core.CFileReadViewInterface import CFileReadViewInterface
 from src.view.GUI.Graph.Plot import Plot
@@ -21,8 +20,6 @@ from src.model.core.MetricName import MetricName
 from src.view.GUI.Visuals.StatusBar import StatusBar
 from src.view.UIInterface import UIInterface
 
-class MainWindowMeta(type(QMainWindow), type(UIInterface)):
-    pass
 
 class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     WINDOWSIZE1: int = 800
