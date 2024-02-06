@@ -22,7 +22,7 @@ class FileBuilder:
         return file_name
 
     def __source_file_content(self, header: Header) -> str:
-        content: str = f'#include "{header.path}"'
+        content: str = f'#include "{header.path}"' + '\n int main(int argc, char *argv) {}'
         return content
 
     def get_compile_command(self, header: Header) -> str:
