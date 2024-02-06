@@ -8,13 +8,5 @@ class SourceFile(CFile):
     """SourceFile is a CFile, represents a c-sourcefile and is used to represent a tracked sourcefile in program."""
 
     def __init__(self, path: str):
-        self.path: str = path
-        self.data_entries: List[DataEntry] = list()
-        self.header: List[CFileReadViewInterface] = list()
+        super().__init__(path)
         self.compile_command: str = ""
-
-    def get_timestamps(self) -> List[float]:
-        timestamps: List[float] = list()
-        for datapoint in self.data_entries:
-            timestamps.append(datapoint.timestamp)
-        return timestamps
