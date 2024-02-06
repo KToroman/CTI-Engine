@@ -6,6 +6,8 @@ from typing import List
 
 import jsonpickle
 import psutil
+from src.fetcher import hierarchy_fetcher
+from src.fetcher.hierarchy_fetcher.HierarchyFetcher import HierarchyFetcher
 
 from src.fetcher.process_fetcher.DataFetcher import DataFetcher
 from src.fetcher.process_fetcher.process_observer.ProcessCollector import ProcessCollector
