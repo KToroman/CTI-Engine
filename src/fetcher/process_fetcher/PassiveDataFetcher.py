@@ -32,12 +32,10 @@ class PassiveDataFetcher(DataFetcher):
 
     def update_project(self) -> bool:
         Thread(target=self.__catch_process).start()
-        self.__project_checker()
-        self.add_data_entry(None)
         return self.__time_keeper()
 
     def add_data_entry(self, process_point: ProcessPoint):
-        if self.__entry_list:
+        if self.__entry_list and self.__model.get_current_project() is not None:
             self.__model.insert_datapoints(self.__entry_list)
             self.__time_till_false = time.time() + self.__time_to_wait
 
@@ -55,18 +53,20 @@ class PassiveDataFetcher(DataFetcher):
         grep.stdout.readline()
         for line in grep.stdout:
             Thread(target=self.__make_process, args=[line]).start()
+        self.add_data_entry(None)
 
     def __make_process(self, line: str):
         process = self.__process_collector.catch_processes(line)
         if not self.__process_in_list(process) and process is not None:
             self.__process_list.append(process)
-            print("new Process")
             Thread(target=self.__get_data, args=[process]).start()
+            Thread(target=self.__project_checker, args=[process]).start()
 
     def __get_data(self, process: psutil.Process):
         try:
             while process.is_running():
                 Thread(target=self.__make_entry, args=[self.fetch_metrics(process)], daemon=True).start()
+                time.sleep(0.09)
             self.__process_list.remove(process)
         except:
             self.__process_list.remove(process)
@@ -95,11 +95,12 @@ class PassiveDataFetcher(DataFetcher):
                 continue
         return False
 
-    def __project_checker(self):
+    def __project_checker(self, proc: psutil.Process):
         try:
-            proc = self.__process_list[-1]
+            time.sleep(0.1)
             project_name: str = self.__get_project_name(proc)
             if self.__model.current_project is None or project_name != self.__model.current_project.working_dir:
+                print("made_project")
                 self.__model.add_project(Project(project_name, proc.ppid(), self.__path_to_save))
         except:
             return
