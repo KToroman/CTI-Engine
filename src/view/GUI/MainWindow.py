@@ -102,8 +102,15 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
         self.show()
 
-    def visualize(self, model):
-        """visualizes data from passive mode"""
+    def visualize(self, model: ModelReadViewInterface):
+        """receives a Model, displays the data contained in that Model to the user."""
+        if self.table_widget.active_started:
+            self.__visualize_active(model)
+        else:
+            self.__visualize_passive(model)
+
+    def __visualize_passive(self, model: ModelReadViewInterface):
+        """visualizes data from passive mode."""
 
         # Select spot for Displayables to be inserted into
         self.table_widget.insertion_point = model.get_project_name()
@@ -117,8 +124,8 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.setup_connections()
         self.status_bar.update_status("finished")
 
-    def visualize_active(self, model: ModelReadViewInterface):
-        """visualizes data from active mode"""
+    def __visualize_active(self, model: ModelReadViewInterface):
+        """visualizes data from active mode."""
 
         # Find file used for active build
         active_row: str = self.table_widget.insertion_point
@@ -164,12 +171,15 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         cpu_plot = Plot(name, color, x_values, cpu_y_values)
         runtime_plot = Plot(name, color, None, runtime)
 
-        # Create header list for current Displayable
-        headers: List[Displayable] = list()
+        # Create header and secondary header list for current Displayable
+        headers: List[str] = list()
+        secondary_headers: List[List[str]] = list()
         for header in cfile.get_headers():
             headers.append(header.get_name())
+            for secondary_header in header.get_headers():
+                secondary_headers.append(secondary_header.get_name())
 
-        return Displayable(name, ram_plot, cpu_plot, runtime_plot, ram_peak, cpu_peak, headers)
+        return Displayable(name, ram_plot, cpu_plot, runtime_plot, ram_peak, cpu_peak, headers, secondary_headers)
 
     def __generate_random_color(self):
         """generates random color for plots"""
