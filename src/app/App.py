@@ -1,5 +1,5 @@
 import click
-from src.fetcher import hierarchy_fetcher
+
 from src.fetcher.file_fetcher.FileLoader import FileLoader
 from src.fetcher.hierarchy_fetcher.HierarchyFetcher import HierarchyFetcher
 from src.fetcher.process_fetcher.ActiveDataFetcher import ActiveDataFetcher
@@ -9,7 +9,7 @@ from src.fetcher.process_fetcher.PassiveDataFetcher import PassiveDataFetcher
 from src.view.AppRequestsInterface import AppRequestsInterface
 from src.view.GUI.prepare_gui import prepare_gui
 from src.view.UIInterface import UIInterface
-from src.view.CLI.CommandLineInterpreter import CommandLineInterpreter
+
 
 
 class App(AppRequestsInterface):
@@ -17,28 +17,29 @@ class App(AppRequestsInterface):
     DEFAULT_GUI: bool = True
 
     def __init__(self, start_with_gui: bool = DEFAULT_GUI, cti_dir_path: str = CTI_DIR_PATH) -> None:
-        self.__active_mode = False
         if start_with_gui:
             self.__UI: UIInterface = prepare_gui()
         self.__has_gui: bool = start_with_gui
         self.__model = Model()
         self.__cti_dir_path = cti_dir_path
         self.__fetcher: FetcherInterface = PassiveDataFetcher(self.__model, self.__cti_dir_path)
+        self.__cancel_measurement: bool = False
+
 
     def run(self):
-        continue_measuring: bool = True
-        while continue_measuring:
-            continue_measuring = self.__fetcher.update_project()
+        self.__continue_measuring: bool = True
+        while self.__continue_measuring and not self.__cancel_measurement:
+            self.__continue_measuring = self.__fetcher.update_project()
             if not self.__model.projects:
                 self.__fetcher = PassiveDataFetcher(self.__model, self.__cti_dir_path)
-                continue_measuring = True
+                self.__continue_measuring = True
         if self.__has_gui:
             self.__UI.visualize(self.__model)
 
 
     
     @click.command()
-    @click.option('--source_file_name', prompt='Enter a filepath', help='filepath for active measurement')
+    @click.option('--source_file_name', prompt='Enter a filepath', help = 'filepath for active measurement')
     def start_active_measurement(self, source_file_name: str):
         self.__fetcher: FetcherInterface = ActiveDataFetcher(
             source_file_name, self.__model, self.__cti_dir_path)
@@ -57,11 +58,27 @@ class App(AppRequestsInterface):
     def quit_application(self) -> bool:
         pass
 
-    @click.command("cancel_measurement")
+    @click.command("quit_measurement")
     def quit_measurement(self) -> bool:
+        self.__cancel_measurement = True
+
+        return True
+    
+    @click.command("restart_measurement")
+    def restart_measurement(self) -> bool:
+        self.__cancel_measurement = False
+
+    @click.group()
+    def group():
         pass
 
+    group.add_command(restart_measurement)
+    group.add_command(quit_measurement)
+    group.add_command(quit_application, "quit")
+    group.add_command(load_from_directory)
+    group.add_command(start_active_measurement)
 
 
-app = App(False)
-app.run()
+if __name__ == "__main__":
+    app = App(False)
+    app.load_from_directory("projects/CTI_ENGINE_SAVE 69 1706886699")
