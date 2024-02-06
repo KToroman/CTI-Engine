@@ -12,8 +12,9 @@ class Displayable:
     ram_peak: float
     cpu_peak: float
     headers: List[str] = list()
+    secondary_headers: List[List[str]] = list()
 
-    def __init__(self, name, ram_plot, cpu_plot, runtime_plot, ram_peak, cpu_peak, headers):
+    def __init__(self, name: str, ram_plot: Plot, cpu_plot: Plot, runtime_plot: Plot, ram_peak: float, cpu_peak: float, headers: List[str], secondary_headers: List[List[str]]):
 
         self.name = name
         self.ram_plot = ram_plot
@@ -22,3 +23,4 @@ class Displayable:
         self.ram_peak = ram_peak
         self.cpu_peak = cpu_peak
         self.headers = headers
+        self.secondary_headers = secondary_headers
