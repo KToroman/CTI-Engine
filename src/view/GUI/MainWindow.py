@@ -11,18 +11,19 @@ from src.view.GUI.Graph.GraphWidget import GraphWidget
 from src.view.GUI.UserInteraction.MenuBar import MenuBar
 from src.view.GUI.UserInteraction.TableWidget import TableWidget
 from src.view.GUI.UserInteraction.Displayable import Displayable
-from src.view.GUI.UserInteraction.TableRow import TableRow
 from src.view.GUI.UserInteraction.MetricBar import MetricBar
-from src.model.Model import Model
 from src.model.ModelReadViewInterface import ModelReadViewInterface
 from src.model.core.CFileReadViewInterface import CFileReadViewInterface
 from src.view.GUI.Graph.Plot import Plot
 from src.model.core.MetricName import MetricName
 from src.view.GUI.Visuals.StatusBar import StatusBar
 from src.view.UIInterface import UIInterface
+from src.view.GUI.Visuals.ErrorWindow import ErrorWindow
+
 
 class MainWindowMeta(type(QMainWindow), type(UIInterface)):
     pass
+
 
 class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     WINDOWSIZE1: int = 800
@@ -37,6 +38,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     def __init__(self, q_application: QApplication):
         self.__q_application: QApplication = q_application
         super().__init__()
+
         self.setWindowTitle(self.WINDOWTITLE)
         self.resize(self.WINDOWSIZE1, self.WINDOWSIZE2)
 
@@ -83,7 +85,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.table_widget: TableWidget = TableWidget()
         self.splitter1.addWidget(self.table_widget)
 
-        self.menu_bar: MenuBar = MenuBar(self.menu_bar_frame_layout, self)
+        self.menu_bar: MenuBar = MenuBar(self.menu_bar_frame_layout)
         self.metric_bar: MetricBar = MetricBar(
             self.metric_bar_frame_layout, self.stacked_widget)
 
@@ -119,6 +121,10 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         # Update other Widgets
         self.setup_connections()
         self.status_bar.update_status("finished")
+
+    def deploy_error(self, error : BaseException):
+        error = ErrorWindow(error)
+        error.show()
 
     def visualize_active(self, model: ModelReadViewInterface):
         """visualizes data from active mode"""

@@ -2,26 +2,26 @@ from typing import List
 
 from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QInputDialog, QWidget, QHBoxLayout
 
-#from src.view.AppRequestsInterface import AppRequestsInterface
 from src.view.GUI.UserInteraction.Displayable import Displayable
 from src.view.GUI.UserInteraction.TableRow import TableRow
+from src.view.AppRequestsInterface import AppRequestsInterface
 
 
 class TableWidget(QTableWidget):
     NUMBER_OF_COLUMNS = 4
     COLUMN_1_LABEL = "Name"
-    COLUMN_2_LABEL = "Peak RAM(%)"
-    COLUMN_3_LABEL = "Peak CPU (MB)"
+    COLUMN_2_LABEL = "Peak RAM(MB)"
+    COLUMN_3_LABEL = "Peak CPU (%)"
     COLUMN_4_LABEL = "Runtime"
 
     def __init__(self):
         super().__init__()
+        self.app_request_interface : AppRequestsInterface = AppRequestsInterface
         self.setColumnCount(self.NUMBER_OF_COLUMNS)
         self.rows: List[TableRow] = []
         self.setHorizontalHeaderLabels([self.COLUMN_1_LABEL, self.COLUMN_2_LABEL,
                                         self.COLUMN_3_LABEL, self.COLUMN_4_LABEL])
         self.insertion_point: str = ""
-        # self.app_request_interface = AppRequestsInterface()
 
     def insert_values(self, displayable: Displayable):
         row_pos: int = self.rowCount()
@@ -92,17 +92,7 @@ class TableWidget(QTableWidget):
             row.toggle_button.setText("v")
 
     def start_active_measurement(self, name):
-        self.insertion_point: str = name
-
-        # Test nur als Beispiel
-        dis = Displayable("test1", ..., ..., ..., 1, 123, 123)
-        dis1 = Displayable("test2", ..., ..., ..., 1, 123, 123)
-
-        if name == "test1":
-            self.add_subrow(dis1)
-        else:
-            self.add_subrow(dis)
-        # self.app_request_interface.start_active_measurement(name)
+        self.app_request_interface.start_active_measurement(name)
 
     def show_input_dialog_active(self, name):
         text, ok = QInputDialog.getText(None, "Active measurement", 'Start active measurement with following file?: ',
