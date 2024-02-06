@@ -40,6 +40,13 @@ class App(AppRequestsInterface):
     
     @click.command()
     @click.option('--source_file_name', prompt='Enter a filepath', help = 'filepath for active measurement')
+    @click.argument('source_file_name')
+    @click.argument('path')
+    def start_active_measurement_command(self, source_file_name: str, path: str):
+        app = App(False)
+        app.load_from_directory(path)
+        app.start_active_measurement()
+    
     def start_active_measurement(self, source_file_name: str):
         self.__fetcher: FetcherInterface = ActiveDataFetcher(
             source_file_name, self.__model, self.__cti_dir_path)
@@ -49,22 +56,35 @@ class App(AppRequestsInterface):
 
     @click.command()
     @click.argument('path')
+    def load_from_directory_command(self, path: str):
+        app = App(False)
+        app.load_from_directory()
+    
     def load_from_directory(self, path: str):
         self.__fetcher = FileLoader(path, self.__model)
         self.run()
 
 
     @click.command("quit")
+    def quit_application_command(self) -> bool:
+        pass
+    
     def quit_application(self) -> bool:
         pass
 
     @click.command("quit_measurement")
+    def quit_measurement_command(self) -> bool:
+        pass
+    
+    @click.command("quit_measurement")
     def quit_measurement(self) -> bool:
         self.__cancel_measurement = True
-
         return True
     
     @click.command("restart_measurement")
+    def restart_measurement_command(self) -> bool:
+        pass
+
     def restart_measurement(self) -> bool:
         self.__cancel_measurement = False
 
@@ -72,11 +92,11 @@ class App(AppRequestsInterface):
     def group():
         pass
 
-    group.add_command(restart_measurement)
-    group.add_command(quit_measurement)
-    group.add_command(quit_application, "quit")
-    group.add_command(load_from_directory)
-    group.add_command(start_active_measurement)
+    group.add_command(restart_measurement_command)
+    group.add_command(quit_measurement_command)
+    group.add_command(quit_application_command, "quit")
+    group.add_command(load_from_directory_command)
+    group.add_command(start_active_measurement_command)
 
 
 if __name__ == "__main__":
