@@ -65,9 +65,9 @@ class ActiveDataFetcher(FetcherInterface):
             source_file_name)
         self.__data_observer = DataObserver()
         self.__process_collector = ProcessCollector(-1)
-        self.__compiling_tool: BuilderInterface = CompilingTool(
-            self.__source_file, build_dir_path
-        )  # TODO
+        self.__compiling_tool: BuilderInterface = CompilingTool(curr_project_dir = self.__model.current_project.working_dir, 
+            source_file = self.__source_file, build_dir_path = build_dir_path
+        )
         self.__time_header_last_found: float = 0
 
     def __fetch_metrics(self, process: psutil.Process) -> ProcessPoint:

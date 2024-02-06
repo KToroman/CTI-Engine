@@ -15,7 +15,3 @@ class UIInterface(Protocol):
     def update_statusbar(self, status: str):
         """receives a status string, changes the ui's status string accordingly."""
         raise NotImplementedError
-    
-    def run_commands(self):
-        """call for the UI to execute all queued commands."""
-        raise NotImplementedError

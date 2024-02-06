@@ -4,10 +4,11 @@ from pathlib import Path
 
 
 class FileBuilder:
-    def __init__(self, compile_command: str, source_file_name: str, build_path: str) -> None:
+    def __init__(self, curr_project_dir: str, compile_command: str, source_file_name: str, build_path: str) -> None:
         self.__original_compile_command: List[str] = compile_command.split(" ")
         self.__source_file_name = source_file_name
         self.__build_path = build_path
+        self.__curr_project_dir = curr_project_dir
 
     def generate_source_file(self, header: Header) -> str:
         '''generates a source file that includes the header named header.path + .cpp
@@ -26,11 +27,11 @@ class FileBuilder:
         return content
 
     def get_compile_command(self, header: Header) -> str:
-        # TODO -I for project directory
         compile_command_header: str = ""
         for entry in self.__original_compile_command:
             if entry is self.__source_file_name:
                 compile_command_header += header.path + ".cpp"
             else:
                 compile_command_header += entry
+        compile_command_header += "-I" + self.__curr_project_dir
         return compile_command_header
