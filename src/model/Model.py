@@ -43,6 +43,14 @@ class Model(ModelReadViewInterface):
         for data_point in data_points:
             header.data_entries.append(data_point)
 
+    def get_project_by_name(self, name: str) -> Project:
+        try:
+            for project in self.projects:
+                if name == project.working_dir:
+                    return project
+            return None
+        except:
+            self.get_project_by_name(name)
     def add_project(self, project: Project) -> None:
         """adds new project to model"""
         self.projects.append(project)
