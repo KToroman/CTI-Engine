@@ -22,6 +22,8 @@ class TableWidget(QTableWidget):
         self.setHorizontalHeaderLabels([self.COLUMN_1_LABEL, self.COLUMN_2_LABEL,
                                         self.COLUMN_3_LABEL, self.COLUMN_4_LABEL])
         self.insertion_point: str = ""
+        self.active_started: bool = False
+        # self.app_request_interface = AppRequestsInterface()
 
     def insert_values(self, displayable: Displayable):
         row_pos: int = self.rowCount()
