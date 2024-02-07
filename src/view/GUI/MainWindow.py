@@ -92,16 +92,6 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.graph_widget.toggle_cpu()
         self.setup_resource_connections()
 
-        # Test nur als Beispiel
-        self.dis = Displayable("test", Plot("marie2", "#FF0000", [1.2, 1.8, 2.9], [7.4, 2.6, 7.8]),
-                               Plot("marie", "#FF0000", [1.5, 2.3, 4.4], [6.4, 5.6, 7.8]),
-                               Plot("marie", "#FF0000", [], [7.4, 9.6, 2.8]), 5.4, 7.88, [])
-        self.dis1 = Displayable("asd", Plot("asd", "#0000FF", [1.2, 1.8, 2.9], [9.4, 5.6, 3.8]),
-                                Plot("asd", "#0000FF", [0.5, 1.3, 3.4], [7.4, 9.6, 2.8]),
-                                Plot("asd", "#0000FF", [], [3.4, 5.6, 3.8]), 7.4, 9.88, [])
-
-        self.table_widget.insert_values(self.dis)
-        self.table_widget.insert_values(self.dis1)
         self.setup_connections()
 
         self.show()
@@ -146,7 +136,8 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         # Update TableWidget for header list for said file
         cfile_list: List[CFileReadViewInterface] = active_file.get_headers()
         for cfile in cfile_list:
-            self.table_widget.add_subrow(self.__create_displayable(cfile))
+            #self.table_widget.add_subrow(self.__create_displayable(cfile))
+            self.table_widget.fill_subrows(self.__create_displayable(cfile))
 
         # Update other Widgets
         self.setup_connections()
