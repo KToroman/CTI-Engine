@@ -60,4 +60,12 @@ class CompileCommandGetter:
         else:
             del args[delindex: delindex + 2]
         args.append("-H")
+        args.append("-M")
         return shlex.join(args)
+
+    def get_all_opaths(self) -> list[str]:
+        command_object: dict[str, str]
+        opaths: list[str] = []
+        for command_object in self.compile_commands_json:
+            opaths.append(self.__get_ofile_path(command_object["command"], command_object["directory"]))
+        return opaths

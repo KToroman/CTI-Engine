@@ -1,3 +1,5 @@
+import datetime
+import time
 from typing import List, Protocol
 
 from src.model.core.CFileReadViewInterface import CFileReadViewInterface
@@ -22,22 +24,22 @@ class CFile(CFileReadViewInterface, Protocol):
                 - self.data_entries[0].timestamp
         )
 
-    def get_max(self, metric: MetricName) -> float:
+    def get_max(self, metric_name: MetricName) -> float:
         max_entry_value = 0
         for entry in self.data_entries:
             for metric in entry.metrics:
-                if metric.name == metric:
+                if metric.name == metric_name:
                     if metric.value > max_entry_value:
                         max_entry_value = metric.value
 
         return max_entry_value
 
-    def get_metrics(self, metric: MetricName) -> List[float]:
+    def get_metrics(self, metric_name: MetricName) -> List[float]:
         metric_list: List[float] = list()
         sorted_timestamp_list = sorted(self.data_entries, key=lambda data_entry: data_entry.timestamp)
         for entry in sorted_timestamp_list:
             for metric in entry.metrics:
-                if metric.name == metric:
+                if metric.name == metric_name:
                     metric_list.append(metric.value)
 
         return metric_list
@@ -60,4 +62,3 @@ class CFile(CFileReadViewInterface, Protocol):
 
     def get_headers(self):
         return self.headers
-
