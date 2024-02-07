@@ -33,11 +33,10 @@ class Model(ModelReadViewInterface):
         cfiles_view.extend(self.current_project.source_files)
         return cfiles_view
 
-    def insert_datapoints(self, data_points: List[DataEntry]):
-        """inserts datapoints to sourcefile according to their paths to the current project"""
-        for data_point in data_points:
-            cfile: CFile = self.current_project.get_sourcefile(data_point.path)
-            cfile.data_entries.append(data_point)
+    def insert_datapoint(self, data_point: DataEntry):
+        """inserts datapoint to sourcefile according to their paths to the current project"""
+        cfile: CFile = self.current_project.get_sourcefile(data_point.path)
+        cfile.data_entries.append(data_point)
 
     def insert_datapoints_header(self, data_points: List[DataEntry], header: Header):
         for data_point in data_points:

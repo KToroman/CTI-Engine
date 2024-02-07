@@ -16,7 +16,7 @@ class DataFetcher(FetcherInterface, Protocol):
     __data_observer: DataObserver = None
     __model: Model = None
 
-    def add_data_entry(self, process_point: ProcessPoint):
+    def add_data_entry(self, data_entry: DataEntry):
         raise NotImplemented
 
     def fetch_metrics(self, process: psutil.Process) -> ProcessPoint:
