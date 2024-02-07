@@ -57,3 +57,5 @@ class Model(ModelReadViewInterface):
         except:
             self.get_current_project()
 
+    def get_project_time(self) -> float:
+        return self.current_project.project_time

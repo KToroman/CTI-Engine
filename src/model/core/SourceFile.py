@@ -8,5 +8,5 @@ class SourceFile(CFile):
     """SourceFile is a CFile, represents a c-sourcefile and is used to represent a tracked sourcefile in program."""
 
     def __init__(self, path: str):
-        super().__init__(path)
+        super(SourceFile, self).__init__(path)
         self.compile_command: str = ""
