@@ -28,7 +28,7 @@ class App(AppRequestsInterface):
         self.__has_gui: bool = start_with_gui
         self.__model = Model()
         self.__cti_dir_path = cti_dir_path
-        self.__fetcher: FetcherInterface = PassiveDataFetcher(self.__model, self.__cti_dir_path)
+        self.__passive_data_fetcher: FetcherInterface = PassiveDataFetcher(self.__model, self.__cti_dir_path)
         self.__hierarchy: FetcherInterface = HierarchyFetcher(self.__model)
         self.__save: SaveInterface = SaveToJSON()
 
@@ -55,11 +55,15 @@ class App(AppRequestsInterface):
         if self.__model.get_current_project() is not None:
             curr_project_name = self.__model.get_current_project().working_dir
         while not self.__cancel_measurement:
-            self.__is_measuring = self.__fetcher.update_project()
-            if curr_project_name != "" and curr_project_name != self.__model.get_current_project().working_dir:
-                Thread(target=self.__save.save_project, args=[self.__model.get_project_by_name(curr_project_name)])
+            self.__is_measuring = self.__passive_data_fetcher.update_project()
+            if self.__model.current_project is None:
+                time.sleep(0.0001)
+                continue
+            if curr_project_name != self.__model.get_current_project().working_dir:
                 Thread(target=self.__make_hierarchy).start()
                 curr_project_name = self.__model.get_current_project().working_dir
+                Thread(target=self.__save_project, args=[curr_project_name]).start()
+            time.sleep(0.01)
         self.__running_passive_fetcher = False
 
     def __make_hierarchy(self):
@@ -68,15 +72,15 @@ class App(AppRequestsInterface):
     def __save_project(self, name: str):
         saver: SaveInterface = SaveToJSON()
         stop_time: float = time.time() + 10
+        print("saver opend")
         while stop_time > time.time() and not self.__cancel_measurement:
             project = self.__model.get_project_by_name(name)
             saver.save_project(project)
             time.sleep(3)
-            if (len(project.source_files) != len(self.__model.get_project_by_name(name).source_files) or
-                    len(project.source_files[-1].data_entries) !=
-                    len(self.__model.get_project_by_name(name).source_files[-1].data_entries)):
+            if project.working_dir == self.__model.get_current_project().working_dir:
                 stop_time = time.time() + 10
         saver.save_project(self.__model.get_project_by_name(name))
+        print("saver colsed")
 
 
 

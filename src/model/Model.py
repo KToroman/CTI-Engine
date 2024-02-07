@@ -50,10 +50,12 @@ class Model(ModelReadViewInterface):
             return None
         except:
             self.get_project_by_name(name)
+
     def add_project(self, project: Project) -> None:
         """adds new project to model"""
-        self.projects.append(project)
-        self.current_project = project
+        if self.get_project_by_name(project.working_dir) is None and project.working_dir != "/common/homes/students/uvhuj_heusinger/Documents/git/cti-engine-prototype/src/app":
+            self.projects.append(project)
+            self.current_project = project
 
     def get_sourcefile_by_name(self, name: str) -> SourceFile:
         return self.current_project.get_sourcefile(name)

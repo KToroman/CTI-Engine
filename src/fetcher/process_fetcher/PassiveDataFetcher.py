@@ -1,6 +1,7 @@
 import os.path
 import subprocess
 import time
+from os.path import join
 from threading import Thread
 from typing import List
 
@@ -25,12 +26,13 @@ class PassiveDataFetcher(DataFetcher):
         self.__path_to_save = path_to_save
         self.__process_collector: ProcessCollector = ProcessCollector(model, path_to_save)
         self.__data_observer: DataObserver = DataObserver()
+        self.__entry_list: List[DataEntry] = list()
 
         self.__time_to_wait: int = 15
         self.__time_till_false: int = 0
 
     def update_project(self) -> bool:
-        Thread(target=self.__fetch_process).start()
+        Thread(target=self.__fetch_process, daemon=True).start()
         return self.__time_keeper()
 
     def add_data_entry(self, data_entry: DataEntry):
@@ -46,7 +48,8 @@ class PassiveDataFetcher(DataFetcher):
         return True
 
     def __fetch_process(self):
-        for line in self.__process_collector.catch_process():
+        processes = self.__process_collector.catch_process()
+        for line in processes:
             Thread(target=self.__create_process, args=[line]).start()
 
     def __create_process(self, line: str):
@@ -58,7 +61,6 @@ class PassiveDataFetcher(DataFetcher):
                 return
             while process.is_running():
                 Thread(target=self.__make_entry, args=[self.fetch_metrics(process)]).start()
-                time.sleep(0.09)
             self.__process_collector.process_list.remove(process)
         except:
             self.__process_collector.process_list.remove(process)
@@ -66,10 +68,10 @@ class PassiveDataFetcher(DataFetcher):
     def __make_entry(self, process_point: ProcessPoint):
         try:
             cmdline: List[str] = process_point.process.cmdline()
-            path: str = ""
+            path: str = process_point.process.cwd()
             for line in cmdline:
                 if line.endswith(".o"):
-                    path = os.path.abspath(line)
+                    path = join(path.split("build/")[0], "build",path.split("build/")[1], "build", line)
                     break
             if path == "":
                 return
@@ -77,4 +79,3 @@ class PassiveDataFetcher(DataFetcher):
             self.add_data_entry(entry)
         except:
             return
-
