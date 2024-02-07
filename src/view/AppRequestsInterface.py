@@ -11,7 +11,7 @@ class AppRequestsInterface(Protocol):
         raise NotImplementedError
 
     '''quits any measurement, passive or active'''
-    def quit_measurement(self) -> bool:
+    def quit_measurement(self):
         raise NotImplementedError
     
     '''loads files from given path as a new project in model'''
@@ -19,5 +19,8 @@ class AppRequestsInterface(Protocol):
         raise NotImplementedError
     
     def restart_measurement(self) -> bool:
+        raise NotImplementedError
+
+    def pause_measurement(self):
         raise NotImplementedError
     

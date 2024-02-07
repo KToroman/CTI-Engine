@@ -19,6 +19,9 @@ from src.view.GUI.Graph.Plot import Plot
 from src.model.core.MetricName import MetricName
 from src.view.GUI.Visuals.StatusBar import StatusBar
 from src.view.UIInterface import UIInterface
+from src.view.GUI.Visuals.ErrorWindow import ErrorWindow
+
+
 
 
 class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
@@ -34,6 +37,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     def __init__(self, q_application: QApplication):
         self.__q_application: QApplication = q_application
         super().__init__()
+
         self.setWindowTitle(self.WINDOWTITLE)
         self.resize(self.WINDOWSIZE1, self.WINDOWSIZE2)
 
@@ -80,7 +84,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.table_widget: TableWidget = TableWidget()
         self.splitter1.addWidget(self.table_widget)
 
-        self.menu_bar: MenuBar = MenuBar(self.menu_bar_frame_layout, self)
+        self.menu_bar: MenuBar = MenuBar(self.menu_bar_frame_layout)
         self.metric_bar: MetricBar = MetricBar(
             self.metric_bar_frame_layout, self.stacked_widget)
 
@@ -124,8 +128,12 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.setup_connections()
         self.status_bar.update_status("finished")
 
-    def __visualize_active(self, model: ModelReadViewInterface):
-        """visualizes data from active mode."""
+    def deploy_error(self, error : BaseException):
+        error = ErrorWindow(error)
+        error.show()
+
+    def visualize_active(self, model: ModelReadViewInterface):
+        """visualizes data from active mode"""
 
         # Find file used for active build
         active_row: str = self.table_widget.insertion_point
