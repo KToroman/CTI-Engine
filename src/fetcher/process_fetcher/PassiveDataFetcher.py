@@ -1,6 +1,7 @@
 import os.path
 import subprocess
 import time
+from os.path import join
 from threading import Thread
 from typing import List
 
@@ -32,6 +33,8 @@ class PassiveDataFetcher(DataFetcher):
         self.__time_to_wait: int = 15
         self.__time_till_false: int = 0
 
+        self.__project_check: bool = False
+
     def update_project(self) -> bool:
         Thread(target=self.__catch_process).start()
         return self.__time_keeper()
@@ -62,7 +65,8 @@ class PassiveDataFetcher(DataFetcher):
         if not self.__process_in_list(process) and process is not None:
             self.__process_list.append(process)
             Thread(target=self.__get_data, args=[process]).start()
-            Thread(target=self.__project_checker, args=[process]).start()
+            if not self.__project_check:
+                Thread(target=self.__project_checker, args=[process]).start()
 
     def __get_data(self, process: psutil.Process):
         try:
@@ -98,17 +102,21 @@ class PassiveDataFetcher(DataFetcher):
         return False
 
     def __project_checker(self, proc: psutil.Process):
+        self.__project_check = True
         try:
             time.sleep(0.1)
             project_name: str = self.__get_project_name(proc)
             if self.__model.current_project is None or project_name != self.__model.current_project.working_dir:
                 print("made_project")
                 self.__model.add_project(Project(project_name, proc.ppid(), self.__path_to_save))
+            self.__project_check = False
         except:
+            self.__project_check = False
             return
 
     def __get_project_name(self, process: psutil.Process) -> str:
         working_dir: str = process.cwd()
         if working_dir.split("build").__len__() > 2:
-            return os.path.abspath(working_dir.split("build")[1])
+            return join(working_dir.split("build/")[0], "build", working_dir.split("build/")[1])
+
         return working_dir.split("build")[0]

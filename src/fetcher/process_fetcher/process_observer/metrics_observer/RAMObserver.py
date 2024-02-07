@@ -10,5 +10,5 @@ class RAMObserver(ObserverInterface):
     metric_name = MetricName.RAM
 
     def observe(self, process: psutil.Process) -> Metric:
-        return Metric(process.memory_info().rss, self.metric_name)
+        return Metric(process.memory_info().vms/1000000, self.metric_name)
 

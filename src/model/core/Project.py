@@ -1,3 +1,4 @@
+import time
 from typing import List
 from src.model.core.CFile import CFile
 from src.model.core.FileDictionary import FileDictionary
@@ -15,6 +16,7 @@ class Project:
         self.origin_pid = origin_pid
         self.path_to_save = path_to_save
         self.file_dict = FileDictionary()
+        self.project_time = time.time() - 0.5
 
     def get_sourcefile(self, name: str) -> SourceFile:
         file_exists: bool = self.file_dict.isInDictionary(name)

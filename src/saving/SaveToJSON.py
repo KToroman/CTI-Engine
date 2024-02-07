@@ -37,7 +37,10 @@ class SaveToJSON(SaveInterface):
             time_date = date.today()
             print(project.working_dir)
             proc_name = project.working_dir.split("/")
-            name = proc_name[proc_name.__len__()-2]
+            name = proc_name[proc_name.__len__()-1]
+            if name is None or name == "":
+                name = proc_name[proc_name.__len__()-2]
+
             self.__current_project_dir = project.working_dir
             self.__current_project_name = ("CTI_ENGINE_SAVE " + name + " " + time_date.__str__())
             return True
