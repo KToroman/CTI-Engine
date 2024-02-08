@@ -1,8 +1,9 @@
 import copy
+import os.path
 from optparse import Option
 import time
 from typing import List, Optional
-from exceptions.ProjectNotFoundException import ProjectNotFoundException
+from src.exceptions.ProjectNotFoundException import ProjectNotFoundException
 
 from src.model.ModelReadViewInterface import ModelReadViewInterface
 from src.model.core.CFile import CFile
@@ -19,7 +20,7 @@ class Model(ModelReadViewInterface):
     A model consists of an arbitrary number of projects."""
 
     def __init__(self) -> None:
-        self.current_project: Project
+        self.current_project: Project = Project("")
         self.projects: List[Project] = list()
 
     def get_project_name(self) -> str:
@@ -49,9 +50,16 @@ class Model(ModelReadViewInterface):
                 return project
         raise ProjectNotFoundException
 
+    def does_project_exist(self, name: str) -> bool:
+        for project in self.projects:
+            if name == project.working_dir:
+                return True
+        return False
+
     def add_project(self, project: Project) -> None:
         """adds new project to model"""
-        if self.get_project_by_name(project.working_dir) is None and project.working_dir != "/common/homes/students/uvhuj_heusinger/Documents/git/cti-engine-prototype/src/app":
+
+        if not self.does_project_exist(project.working_dir) and "/src/app" not in project.working_dir:
             self.projects.append(project)
             self.current_project = project
 
@@ -62,7 +70,7 @@ class Model(ModelReadViewInterface):
         try:
             return copy.deepcopy(self.current_project)
         except:
-            self.get_current_project()
+            return None
 
     def get_project_time(self) -> float:
         return self.current_project.project_time

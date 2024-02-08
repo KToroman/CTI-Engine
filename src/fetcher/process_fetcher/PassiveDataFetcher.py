@@ -65,10 +65,8 @@ class PassiveDataFetcher(DataFetcher):
             path: str = process_point.process.cwd()
             for line in cmdline:
                 if line.endswith(".o"):
-                    path = join(path.split("build/")[0], "build",path.split("build/")[1], "build", line)
+                    path = join(path.split("build/")[0], "build", path.split("build/")[1], "build", line)
                     break
-            if path == "":
-                return
             entry: DataEntry = DataEntry(path, process_point.timestamp, process_point.metrics)
             self.add_data_entry(entry)
         except:

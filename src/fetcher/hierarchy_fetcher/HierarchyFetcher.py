@@ -1,3 +1,4 @@
+import time
 from threading import Thread
 
 from src.fetcher.FetcherInterface import FetcherInterface
@@ -16,11 +17,22 @@ class HierarchyFetcher(FetcherInterface):
         self.__model: Model = model
         self.__gcc_command_executor: GCCCommandExecutor = GCCCommandExecutor()
         self.command_getter: CompileCommandGetter
+        self.__open_timeout: int = 0
 
     def update_project(self) -> bool:
         """Updates the current project by adding a hierarchical structure of header objects to all source files"""
         project: Project = self.__model.current_project
-        self.command_getter = CompileCommandGetter(project.working_dir)
+        try:
+            self.command_getter = CompileCommandGetter(project.working_dir)
+            self.__open_timeout = 0
+        except FileNotFoundError as e:
+            time.sleep(5)
+            if self.__open_timeout > 2:
+                raise e
+            else:
+                self.__open_timeout += 1
+                print(e.__str__() + "\n trying again...")
+                return True
 
         hierarchy_thread: Thread = Thread(target=self.__setup_hierarchy, args=[project], daemon=False)
         hierarchy_thread.start()

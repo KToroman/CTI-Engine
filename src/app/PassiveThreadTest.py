@@ -1,3 +1,4 @@
+import multiprocessing
 import time
 from threading import Thread
 from typing import List
@@ -15,6 +16,7 @@ from src.model.core.MetricName import MetricName
 from src.model.core.Project import Project
 from src.saving.SaveInterface import SaveInterface
 from src.saving.SaveToJSON import SaveToJSON
+from multiprocessing import Process
 
 
 class PassiveThread:
@@ -23,29 +25,30 @@ class PassiveThread:
         self.__cancel_measurement: bool = False
         self.__model: Model = Model()
         self.__hierarchy: FetcherInterface = HierarchyFetcher(self.__model)
-        self.__passive_data_fetcher: FetcherInterface = PassiveDataFetcher(self.__model, "")
+        self.__passive_data_fetcher: FetcherInterface = PassiveDataFetcher(self.__model)
 
         self.__is_measuring: bool = False
         self.is_running = True
         self.saver: SaveToJSON = SaveToJSON()
 
     def __passive_measurement(self):
-        curr_project_name: str = ""
-        if self.__model.get_current_project() is not None:
-            curr_project_name = self.__model.get_current_project().working_dir
+        curr_project_name: str
+        curr_project_name = self.__model.get_current_working_directory()
         while not self.__cancel_measurement:
             self.__is_measuring = self.__passive_data_fetcher.update_project()
-            if self.__model.get_current_project() is None:
-                time.sleep(0.0001)
-                continue
-            if curr_project_name != self.__model.get_current_project().working_dir:
+            if curr_project_name != self.__model.get_current_working_directory():
                 Thread(target=self.__make_hierarchy).start()
-                curr_project_name = self.__model.get_current_project().working_dir
+                curr_project_name = self.__model.get_current_working_directory()
                 Thread(target=self.__save_project, args=[curr_project_name]).start()
             time.sleep(0.01)
         self.__running_passive_fetcher = False
 
+    def passsss(self):
+        while not self.__cancel_measurement:
+            self.__is_measuring = self.__passive_data_fetcher.update_project()
+
     def __make_hierarchy(self):
+        time.sleep(2)
         self.__hierarchy.update_project()
 
     def __save_project(self, name: str):
@@ -68,7 +71,7 @@ class PassiveThread:
 
     def main_loop(self):
         start = time.time()
-        Thread(target=self.stop_programm).start()
+        Thread(target=self.stop_programm, daemon=True).start()
         Thread(target=self.__passive_measurement).start()
         while self.is_running:
             time.sleep(5)
@@ -92,7 +95,7 @@ class PassiveThread:
         print("Project Count: " + self.__model.projects.__len__().__str__())
         for p in self.__model.projects:
             print(
-                '\n' + "workind_dir: " + p.working_dir + ". project_pid: " + p.origin_pid.__str__() +
+                '\n' + "workind_dir: " + p.working_dir + ". project_pid: " +
                 ". SoureFiles_count: " + p.source_files.__len__().__str__())
             counter += 1
             conter = 0
