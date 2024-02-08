@@ -35,8 +35,7 @@ class ProcessCollector:
         grep = subprocess.Popen('grep cc1plus', stdin=ps.stdout, stdout=subprocess.PIPE, shell=True, encoding='utf-8')
         if ps.stdout is not None:
             ps.stdout.close()
-        if grep.stdout:
-            grep.stdout.readline()
+
         return grep.stdout
 
     def make_process(self, line: str) -> Optional[psutil.Process]:
@@ -44,6 +43,7 @@ class ProcessCollector:
         if process is not None and not self.__is_process_in_list(process):
             self.project_checker(process)
             self.process_list.append(process)
+            print("new process")
             return process
         return None
 
