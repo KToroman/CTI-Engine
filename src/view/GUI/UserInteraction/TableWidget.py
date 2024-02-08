@@ -25,6 +25,7 @@ class TableWidget(QTableWidget):
                                         self.COLUMN_3_LABEL, self.COLUMN_4_LABEL])
         self.insertion_point: str = ""
         self.active_started: bool = False
+        self.all_selected: bool = False
         # self.app_request_interface = AppRequestsInterface()
 
     def insert_values(self, displayable: Displayable):
@@ -40,14 +41,14 @@ class TableWidget(QTableWidget):
         row.name_button.clicked.connect(lambda: self.show_input_dialog_active(row.displayable.name))
 
         for header in displayable.headers:
-            displayable_mock: Displayable = Displayable(header, ..., ..., ..., 0, 0, [], [])
+            displayable_mock: Displayable = Displayable(header, None, ..., ..., 0, 0, [], [])
             self.add_subrow(displayable_mock, displayable.name)
             if len(displayable.secondary_headers[displayable.headers.index(header)]) != 0:
                 for subheader in displayable.secondary_headers[displayable.headers.index(header)]:
-                    displayable_mock_2: Displayable = Displayable(subheader, ..., ..., ..., 0, 0, [], [])
+                    displayable_mock_2: Displayable = Displayable(subheader, None, ..., ..., 0, 0, [], [])
                     self.add_subrow(displayable_mock_2, header)
 
-    def add_subrow(self, displayable: Displayable, parent_name : str):
+    def add_subrow(self, displayable: Displayable, parent_name: str):
         for row in self.rows:
             if row.displayable.name == parent_name:
                 caller_row: TableRow = row
@@ -69,10 +70,6 @@ class TableWidget(QTableWidget):
             if len(new_row.children) == 0:
                 self.set_row_color(self.rows.index(new_row), QColor(170, 170, 170))
 
-
-
-
-
     def set_row_color(self, row, color):
         for column in range(self.columnCount()):
             item = self.item(row, column)
@@ -92,7 +89,7 @@ class TableWidget(QTableWidget):
                      QTableWidgetItem(self.setCellWidget(index, 0, cell_widget)))
         self.setItem(index, 1, QTableWidgetItem(str(row.displayable.ram_peak)))
         self.setItem(index, 2, QTableWidgetItem(str(row.displayable.cpu_peak)))
-        self.setItem(index, 3, QTableWidgetItem("Dummy"))  # row.displayable.runtime_plot.y_values[0]
+        self.setItem(index, 3, QTableWidgetItem(str(row.displayable.runtime_plot.y_values[0])))
 
     def fill_subrow(self, displayable : Displayable):
         for row in self.rows:
@@ -127,10 +124,23 @@ class TableWidget(QTableWidget):
         # Test nur als Beispiel
 
 
-
-
-
     def show_input_dialog_active(self, name):
         text, ok = QInputDialog.getText(None, "Active measurement", 'Start active measurement with following file?: ',
                                         text=name)
         if ok: self.start_active_measurement(name)
+
+    def highlight_row(self, name: str):
+        row_id: int = 0
+        for row in self.rows:
+            if row.displayable.name == name:
+                self.selectRow(row_id)
+                break
+            row_id = row_id + 1
+
+    def toggle_all_rows(self):
+        for row in self.rows:
+            if not self.all_selected:
+                row.checkbox.setChecked(True)
+            else:
+                row.checkbox.setChecked(False)
+        self.all_selected = not self.all_selected

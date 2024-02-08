@@ -1,3 +1,4 @@
+import colorsys
 import sys
 
 import random
@@ -5,7 +6,7 @@ from typing import List
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QWidget,
-                             QStackedWidget, QApplication, QHBoxLayout, QSplitter)
+                             QStackedWidget, QApplication, QHBoxLayout, QSplitter, QCheckBox)
 from src.view.GUI.Graph.BarWidget import BarWidget
 from src.view.GUI.Graph.GraphWidget import GraphWidget
 from src.view.GUI.MainWindowMeta import MainWindowMeta
@@ -17,17 +18,20 @@ from src.model.ModelReadViewInterface import ModelReadViewInterface
 from src.model.core.CFileReadViewInterface import CFileReadViewInterface
 from src.view.GUI.Graph.Plot import Plot
 from src.model.core.MetricName import MetricName
+from src.view.GUI.Visuals.ErrorWindow import ErrorWindow
 from src.view.GUI.Visuals.StatusBar import StatusBar
+from src.view.GUI.Visuals.StatusSettings import StatusSettings
 from src.view.UIInterface import UIInterface
 from src.view.GUI.Visuals.ErrorWindow import ErrorWindow
-
-
 
 
 class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     WINDOWSIZE1: int = 800
     WINDOWSIZE2: int = 600
     WINDOWTITLE: str = "CTI Engine"
+    SELECT_ALL: str = "Select all"
+    RAM_Y_AXIS: str = "RAM (in mb)"
+    CPU_Y_AXIS: str = "CPU (in %)"
 
     __visible_plots: List[Displayable] = []
     __ram: bool = False
@@ -57,6 +61,9 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.status_bar.setMaximumHeight(100)
         self.status_bar_frame_layout.addWidget(self.status_bar)
         self.top_frame_layout.addLayout(self.status_bar_frame_layout)
+        self.all: QCheckBox = QCheckBox(self.SELECT_ALL)
+        self.all.stateChanged.connect(lambda: self.table_widget.toggle_all_rows())
+        self.top_frame_layout.addWidget(self.all)
 
         self.widget_frame_layout: QVBoxLayout = QVBoxLayout()
         self.main_layout.addLayout(self.widget_frame_layout)
@@ -75,9 +82,11 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
         # Initialize the components
         self.stacked_widget: QStackedWidget = QStackedWidget()
-        self.graph_widget: GraphWidget = GraphWidget()  # Hier später die implementierte Version von GraphWidget
-        self.bar_chart_widget: BarWidget = BarWidget()  # Hier später die implementierte Version von BarWidget
-        self.stacked_widget.addWidget(self.graph_widget)
+        self.ram_graph_widget: GraphWidget = GraphWidget(self.RAM_Y_AXIS)
+        self.cpu_graph_widget: GraphWidget = GraphWidget(self.CPU_Y_AXIS)
+        self.bar_chart_widget: BarWidget = BarWidget()
+        self.stacked_widget.addWidget(self.ram_graph_widget)
+        self.stacked_widget.addWidget(self.cpu_graph_widget)
         self.stacked_widget.addWidget(self.bar_chart_widget)
         self.splitter1.addWidget(self.stacked_widget)
 
@@ -85,19 +94,15 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.splitter1.addWidget(self.table_widget)
 
         self.menu_bar: MenuBar = MenuBar(self.menu_bar_frame_layout)
-        self.metric_bar: MetricBar = MetricBar(
-            self.metric_bar_frame_layout, self.stacked_widget)
+        self.metric_bar: MetricBar = MetricBar(self.metric_bar_frame_layout)
 
-        self.graph_widget.toggle_ram()
-        self.graph_widget.toggle_cpu()
         self.setup_resource_connections()
-
-        self.setup_connections()
-
+        self.project_time: float = 0
         self.show()
 
     def visualize(self, model: ModelReadViewInterface):
         """receives a Model, displays the data contained in that Model to the user."""
+        self.project_time = model.get_project_time()
         if self.table_widget.active_started:
             self.__visualize_active(model)
         else:
@@ -116,13 +121,9 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
         # Update other Widgets
         self.setup_connections()
-        self.status_bar.update_status("finished")
+        self.status_bar.update_status(StatusSettings.FINISHED)
 
-    def deploy_error(self, error : BaseException):
-        error = ErrorWindow(error)
-        error.show()
-
-    def visualize_active(self, model: ModelReadViewInterface):
+    def __visualize_active(self, model: ModelReadViewInterface):
         """visualizes data from active mode"""
 
         # Find file used for active build
@@ -136,12 +137,21 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         # Update TableWidget for header list for said file
         cfile_list: List[CFileReadViewInterface] = active_file.get_headers()
         for cfile in cfile_list:
-            #self.table_widget.add_subrow(self.__create_displayable(cfile))
+            # self.table_widget.add_subrow(self.__create_displayable(cfile))
             self.table_widget.fill_subrows(self.__create_displayable(cfile))
 
         # Update other Widgets
         self.setup_connections()
-        self.status_bar.update_status("finished")
+        self.status_bar.update_status(StatusSettings.FINISHED)
+
+    def deploy_error(self, error: BaseException):
+        """receives an Exception, displays information regarding that exception to the user."""
+        error_window = ErrorWindow(error.__str__())
+        error_window.show()
+
+    def update_statusbar(self, status: StatusSettings):
+        """receives a status string, changes the ui's status string accordingly."""
+        self.status_bar.update_status(status)
 
     def __get_hierarchy(self, cfile: CFileReadViewInterface, active_row: str) -> CFileReadViewInterface:
         """finds cfile which started active mode"""
@@ -161,7 +171,9 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         cpu_peak: float = cfile.get_max(MetricName.CPU)
 
         # Create Graph Plots
-        x_values: List[float] = cfile.get_timestamps()
+        x_values: List[float] = list()
+        for c in cfile.get_timestamps():
+            x_values.append(c - self.project_time)
         ram_y_values: List[float] = cfile.get_metrics(MetricName.RAM)
         cpu_y_values: List[float] = cfile.get_metrics(MetricName.CPU)
         runtime: List[float] = [cfile.get_total_time()]
@@ -181,9 +193,23 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         return Displayable(name, ram_plot, cpu_plot, runtime_plot, ram_peak, cpu_peak, headers, secondary_headers)
 
     def __generate_random_color(self):
-        """generates random color for plots"""
-        random_color: str = "#{:06X}".format(random.randint(0, 0xFFFFFF))
-        return random_color
+        """Generates random saturated color between light blue and pink."""
+        light_blue_rgb = (173, 216, 230)  # Light Blue
+        pink_rgb = (255, 182, 193)  # Pink
+        saturation_factor = 2.1
+
+        # Generate random RGB Values between Light Blue and Pink
+        random_color_rgb = [
+            random.randint(min(light_blue_rgb[i], pink_rgb[i]), max(light_blue_rgb[i], pink_rgb[i]))
+            for i in range(3)
+        ]
+
+        hsv = colorsys.rgb_to_hsv(random_color_rgb[0] / 255.0, random_color_rgb[1] / 255.0, random_color_rgb[2] / 255.0)
+        hsv = (hsv[0], min(1.0, hsv[1] * saturation_factor), hsv[2])
+        random_color_rgb = tuple(int(x * 255) for x in colorsys.hsv_to_rgb(*hsv))
+        random_color_hex = "#{:02X}{:02X}{:02X}".format(*random_color_rgb)
+
+        return random_color_hex
 
     def setup_connections(self):
         """sets up connections between table and graph widgets"""
@@ -193,38 +219,13 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
                     lambda state, current_row=row: self.update_visibility(current_row.displayable))
                 row.connected = True
 
+        self.setup_click_connections()
+
     def setup_resource_connections(self):
-        """sets up connections between metric bar and graph widgets"""
-        self.metric_bar.cpu_checkbox.stateChanged.connect(lambda: self.switch_cpu())
-        self.metric_bar.ram_checkbox.stateChanged.connect(lambda: self.switch_ram())
-        self.metric_bar.time_checkbox.stateChanged.connect(lambda: self.switch_runtime())
-
-    def switch_runtime(self):
-        """is called by using runtime checkbox, shows or hides runtime bars"""
-        if self.__runtime:
-            self.__runtime = False
-        elif not self.__ram and not self.__cpu:
-            self.__runtime = True
-            self.stacked_widget.setCurrentIndex(1)
-        self.bar_chart_widget.toggle_chart()
-
-    def switch_ram(self):
-        """is called by using ram checkbox, shows or hides ram graphs"""
-        if self.__ram:
-            self.__ram = False
-        elif not self.__runtime:
-            self.__ram = True
-            self.stacked_widget.setCurrentIndex(0)
-        self.graph_widget.toggle_ram()
-
-    def switch_cpu(self):
-        """is called by using cpu checkbox, shows or hides cpu graphs"""
-        if self.__cpu:
-            self.__cpu = False
-        elif not self.__runtime:
-            self.__cpu = True
-            self.stacked_widget.setCurrentIndex(0)
-        self.graph_widget.toggle_cpu()
+        """sets up connections between metric bar and graph/bar chart widgets"""
+        self.metric_bar.cpu_button.pressed.connect(lambda: self.stacked_widget.setCurrentIndex(1))
+        self.metric_bar.ram_button.pressed.connect(lambda: self.stacked_widget.setCurrentIndex(0))
+        self.metric_bar.runtime_button.pressed.connect(lambda: self.stacked_widget.setCurrentIndex(2))
 
     def update_visibility(self, displayable: Displayable):
         """shows or hides plots of given displayable"""
@@ -240,15 +241,23 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
     def __add_to_graph(self, displayable: Displayable):
         """adds plots of given displayable to graph and bar chart widgets"""
-        self.graph_widget.add_ram_plot(displayable.ram_plot)
-        self.graph_widget.add_cpu_plot(displayable.cpu_plot)
+        self.ram_graph_widget.add_plot(displayable.ram_plot)
+        self.cpu_graph_widget.add_plot(displayable.cpu_plot)
         self.bar_chart_widget.add_bar(displayable.runtime_plot)
 
     def __remove_from_graph(self, displayable: Displayable):
         """removes plots of given displayable from graph and bar chart widgets"""
-        self.graph_widget.remove_ram_plot(displayable.ram_plot)
-        self.graph_widget.remove_cpu_plot(displayable.cpu_plot)
+        self.ram_graph_widget.remove_plot(displayable.ram_plot)
+        self.cpu_graph_widget.remove_plot(displayable.cpu_plot)
         self.bar_chart_widget.remove_bar(displayable.runtime_plot)
+
+    def setup_click_connections(self):
+        self.bar_chart_widget.click_signal.connect(
+            lambda: self.table_widget.highlight_row(self.bar_chart_widget.bar_clicked))
+        self.cpu_graph_widget.click_signal.connect(
+            lambda: self.table_widget.highlight_row(self.cpu_graph_widget.plot_clicked))
+        self.ram_graph_widget.click_signal.connect(
+            lambda: self.table_widget.highlight_row(self.ram_graph_widget.plot_clicked))
 
     def close(self):
         self.q_application.exec()
