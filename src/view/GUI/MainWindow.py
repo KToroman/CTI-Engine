@@ -2,6 +2,7 @@ import colorsys
 import sys
 
 import random
+import time
 from typing import List
 
 from PyQt5.QtCore import Qt
@@ -10,6 +11,8 @@ from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QWidget,
 from src.view.GUI.Graph.BarWidget import BarWidget
 from src.view.GUI.Graph.GraphWidget import GraphWidget
 from src.view.GUI.MainWindowMeta import MainWindowMeta
+from src.view.GUI.UserInteraction.DisplayableHolder import DisplayableHolder
+from src.view.GUI.UserInteraction.DisplayableInterface import DisplayableInterface
 from src.view.GUI.UserInteraction.MenuBar import MenuBar
 from src.view.GUI.UserInteraction.TableWidget import TableWidget
 from src.view.GUI.UserInteraction.Displayable import Displayable
@@ -33,14 +36,15 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     RAM_Y_AXIS: str = "RAM (in mb)"
     CPU_Y_AXIS: str = "CPU (in %)"
 
-    __visible_plots: List[Displayable] = []
-    __ram: bool = False
-    __cpu: bool = False
-    __runtime: bool = False
 
     def __init__(self, q_application: QApplication):
         self.__q_application: QApplication = q_application
         super().__init__()
+
+        self.__visible_plots: List[Displayable] = []
+        self.__ram: bool = False
+        self.__cpu: bool = False
+        self.__runtime: bool = False
 
         self.setWindowTitle(self.WINDOWTITLE)
         self.resize(self.WINDOWSIZE1, self.WINDOWSIZE2)
@@ -93,6 +97,8 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.table_widget: TableWidget = TableWidget()
         self.splitter1.addWidget(self.table_widget)
 
+        self.HIERARCHY_DEPTH: int = 3
+
         self.menu_bar: MenuBar = MenuBar(self.menu_bar_frame_layout)
         self.metric_bar: MetricBar = MetricBar(self.metric_bar_frame_layout)
 
@@ -117,11 +123,13 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         # Update TableWidget for each cfile
         cfile_list: List[CFileReadViewInterface] = model.get_cfiles()
         for cfile in cfile_list:
-            self.table_widget.insert_values(self.__create_displayable(cfile))
+            c_disp = self.__create_displayable(cfile, 0)
+            self.table_widget.insert_values(c_disp)
 
         # Update other Widgets
         self.setup_connections()
         self.status_bar.update_status(StatusSettings.FINISHED)
+
 
     def __visualize_active(self, model: ModelReadViewInterface):
         """visualizes data from active mode"""
@@ -162,35 +170,32 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         for header in cfile.get_headers():
             self.__get_hierarchy(header, active_row)
 
-    def __create_displayable(self, cfile: CFileReadViewInterface) -> Displayable:
+    def __create_displayable(self, cfile: CFileReadViewInterface, depth_p: int) -> DisplayableHolder:
         """turns given cfile into displayable"""
+        depth = depth_p + 1
+        if depth >= self.HIERARCHY_DEPTH or not cfile.get_headers():
+            return DisplayableHolder(self.__make_disp(cfile), [])
+        sub_disp_list: List[DisplayableHolder] = list()
+        for h in cfile.get_headers():
+            sub_disp_list.append(self.__create_displayable(h, depth))
+        return DisplayableHolder(self.__make_disp(cfile), sub_disp_list)
 
-        # Collect data for Displayable
-        name: str = cfile.get_name()
-        ram_peak: float = cfile.get_max(MetricName.RAM)
-        cpu_peak: float = cfile.get_max(MetricName.CPU)
-
+    def __make_disp(self, c: CFileReadViewInterface) -> Displayable:
+        name: str = c.get_name()
+        ram_peak: float = c.get_max(MetricName.RAM)
+        cpu_peak: float = c.get_max(MetricName.CPU)
         # Create Graph Plots
         x_values: List[float] = list()
-        for c in cfile.get_timestamps():
-            x_values.append(c - self.project_time)
-        ram_y_values: List[float] = cfile.get_metrics(MetricName.RAM)
-        cpu_y_values: List[float] = cfile.get_metrics(MetricName.CPU)
-        runtime: List[float] = [cfile.get_total_time()]
+        for c_time in c.get_timestamps():
+            x_values.append(c_time - self.project_time)
+        ram_y_values: List[float] = c.get_metrics(MetricName.RAM)
+        cpu_y_values: List[float] = c.get_metrics(MetricName.CPU)
+        runtime: List[float] = [c.get_total_time()]
         color: str = self.__generate_random_color()
         ram_plot = Plot(name, color, x_values, ram_y_values)
         cpu_plot = Plot(name, color, x_values, cpu_y_values)
         runtime_plot = Plot(name, color, None, runtime)
-
-        # Create header and secondary header list for current Displayable
-        headers: List[str] = list()
-        secondary_headers: List[List[str]] = list()
-        for header in cfile.get_headers():
-            headers.append(header.get_name())
-            for secondary_header in header.get_headers():
-                secondary_headers.append(secondary_header.get_name())
-
-        return Displayable(name, ram_plot, cpu_plot, runtime_plot, ram_peak, cpu_peak, headers, secondary_headers)
+        return Displayable(name, ram_plot, cpu_plot, runtime_plot, ram_peak, cpu_peak)
 
     def __generate_random_color(self):
         """Generates random saturated color between light blue and pink."""
@@ -214,7 +219,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     def setup_connections(self):
         """sets up connections between table and graph widgets"""
         for row in self.table_widget.rows:
-            if not row.connected:
+            if not row.is_child and not row.connected:
                 row.checkbox.stateChanged.connect(
                     lambda state, current_row=row: self.update_visibility(current_row.displayable))
                 row.connected = True

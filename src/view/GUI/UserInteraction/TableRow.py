@@ -5,11 +5,12 @@ from PyQt5.QtWidgets import QCheckBox, QPushButton, QWidget, QHBoxLayout, QTable
 
 
 class TableRow:
-    def __init__(self, displayable: Displayable):
+    def __init__(self, displayable: Displayable, is_child: bool):
         self.displayable: Displayable = displayable
+        self.is_child = is_child
         self.children: List[TableRow] = []
         self.checkbox: QCheckBox = QCheckBox()
-        if not displayable.ram_plot:
+        if self.is_child:
             self.checkbox.setDisabled(True)
         self.toggle_button: QPushButton = QPushButton()
         self.toggle_button.setMaximumWidth(20)

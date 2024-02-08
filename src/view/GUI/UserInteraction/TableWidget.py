@@ -1,10 +1,16 @@
+import copy
+import time
+from threading import Thread
 from typing import List
 
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QInputDialog, QWidget, QHBoxLayout
 
+from src.view.GUI.Graph.Plot import Plot
 # from src.view.AppRequestsInterface import AppRequestsInterface
 from src.view.GUI.UserInteraction.Displayable import Displayable
+from src.view.GUI.UserInteraction.DisplayableHolder import DisplayableHolder
+from src.view.GUI.UserInteraction.DisplayableInterface import DisplayableInterface
 from src.view.GUI.UserInteraction.TableRow import TableRow
 from src.view.AppRequestsInterface import AppRequestsInterface
 
@@ -18,7 +24,7 @@ class TableWidget(QTableWidget):
 
     def __init__(self):
         super().__init__()
-        self.app_request_interface : AppRequestsInterface = AppRequestsInterface
+        self.app_request_interface: AppRequestsInterface = AppRequestsInterface
         self.setColumnCount(self.NUMBER_OF_COLUMNS)
         self.rows: List[TableRow] = []
         self.setHorizontalHeaderLabels([self.COLUMN_1_LABEL, self.COLUMN_2_LABEL,
@@ -28,53 +34,48 @@ class TableWidget(QTableWidget):
         self.all_selected: bool = False
         # self.app_request_interface = AppRequestsInterface()
 
-    def insert_values(self, displayable: Displayable):
-        row_pos: int = self.rowCount()
-        self.insertRow(row_pos)
+    def insert_data_row(self, displayable_holder: DisplayableInterface, row: TableRow):
+        if not displayable_holder.get_sub_disp():
+            self.make_row(displayable_holder.get_disp(), row)
+            return
+        p_row = self.make_row(displayable_holder.get_disp(), row)
+        for h in displayable_holder.get_sub_disp():
+            self.insert_data_row(h, p_row)
 
-        row: TableRow = TableRow(displayable)
-        self.rows.append(row)
-        self.fill_row(row, row_pos)
-        self.setRowHeight(self.rows.index(row), 40)
+    def make_row(self, displayable: Displayable, caller_row: TableRow) -> TableRow:
+        if caller_row is None:
+            row_pos: int = self.rowCount()
+            self.insertRow(row_pos)
+            row: TableRow = TableRow(displayable, False)
+            self.rows.append(row)
+            self.fill_row(row, row_pos)
+            self.setRowHeight(self.rows.index(row), 40)
+            row.toggle_button.clicked.connect(lambda: self.toggle_row_vis(row))
+            row.name_button.clicked.connect(lambda: self.show_input_dialog_active(row.displayable.name))
+            return row
 
-        row.toggle_button.clicked.connect(lambda: self.toggle_row_vis(row))
-        row.name_button.clicked.connect(lambda: self.show_input_dialog_active(row.displayable.name))
+        sub_row: TableRow = TableRow(displayable, True)
+        caller_row.children.append(sub_row)
+        self.rows.insert(self.rows.index(caller_row) + 1, sub_row)
+        self.insertRow(self.rowCount())
+        self.fill_row(sub_row, self.rows.index(caller_row) + caller_row.children.index(sub_row) + 1)
+        self.setRowHeight(self.rows.index(sub_row), 30)
+        sub_row.toggle_button.clicked.connect(lambda: self.toggle_row_vis(sub_row))
+        sub_row.name_button.clicked.connect(lambda: self.show_input_dialog_active(sub_row.displayable.name))
 
-        for header in displayable.headers:
-            displayable_mock: Displayable = Displayable(header, None, ..., ..., 0, 0, [], [])
-            self.add_subrow(displayable_mock, displayable.name)
-            if len(displayable.secondary_headers[displayable.headers.index(header)]) != 0:
-                for subheader in displayable.secondary_headers[displayable.headers.index(header)]:
-                    displayable_mock_2: Displayable = Displayable(subheader, None, ..., ..., 0, 0, [], [])
-                    self.add_subrow(displayable_mock_2, header)
+        self.set_row_color(self.rows.index(sub_row), QColor(220, 220, 220))
+        if caller_row.is_child:
+            self.set_row_color(self.rows.index(sub_row), QColor(170, 170, 170))
 
-    def add_subrow(self, displayable: Displayable, parent_name: str):
-        for row in self.rows:
-            if row.displayable.name == parent_name:
-                caller_row: TableRow = row
-                sub_row: TableRow = TableRow(displayable)
-                caller_row.children.append(sub_row)
-                self.rows.insert(self.rows.index(row) + 1, sub_row)
-                self.insertRow(self.rowCount())
-                sub_row.toggle_button.clicked.connect(lambda: self.toggle_row_vis(sub_row))
-                sub_row.name_button.clicked.connect(lambda: self.show_input_dialog_active(sub_row.displayable.name))
-                break
-        self.clear()
-        self.setHorizontalHeaderLabels([self.COLUMN_1_LABEL, self.COLUMN_2_LABEL,
-                                        self.COLUMN_3_LABEL, self.COLUMN_4_LABEL])
-        for new_row in self.rows:
-            self.setRowHeight(self.rows.index(new_row), 40)
-            self.fill_row(new_row, self.rows.index(new_row))
-            if len(new_row.displayable.headers) == 0:
-                self.set_row_color(self.rows.index(new_row), QColor(220, 220, 220))
-            if len(new_row.children) == 0:
-                self.set_row_color(self.rows.index(new_row), QColor(170, 170, 170))
+        return sub_row
+
+    def insert_values(self, displayable_holder: DisplayableHolder):
+        self.insert_data_row(displayable_holder, None)
 
     def set_row_color(self, row, color):
         for column in range(self.columnCount()):
             item = self.item(row, column)
             item.setBackground(color)
-
 
     def fill_row(self, row, index):
         if len(row.children) != 0:
@@ -89,9 +90,12 @@ class TableWidget(QTableWidget):
                      QTableWidgetItem(self.setCellWidget(index, 0, cell_widget)))
         self.setItem(index, 1, QTableWidgetItem(str(row.displayable.ram_peak)))
         self.setItem(index, 2, QTableWidgetItem(str(row.displayable.cpu_peak)))
-        self.setItem(index, 3, QTableWidgetItem(str(row.displayable.runtime_plot.y_values[0])))
+        if row.displayable.runtime_plot.y_values:
+            self.setItem(index, 3, QTableWidgetItem(str(row.displayable.runtime_plot.y_values[0])))
+        else:
+            self.setItem(index, 3, QTableWidgetItem(str(0)))
 
-    def fill_subrow(self, displayable : Displayable):
+    def fill_subrow(self, displayable: Displayable):
         for row in self.rows:
             if row.displayable.name == displayable.name:
                 row.displayable = displayable
@@ -123,7 +127,6 @@ class TableWidget(QTableWidget):
 
         # Test nur als Beispiel
 
-
     def show_input_dialog_active(self, name):
         text, ok = QInputDialog.getText(None, "Active measurement", 'Start active measurement with following file?: ',
                                         text=name)
@@ -139,7 +142,7 @@ class TableWidget(QTableWidget):
 
     def toggle_all_rows(self):
         for row in self.rows:
-            if not self.all_selected:
+            if not self.all_selected and not row.is_child:
                 row.checkbox.setChecked(True)
             else:
                 row.checkbox.setChecked(False)

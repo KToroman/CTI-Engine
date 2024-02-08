@@ -46,6 +46,8 @@ class HierarchyFetcher(FetcherInterface):
     def __update_headers(self, source_file: SourceFile) -> None:
         hierarchy_command: str = self.command_getter.generate_hierarchy_command(
             source_file)
+        if hierarchy_command is None:
+            return
         hierarchy_result: str = self.__gcc_command_executor.execute(
             hierarchy_command)
 
