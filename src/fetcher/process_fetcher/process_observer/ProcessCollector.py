@@ -3,7 +3,7 @@ import subprocess
 import time
 from os.path import join
 from re import split
-from typing import List, IO
+from typing import List, IO, Optional
 import psutil
 
 from src.model.Model import Model
@@ -15,12 +15,11 @@ from src.model.core.Project import Project
 class ProcessCollector:
     PROC_NAME_FILTER = "cc1plus"
 
-    def __init__(self, model: Model, path_to_save: str):
+    def __init__(self, model: Model):
         self.process_list: List[psutil.Process] = list()
         self.__model = model
-        self.__path_to_save = path_to_save
 
-    def __create_processes(self, line: str) -> psutil.Process:
+    def __create_processes(self, line: str) -> Optional[psutil.Process]:
         try:
             proc_info = split(" ", line, 10)
             proc_id: str = proc_info[0]
@@ -34,13 +33,15 @@ class ProcessCollector:
     def catch_process(self) -> IO[str] | None:
         ps = subprocess.Popen(['ps', '-e'], stdout=subprocess.PIPE)
         grep = subprocess.Popen(['grep', 'cc1plus'], stdin=ps.stdout, stdout=subprocess.PIPE, encoding='utf-8')
-        ps.stdout.close()
-        grep.stdout.readline()
+        if ps.stdout is not None:
+            ps.stdout.close()
+        if grep.stdout:
+            grep.stdout.readline()
         return grep.stdout
 
-    def make_process(self, line: str) -> psutil.Process:
+    def make_process(self, line: str) -> Optional[psutil.Process]:
         process = self.__create_processes(line)
-        if not self.__is_process_in_list(process) and process is not None:
+        if process is not None and not self.__is_process_in_list(process):
             self.process_list.append(process)
             self.project_checker(process)
             return process
@@ -60,7 +61,7 @@ class ProcessCollector:
             time.sleep(0.1)
             project_name: str = self.__get_project_name(proc)
             if self.__model.current_project is None or project_name != self.__model.current_project.working_dir:
-                self.__model.add_project(Project(project_name, proc.ppid(), self.__path_to_save))
+                self.__model.add_project(Project(project_name))
         except:
             return
 

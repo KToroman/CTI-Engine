@@ -3,6 +3,7 @@ import time
 from threading import Thread
 
 import click
+from exceptions.ProjectNotFoundException import ProjectNotFoundException
 
 from src.fetcher.file_fetcher.FileLoader import FileLoader
 from src.fetcher.hierarchy_fetcher.HierarchyFetcher import HierarchyFetcher
@@ -28,7 +29,7 @@ class App(AppRequestsInterface):
         self.__has_gui: bool = start_with_gui
         self.__model = Model()
         self.__cti_dir_path = cti_dir_path
-        self.__passive_data_fetcher: FetcherInterface = PassiveDataFetcher(self.__model, self.__cti_dir_path)
+        self.__passive_data_fetcher: FetcherInterface = PassiveDataFetcher(self.__model)
         self.__hierarchy: FetcherInterface = HierarchyFetcher(self.__model)
         self.__save: SaveInterface = SaveToJSON()
 
@@ -53,15 +54,15 @@ class App(AppRequestsInterface):
     def __passive_measurement(self):
         curr_project_name: str = ""
         if self.__model.get_current_project() is not None:
-            curr_project_name = self.__model.get_current_project().working_dir
+            curr_project_name = self.__model.get_current_working_directory()
         while not self.__cancel_measurement:
             self.__is_measuring = self.__passive_data_fetcher.update_project()
             if self.__model.current_project is None:
                 time.sleep(0.0001)
                 continue
-            if curr_project_name != self.__model.get_current_project().working_dir:
+            if curr_project_name != self.__model.get_current_working_directory():
                 Thread(target=self.__make_hierarchy).start()
-                curr_project_name = self.__model.get_current_project().working_dir
+                curr_project_name = self.__model.get_current_working_directory()
                 Thread(target=self.__save_project, args=[curr_project_name]).start()
             time.sleep(0.01)
         self.__running_passive_fetcher = False
@@ -74,15 +75,22 @@ class App(AppRequestsInterface):
         stop_time: float = time.time() + 10
         print("saver opend")
         while stop_time > time.time() and not self.__cancel_measurement:
-            project = self.__model.get_project_by_name(name)
+            project: Project = self.__get_project(name)
             saver.save_project(project)
             time.sleep(3)
-            if project.working_dir == self.__model.get_current_project().working_dir:
+            if project.working_dir == self.__model.get_current_working_directory():
                 stop_time = time.time() + 10
         saver.save_project(self.__model.get_project_by_name(name))
         print("saver colsed")
 
-
+    def __get_project(self, name: str):
+        project: Project = Project("", "")
+        try: 
+            project = self.__model.get_project_by_name(name)
+        except ProjectNotFoundException:
+            self.__get_project
+        return project
+        
 
     @click.command()
     @click.option('--source_file_name', prompt='Enter a filepath', help='filepath for active measurement')
@@ -91,11 +99,11 @@ class App(AppRequestsInterface):
     def start_active_measurement_command(self, source_file_name: str, path: str):
         app = App(False)
         app.load_from_directory(path)
-        app.start_active_measurement()
+        app.start_active_measurement(source_file_name)
 
     def start_active_measurement(self, source_file_name: str):
         self.__fetcher: FetcherInterface = ActiveDataFetcher(
-            source_file_name, self.__model, self.__cti_dir_path)
+            source_file_name=source_file_name, model=self.__model, build_dir_path = self.CTI_DIR_PATH)
         self.run()
         if self.__has_gui:
             self.__UI.visualize(self.__model)
@@ -104,7 +112,7 @@ class App(AppRequestsInterface):
     @click.argument('path')
     def load_from_directory_command(self, path: str):
         app = App(False)
-        app.load_from_directory()
+        app.load_from_directory(path)
 
     def load_from_directory(self, path: str):
         self.__fetcher = FileLoader(path, self.__model)
@@ -119,7 +127,7 @@ class App(AppRequestsInterface):
         self.__cancel_measurement = True
         return True
 
-    def restart_measurement(self) -> bool:
+    def restart_measurement(self):
         self.__cancel_measurement = False
         self.run()
 

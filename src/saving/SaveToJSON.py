@@ -46,7 +46,7 @@ class SaveToJSON(SaveInterface):
             return True
         return False
 
-    def __set_path(self, path: str = None):
+    def __set_path(self, path: str = ""):
         if path is None or path == "":
             self.__save_path = self.__default_path()
             return

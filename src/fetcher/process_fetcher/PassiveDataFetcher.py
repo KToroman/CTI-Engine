@@ -1,13 +1,9 @@
-import os.path
-import subprocess
+
 import time
 from os.path import join
 from threading import Thread
 from typing import List
-
-import jsonpickle
 import psutil
-from src.fetcher import hierarchy_fetcher
 from src.fetcher.hierarchy_fetcher.HierarchyFetcher import HierarchyFetcher
 
 from src.fetcher.process_fetcher.DataFetcher import DataFetcher
@@ -16,20 +12,16 @@ from src.fetcher.process_fetcher.process_observer.metrics_observer.DataObserver 
 from src.model.Model import Model
 from src.model.core.DataEntry import DataEntry
 from src.model.core.ProcessPoint import ProcessPoint
-from src.model.core.Project import Project
 
 
 class PassiveDataFetcher(DataFetcher):
 
-    def __init__(self, model: Model, path_to_save: str):
+    def __init__(self, model: Model):
         self.__model = model
-        self.__path_to_save = path_to_save
-        self.__process_collector: ProcessCollector = ProcessCollector(model, path_to_save)
+        self.__process_collector: ProcessCollector = ProcessCollector(model)
         self.__data_observer: DataObserver = DataObserver()
-        self.__entry_list: List[DataEntry] = list()
-
-        self.__time_to_wait: int = 15
-        self.__time_till_false: int = 0
+        self.__time_to_wait: float = 15
+        self.__time_till_false: float = 0
 
     def update_project(self) -> bool:
         Thread(target=self.__fetch_process, daemon=True).start()
@@ -49,6 +41,8 @@ class PassiveDataFetcher(DataFetcher):
 
     def __fetch_process(self):
         processes = self.__process_collector.catch_process()
+        if processes is None:
+            return
         for line in processes:
             Thread(target=self.__create_process, args=[line]).start()
 
