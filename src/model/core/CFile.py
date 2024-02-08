@@ -19,10 +19,9 @@ class CFile(CFileReadViewInterface, Protocol):
         return self.path
 
     def get_total_time(self) -> float:
-        return (
-                self.data_entries[len(self.data_entries) - 1].timestamp
-                - self.data_entries[0].timestamp
-        )
+        if self.data_entries:
+            return self.data_entries[-1].timestamp - self.data_entries[0].timestamp
+        return 0
 
     def get_max(self, metric_name: MetricName) -> float:
         max_entry_value = 0
