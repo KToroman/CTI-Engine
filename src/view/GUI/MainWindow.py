@@ -56,7 +56,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.user_interaction_frame_layout: QVBoxLayout = QVBoxLayout()
         self.top_frame_layout.addLayout(self.user_interaction_frame_layout)
 
-        self.status_bar_frame_layout: QHBoxLayout = QVBoxLayout()
+        self.status_bar_frame_layout: QVBoxLayout = QVBoxLayout()
         self.status_bar: StatusBar = StatusBar()
         self.status_bar.setMaximumHeight(100)
         self.status_bar_frame_layout.addWidget(self.status_bar)

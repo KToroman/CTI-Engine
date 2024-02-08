@@ -16,6 +16,7 @@ class HierarchyFetcher(FetcherInterface):
         self.__model: Model = model
         self.__gcc_command_executor: GCCCommandExecutor = GCCCommandExecutor()
         self.command_getter: CompileCommandGetter
+        self.is_done: bool = False
 
     def update_project(self) -> bool:
         """Updates the current project by adding a hierarchical structure of header objects to all source files"""
@@ -24,6 +25,7 @@ class HierarchyFetcher(FetcherInterface):
 
         hierarchy_thread: Thread = Thread(target=self.__setup_hierarchy, args=[project], daemon=False)
         hierarchy_thread.start()
+        self.is_done = True
         return False
 
     def __setup_hierarchy(self, project: Project) -> None:

@@ -5,6 +5,24 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "normal_start",
+            "type": "python",
+            "request": "launch",
+            "module": "src",
+            "justMyCode": true
+        },
+        {
+            "name": "load",
+            "args": [
+                "load",
+                "/common/homes/students/upufw_toroman/PSE/cti-engine-prototype/saves/CTI_ENGINE_SAVE ArmarXCore 2024-02-06/CTI_ENGINE_SAVE ArmarXCore 2024-02-06.json"
+            ],
+            "type": "python",
+            "request": "launch",
+            "module": "src",
+            "justMyCode": true
+        },
+        {
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",

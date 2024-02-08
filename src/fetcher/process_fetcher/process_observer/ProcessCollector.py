@@ -4,6 +4,7 @@ import time
 from os.path import join
 from re import split
 from typing import List, IO, Optional
+
 import psutil
 
 from src.model.Model import Model
