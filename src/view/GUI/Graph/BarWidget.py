@@ -15,15 +15,16 @@ class BarWidget(QWidget):
     X_AXIS: str = "Sourcefiles"
     Y_AXIS: str = "Runtime (in sec)"
 
-    categories: List[str] = []
-    values: List[float] = []
-    colors: List[str] = []
-    clear_flag: bool = True
-    bar_clicked: str = ""
     click_signal: pyqtSignal = pyqtSignal()
 
     def __init__(self):
         super(BarWidget, self).__init__()
+
+        self.categories: List[str] = []
+        self.values: List[float] = []
+        self.colors: List[str] = []
+        self.clear_flag: bool = True
+        self.bar_clicked: str = ""
 
         self.figure = Figure(figsize=(5, 4), dpi=100)
         self.canvas = FigureCanvas(self.figure)

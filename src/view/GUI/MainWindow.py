@@ -33,14 +33,14 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     RAM_Y_AXIS: str = "RAM (in mb)"
     CPU_Y_AXIS: str = "CPU (in %)"
 
-    __visible_plots: List[Displayable] = []
-    __ram: bool = False
-    __cpu: bool = False
-    __runtime: bool = False
-
     def __init__(self, q_application: QApplication):
         self.__q_application: QApplication = q_application
         super().__init__()
+
+        __visible_plots: List[Displayable] = []
+        __ram: bool = False
+        __cpu: bool = False
+        __runtime: bool = False
 
         self.setWindowTitle(self.WINDOWTITLE)
         self.resize(self.WINDOWSIZE1, self.WINDOWSIZE2)
