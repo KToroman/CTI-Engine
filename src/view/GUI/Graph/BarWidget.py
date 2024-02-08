@@ -1,22 +1,26 @@
 from typing import List
-
+from PyQt5.QtCore import pyqtSignal, pyqtSlot
+from matplotlib.backend_bases import PickEvent
 from matplotlib.backends.backend_template import FigureCanvas
 from PyQt5.QtWidgets import QVBoxLayout, QWidget
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
+from src.view.GUI.Graph.CustomToolbar import CustomToolbar
 from src.view.GUI.Graph.Plot import Plot
 
 
 class BarWidget(QWidget):
 
     X_AXIS: str = "Sourcefiles"
-    Y_AXIS: str = "Runtime"
+    Y_AXIS: str = "Runtime (in sec)"
 
     categories: List[str] = []
     values: List[float] = []
     colors: List[str] = []
     clear_flag: bool = True
+    bar_clicked: str = ""
+    click_signal: pyqtSignal = pyqtSignal()
 
     def __init__(self):
         super(BarWidget, self).__init__()
@@ -25,8 +29,13 @@ class BarWidget(QWidget):
         self.canvas = FigureCanvas(self.figure)
 
         layout = QVBoxLayout(self)
+        self.toolbar = CustomToolbar(self.canvas, self)
+        layout.addWidget(self.toolbar)
         layout.addWidget(self.canvas)
         self.__plot_bar_chart()
+
+        # Connect pick events for the bar chart
+        self.canvas.mpl_connect('pick_event', self.on_pick)
 
     def add_bar(self, plot: Plot):
         """adds bar to bar chart"""
@@ -56,8 +65,8 @@ class BarWidget(QWidget):
         self.ax = self.figure.add_subplot(111)
 
         # Create bar chart
-        self.ax.bar(self.categories, self.values, color=self.colors)
-
+        bars = self.ax.bar(self.categories, self.values, color=self.colors, label=self.categories)
+        self.ax.set_xticks([])
         # Add title and labels for axes
         self.ax.set_xlabel(self.X_AXIS)
         self.ax.set_ylabel(self.Y_AXIS)
@@ -65,12 +74,11 @@ class BarWidget(QWidget):
         # Draw diagram on canvas
         self.canvas.draw()
 
-    def toggle_chart(self):
-        """shows or hides bar chart"""
-        if self.clear_flag:
-            self.__plot_bar_chart()
-            self.clear_flag = False
-        else:
-            self.ax.clear()
-            self.clear_flag = True
-        self.canvas.draw()
+        # Set the clickable property for each bar
+        for bar in bars:
+            bar.set_picker(True)
+
+    def on_pick(self, event: PickEvent):
+        """reacts to click on bar"""
+        self.bar_clicked = event.artist.get_label().__str__()
+        self.click_signal.emit()
