@@ -1,5 +1,8 @@
+import time
+from random import randrange
 from typing import List
 
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QInputDialog, QWidget, QHBoxLayout
 
@@ -18,11 +21,14 @@ class TableWidget(QTableWidget):
 
     def __init__(self):
         super().__init__()
-        self.app_request_interface : AppRequestsInterface = AppRequestsInterface
+        self.app_request_interface: AppRequestsInterface = AppRequestsInterface
         self.setColumnCount(self.NUMBER_OF_COLUMNS)
         self.rows: List[TableRow] = []
         self.setHorizontalHeaderLabels([self.COLUMN_1_LABEL, self.COLUMN_2_LABEL,
                                         self.COLUMN_3_LABEL, self.COLUMN_4_LABEL])
+        self.horizontalHeader().setStyleSheet("::section{Background-color: #4095a1}")
+        for column in range(self.columnCount()):
+            self.horizontalHeader().sectionClicked.connect(lambda col=column: self.sort_table(col))
         self.insertion_point: str = ""
         self.active_started: bool = False
         self.all_selected: bool = False
@@ -85,11 +91,17 @@ class TableWidget(QTableWidget):
         layout.addWidget(row.checkbox)
         layout.addWidget(row.name_button)
         layout.addWidget(row.toggle_button)
-        self.setItem(index, 0,
-                     QTableWidgetItem(self.setCellWidget(index, 0, cell_widget)))
-        self.setItem(index, 1, QTableWidgetItem(str(row.displayable.ram_peak)))
-        self.setItem(index, 2, QTableWidgetItem(str(row.displayable.cpu_peak)))
-        self.setItem(index, 3, QTableWidgetItem(str(row.displayable.runtime_plot.y_values[0])))
+
+        self.setItem(index, 0, QTableWidgetItem(self.setCellWidget(index, 0, cell_widget)))
+        item: QTableWidgetItem = QTableWidgetItem()
+        item.setData(Qt.DisplayRole, row.displayable.ram_peak)
+        self.setItem(index, 1, item)
+        item2: QTableWidgetItem = QTableWidgetItem()
+        item2.setData(Qt.DisplayRole, row.displayable.cpu_peak)
+        self.setItem(index, 2, item2)
+        item3: QTableWidgetItem = QTableWidgetItem()
+        item3.setData(Qt.DisplayRole, (row.displayable.runtime_plot.y_values[0]))
+        self.setItem(index, 3, item3)
 
     def fill_subrow(self, displayable : Displayable):
         for row in self.rows:
@@ -138,9 +150,15 @@ class TableWidget(QTableWidget):
             row_id = row_id + 1
 
     def toggle_all_rows(self):
+        #ti = time.time()
         for row in self.rows:
             if not self.all_selected:
                 row.checkbox.setChecked(True)
             else:
                 row.checkbox.setChecked(False)
         self.all_selected = not self.all_selected
+        #print("toggle all: " + (time.time() - ti).__str__())
+
+    def sort_table(self, column: int):
+        self.sortItems(column, order=2)
+        # Sortiere die Tabelle basierend auf dem numerischen Wert in der UserRole

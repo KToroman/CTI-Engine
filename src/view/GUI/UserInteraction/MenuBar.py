@@ -7,13 +7,16 @@ class MenuBar:
     def __init__(self, menu_bar_layout):
         self.app_request_interface = AppRequestsInterface
         self.load_file_button: QPushButton = QPushButton("Load file")
+        self.load_file_button.setStyleSheet("background-color: #61b3bf;")
         self.load_file_button.clicked.connect(lambda: self.show_input_dialog())
 
         self.pause_resume_button: QPushButton = QPushButton("Restart")
+        self.pause_resume_button.setStyleSheet("background-color: #61b3bf;")
         self.pause_resume_button.clicked.connect(lambda: self.app_request_interface.pause_measurement(
             self.app_request_interface))
 
         self.cancel_button: QPushButton = QPushButton("Cancel")
+        self.cancel_button.setStyleSheet("background-color: #61b3bf;")
         self.cancel_button.clicked.connect(lambda: self.app_request_interface.quit_measurement(
             self.app_request_interface))
 
