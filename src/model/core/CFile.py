@@ -14,6 +14,7 @@ class CFile(CFileReadViewInterface, Protocol):
         self.data_entries: List[DataEntry] = []
         self.headers: List[CFileReadViewInterface] = []
         self.path: str = path
+        self.error: bool = False
 
     def get_name(self) -> str:
         return self.path
@@ -62,3 +63,6 @@ class CFile(CFileReadViewInterface, Protocol):
 
     def get_headers(self):
         return self.headers
+
+    def has_header(self) -> bool:
+        return self.error

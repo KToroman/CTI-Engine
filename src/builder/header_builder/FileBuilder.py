@@ -1,37 +1,49 @@
-from typing import List
+import shlex
 from src.model.core.Header import Header
 from pathlib import Path
 
 
 class FileBuilder:
     def __init__(self, curr_project_dir: str, compile_command: str, source_file_name: str, build_path: str) -> None:
-        self.__original_compile_command: List[str] = compile_command.split(" ")
-        self.__source_file_name = source_file_name
-        self.__build_path = build_path
-        self.__curr_project_dir = curr_project_dir
+        self.__original_compile_command: str = compile_command
+        self.__source_file_name: str = source_file_name
+        self.__build_path: Path = Path(build_path) / "Active_Mode_Build" / "temp" / source_file_name.replace("/", "_")
+        self.__curr_project_dir: str = curr_project_dir
 
-    def generate_source_file(self, header: Header) -> str:
-        '''generates a source file that includes the header named header.path + .cpp
-        The files are generated in the CTIEngine-directory/Active_Mode_Build.'''
-        path = Path(self.__build_path) / 'Active_Mode_Build'
+
+    def generate_source_file(self, header: Header) -> Path:
+        """generates a source file that includes the given header
+
+        The files are generated as build_path/Active_Mode_Build/temp/<source_file_path>/<header_path>.cpp
+        where build_path is passed in the constructor"""
+        path = self.__build_path
         # will just be ignored if directory already exists
-        path.mkdir(exist_ok=True)
-        file_name: str = header.path + ".cpp"
-        with (path / file_name).open('w') as new_source_file:
+        path.mkdir(exist_ok=True, parents=True)
+        header_name: str = header.path.replace("/", "_") + ".cpp"
+        header.build_file_name = header_name
+        file_path: Path = Path(header_name)
+        file_path = path / file_path
+        with file_path.open('w') as new_source_file:
             new_source_file.write(self.__source_file_content(header))
             new_source_file.close()
-        return file_name
+        return file_path
 
     def __source_file_content(self, header: Header) -> str:
-        content: str = f'#include "{header.path}"' + '\n int main(int argc, char *argv) {}'
+        content: str = f'#include "{header.path}"' + '\n int main() {}'
         return content
 
-    def get_compile_command(self, header: Header) -> str:
-        compile_command_header: str = ""
-        for entry in self.__original_compile_command:
-            if entry is self.__source_file_name:
-                compile_command_header += header.path + ".cpp"
-            else:
-                compile_command_header += entry
-        compile_command_header += "-I" + self.__curr_project_dir
-        return compile_command_header
+    def get_compile_command(self, file_path: Path) -> list[str]:
+        """amends the original compile command of the Source File (passed in the constructor) to compile the header at the given path"""
+        command: list[str] = shlex.split(self.__original_compile_command)
+        delindex: int = -1
+        for i in range(len(command)):
+            if command[i] == "-c":
+                command[i+1] = file_path.resolve().__str__()
+            elif command[i] == "-o":
+                command[i+1] = file_path.resolve().__str__() + ".o"
+            elif command[i] == "-Werror":
+                delindex = i
+        if delindex != -1:
+            del command[delindex]
+        command.append("-I" + self.__curr_project_dir)
+        return command
