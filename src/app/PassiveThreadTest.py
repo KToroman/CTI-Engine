@@ -7,6 +7,8 @@ from src.fetcher.file_fetcher.FileLoader import FileLoader
 from src.fetcher.hierarchy_fetcher.HierarchyFetcher import HierarchyFetcher
 from src.fetcher.process_fetcher.PassiveDataFetcher import PassiveDataFetcher
 from src.model.Model import Model
+from src.model.core.CFile import CFile
+from src.model.core.CFileReadViewInterface import CFileReadViewInterface
 from src.model.core.DataEntry import DataEntry
 from src.model.core.Metric import Metric
 from src.model.core.MetricName import MetricName
@@ -59,8 +61,6 @@ class PassiveThread:
         saver.save_project(self.__model.get_project_by_name(name))
         print("saver colsed")
 
-
-
     def stop_programm(self):
         input("press button \n")
         self.is_running = False
@@ -77,6 +77,16 @@ class PassiveThread:
         time.sleep(1)
         print("fin in time: " + (time.time() - start).__str__())
 
+    def get_header_count(self, source_file: CFileReadViewInterface, counter: int) -> int:
+        if not source_file.get_headers():
+            return counter
+        for header in source_file.get_headers():
+            counter += 1
+            return self.get_header_count(header, counter)
+
+    def set_model(self, model: Model):
+        self.__model = model
+
     def length(self):
         counter = 0
         print("Project Count: " + self.__model.projects.__len__().__str__())
@@ -87,35 +97,30 @@ class PassiveThread:
             counter += 1
             conter = 0
             for c in p.source_files:
+                counter = self.get_header_count(c, counter)
                 conter += 1
                 print("       " + c.path + ": " + c.data_entries.__len__().__str__())
-                counter += 1 + c.data_entries.__len__()
+                counter += 1 # + c.data_entries.__len__()
 
         print("insgesamt: " + counter.__str__())
 
 
+"""
 p = PassiveThread()
 
 p.main_loop()
 
 time.sleep(1)
 p.length()
-
 """
+
+p = PassiveThread()
+
 m = Model()
 
-loader = FileLoader("C:\\Users\\cashe\\git\\cti-engine-prototype\\saves\\CTI_ENGINE_SAVE 69 1706829466", m)
+loader = FileLoader(
+    "/common/homes/students/uvhuj_heusinger/Documents/git/cti-engine-prototype/saves/CTI_ENGINE_SAVE simox 2024-02-07",
+    m)
 loader.update_project()
-
-e_loader = FileLoader("C:\\Users\\cashe\\git\\cti-engine-prototype\\saves\\CTI_ENGINE_SAVE 1706829468 1706829471", m)
-e_loader.update_project()
-
-p_e_loader = FileLoader("C:\\Users\\cashe\\git\\cti-engine-prototype\\saves\\CTI_ENGINE_SAVE 1706829498 1706829501", m)
-p_e_loader.update_project()
-
-p_e_cloader = FileLoader("C:\\Users\\cashe\\git\\cti-engine-prototype\\saves\\CTI_ENGINE_SAVE 1706829528 1706829531", m)
-p_e_cloader.update_project()
-
-print("Project Count: " + m.projects.__len__().__str__() )
-for p in m.projects:
-    print(p.origin_pid.__str__() + ": " + p.source_files.__len__().__str__()) """
+p.set_model(m)
+p.length()
