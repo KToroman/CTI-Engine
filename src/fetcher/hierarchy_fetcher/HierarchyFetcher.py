@@ -1,4 +1,3 @@
-from typing import Optional
 from threading import Thread
 
 from src.fetcher.FetcherInterface import FetcherInterface
@@ -16,7 +15,7 @@ class HierarchyFetcher(FetcherInterface):
     def __init__(self, model: Model) -> None:
         self.__model: Model = model
         self.__gcc_command_executor: GCCCommandExecutor = GCCCommandExecutor()
-        self.command_getter: Optional[CompileCommandGetter] = None
+        self.command_getter: CompileCommandGetter
 
     def update_project(self) -> bool:
         """Updates the current project by adding a hierarchical structure of header objects to all source files"""
@@ -24,19 +23,21 @@ class HierarchyFetcher(FetcherInterface):
         self.command_getter = CompileCommandGetter(project.working_dir)
 
         hierarchy_thread: Thread = Thread(target=self.__setup_hierarchy, args=[project], daemon=False)
-        hierarchy_thread.run()
+        hierarchy_thread.start()
         return False
 
     def __setup_hierarchy(self, project: Project) -> None:
         """the main Method of the Hierarchy Fetcher class, to be called in a separate thread"""
-        self.__setup_source_files(project)
-        for source_file in project.source_files:
+        source_files: list[SourceFile] = self.__setup_source_files(project)
+        for source_file in source_files:
             self.__set_compile_command(source_file)
             self.__update_headers(source_file)
 
-    def __setup_source_files(self, project: Project) -> None:
+    def __setup_source_files(self, project: Project) -> list[SourceFile]:
+        created_source_files: list[SourceFile] = []
         for opath in self.command_getter.get_all_opaths():
-            project.get_sourcefile(opath)
+            created_source_files.append(project.get_sourcefile(opath))
+        return created_source_files
 
     def __set_compile_command(self, source_file: SourceFile) -> None:
         compile_command: str = self.command_getter.get_compile_command(
