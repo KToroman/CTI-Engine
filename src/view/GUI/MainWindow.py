@@ -122,6 +122,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         # Update other Widgets
         self.setup_connections()
         self.status_bar.update_status(StatusSettings.FINISHED)
+        self.table_widget.rebuild_table()
 
     def __visualize_active(self, model: ModelReadViewInterface):
         """visualizes data from active mode"""
