@@ -9,6 +9,8 @@ class TableRow:
         self.displayable: Displayable = displayable
         self.children: List[TableRow] = []
         self.checkbox: QCheckBox = QCheckBox()
+        if not displayable.ram_plot:
+            self.checkbox.setDisabled(True)
         self.toggle_button: QPushButton = QPushButton()
         self.toggle_button.setMaximumWidth(20)
         self.name_button: QPushButton = QPushButton(displayable.name)
