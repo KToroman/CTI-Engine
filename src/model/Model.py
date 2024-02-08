@@ -31,6 +31,7 @@ class Model(ModelReadViewInterface):
         """returns view only on all cfiles in current project"""
         cfiles_view: List[CFileReadViewInterface] = list()
         cfiles_view.extend(self.current_project.source_files)
+        print(cfiles_view.__len__())
         return cfiles_view
 
     def insert_datapoint(self, data_point: DataEntry):

@@ -35,7 +35,7 @@ class PassiveThread:
             curr_project_name = self.__model.get_current_project().working_dir
         while not self.__cancel_measurement:
             self.__is_measuring = self.__passive_data_fetcher.update_project()
-            if self.__model.current_project is None:
+            if self.__model.get_current_project() is None:
                 time.sleep(0.0001)
                 continue
             if curr_project_name != self.__model.get_current_project().working_dir:
@@ -100,12 +100,12 @@ class PassiveThread:
                 counter = self.get_header_count(c, counter)
                 conter += 1
                 print("       " + c.path + ": " + c.data_entries.__len__().__str__())
-                counter += 1 # + c.data_entries.__len__()
+                counter += 1 + c.data_entries.__len__()
 
         print("insgesamt: " + counter.__str__())
 
 
-"""
+
 p = PassiveThread()
 
 p.main_loop()
@@ -124,3 +124,4 @@ loader = FileLoader(
 loader.update_project()
 p.set_model(m)
 p.length()
+"""
