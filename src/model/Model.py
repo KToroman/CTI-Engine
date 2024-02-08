@@ -2,7 +2,7 @@ import copy
 from optparse import Option
 import time
 from typing import List, Optional
-from exceptions.ProjectNotFoundException import ProjectNotFoundException
+from src.exceptions.ProjectNotFoundException import ProjectNotFoundException
 
 from src.model.ModelReadViewInterface import ModelReadViewInterface
 from src.model.core.CFile import CFile
@@ -19,7 +19,7 @@ class Model(ModelReadViewInterface):
     A model consists of an arbitrary number of projects."""
 
     def __init__(self) -> None:
-        self.current_project: Project
+        self.current_project: Project = Project("")
         self.projects: List[Project] = list()
 
     def get_project_name(self) -> str:
@@ -68,6 +68,4 @@ class Model(ModelReadViewInterface):
         return self.current_project.project_time
     
     def get_current_working_directory(self) -> str:
-        if self.current_project is not None:
-            return self.current_project.working_dir
-        return ""
+        return self.current_project.working_dir

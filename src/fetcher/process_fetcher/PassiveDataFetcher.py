@@ -3,6 +3,7 @@ import time
 from os.path import join
 from threading import Thread
 from typing import List
+
 import psutil
 from src.fetcher.hierarchy_fetcher.HierarchyFetcher import HierarchyFetcher
 
