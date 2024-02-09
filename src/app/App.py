@@ -23,6 +23,8 @@ from src.view.GUI.prepare_gui import prepare_gui
 from src.view.UIInterface import UIInterface
 from PyQt5.QtWidgets import QApplication
 
+from src.view.GUI.Visuals.StatusSettings import StatusSettings
+
 
 
 class AppMeta(type(QApplication), type(AppRequestsInterface)):
@@ -52,22 +54,33 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         while self.__is_running:
             self.__UI.execute()
             if self.__continue_measuring:
+                if self.__has_gui:
+                    self.__UI.update_statusbar(StatusSettings.MEASURING)
                 Thread(target=self.__passive_fetch).start()
             if self.__model.get_current_working_directory() != "" and not self.__hierarchy_fetcher.is_done: # if there is a new project
                 self.__hierarchy_needed = True
                 Thread(target=self.__hierarchy_fetch).start()
-                Thread(target=self.__save_project(self.__model.get_current_working_directory()))
+                Thread(target=self.__save_project).start()
         print("done running")
         if self.__has_gui:
+            self.__UI.update_statusbar(StatusSettings.FINISHED)
             self.__UI.visualize(self.__model)
 
-    def __hierarchy_fetch(self):
+    def __hierarchy_fetch(self) -> None:
         while self.__hierarchy_needed:
-            self.__hierarchy_needed = self.__hierarchy_fetcher.update_project()
+            try:
+                self.__hierarchy_needed = self.__hierarchy_fetcher.update_project()
+            except FileNotFoundError:
+                self.__UI.deploy_error(FileNotFoundError("could not find the compile-commands.json file"))
+                self.__hierarchy_needed = False
 
     def __fetch(self) -> None:
+        if self.__has_gui:
+            self.__UI.update_statusbar(StatusSettings.MEASURING)
         while (self.__continue_measuring):
             self.__continue_measuring = self.__fetcher.update_project()
+        if self.__has_gui:
+            self.__UI.update_statusbar(StatusSettings.FINISHED)
 
     def __passive_fetch(self) -> None:
         self.__hierarchy_fetcher.is_done = False 
@@ -76,9 +89,11 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         while self.__continue_measuring:
             found_project = self.__passive_data_fetcher.update_project()
         if found_project:
+            print("done with project")
             self.__UI.visualize(self.__model)
 
-    def __save_project(self, name: str) -> None:
+    def __save_project(self) -> None:
+        name: str = self.__model.get_current_working_directory()
         saver: SaveInterface = SaveToJSON(self.__cti_dir_path)
         stop_time: float = time.time() + 10
         while stop_time > time.time() and self.__continue_measuring:
