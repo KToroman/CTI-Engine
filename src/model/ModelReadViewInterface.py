@@ -14,4 +14,4 @@ class ModelReadViewInterface(Protocol):
         raise NotImplementedError
 
     def get_project_time(self) -> float:
-        pass
+        raise NotImplementedError

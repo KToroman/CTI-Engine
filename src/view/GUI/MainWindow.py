@@ -3,6 +3,8 @@ import os
 
 import random
 from threading import Thread
+import time
+from threading import Thread
 from typing import List
 
 from PyQt5.QtCore import Qt
@@ -92,7 +94,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.stacked_widget.addWidget(self.cpu_graph_widget)
         self.stacked_widget.addWidget(self.bar_chart_widget)
         self.splitter1.addWidget(self.stacked_widget)
-
+        self.__app: AppRequestsInterface = app
         self.table_widget: TableWidget = TableWidget(app)
         self.splitter1.addWidget(self.table_widget)
 
@@ -116,9 +118,10 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         caspars farbe: #444447
         """
         self.show()
+        
 
     def execute(self):
-        self.__q_application.exec()
+        self.__q_application.processEvents()
 
     def visualize(self, model: ModelReadViewInterface):
         """receives a Model, displays the data contained in that Model to the user."""
@@ -167,7 +170,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
     def deploy_error(self, error: BaseException):
         """receives an Exception, displays information regarding that exception to the user."""
-        error_window = ErrorWindow(error.__str__())
+        error_window = ErrorWindow(error)
         error_window.show()
 
     def update_statusbar(self, status: StatusSettings):

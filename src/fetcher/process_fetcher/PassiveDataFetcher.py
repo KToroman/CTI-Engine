@@ -21,7 +21,7 @@ class PassiveDataFetcher(DataFetcher):
 
     def __init__(self, model: Model):
         self.__model = model
-        self.__process_collector: ProcessCollector = ProcessCollector(model)
+        self.__process_collector: ProcessCollector = ProcessCollector(model, True)
         self.__data_observer: DataObserver = DataObserver()
         self.__time_to_wait: float = 15
         self.__time_till_false: float = 0

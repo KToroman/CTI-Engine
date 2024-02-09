@@ -4,6 +4,8 @@ from os.path import join
 
 import jsonpickle
 import time
+from pathlib import Path
+
 
 from src.model.core.Project import Project
 from src.saving.SaveInterface import SaveInterface
@@ -11,18 +13,17 @@ from src.saving.SaveInterface import SaveInterface
 
 class SaveToJSON(SaveInterface):
 
-    def __init__(self):
+    def __init__(self, cti_engine_folder: str):
         self.__current_project_name: str = ""
         self.__current_project_dir: str = ""
-        self.__save_path: str = ""
+        self.__save_path: Path
+        self.__cti_engine_folder: str = cti_engine_folder
 
     def save_project(self, project: Project):
         if self.__set_name(project):
-            self.__set_path(project.path_to_save)
+            self.__set_path()
 
-        if not os.path.isdir(self.__save_path):
-            os.makedirs(self.__save_path)
-
+        self.__save_path.mkdir(exist_ok=True, parents=True)
         project_string: str = jsonpickle.encode(project)
 
         self.__write_file(project_string)
@@ -41,17 +42,10 @@ class SaveToJSON(SaveInterface):
                 name = proc_name[proc_name.__len__()-2]
 
             self.__current_project_dir = project.working_dir
-            self.__current_project_name = ("CTI_ENGINE_SAVE/ " + name + " " + time_date.__str__())
+            self.__current_project_name = (name + " " + time_date.__str__())
             return True
         return False
 
-    def __set_path(self, path: str = ""):
-        if path is None or path == "":
-            self.__save_path = self.__default_path()
-            return
-
-        self.__save_path = join(path, self.__current_project_name)
-
-    def __default_path(self) -> str:
-        default_path: str = join(os.getcwd().split("src")[0], "saves")
-        return join(default_path, self.__current_project_name)
+    def __set_path(self):
+        path: str = f"{self.__cti_engine_folder}/{self.__current_project_name}"
+        self.__save_path = Path(path)
