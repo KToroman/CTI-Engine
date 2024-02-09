@@ -47,7 +47,6 @@ class PassiveDataFetcher(DataFetcher):
         if processes is None:
             return
         for line in processes:
-            #print("line being processed")
             Thread(target=self.__create_process, args=[line]).start()
         processes.close()
 
@@ -58,8 +57,10 @@ class PassiveDataFetcher(DataFetcher):
         try:
             if process is None:
                 return
+            Thread(target=self.__make_entry, args=[self.fetch_metrics(process)]).start()
             while process.is_running():
                 Thread(target=self.__make_entry, args=[self.fetch_metrics(process)]).start()
+                time.sleep(0.1)
             self.__process_collector.process_list.remove(process)
         except:
             self.__process_collector.process_list.remove(process)
