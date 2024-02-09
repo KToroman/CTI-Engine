@@ -3,6 +3,7 @@ from io import FileIO
 from os.path import join
 from src.model.core.SourceFile import SourceFile
 from os.path import join
+from src.exceptions.CompileCommandError import CompileCommandError
 
 
 class CompileCommandGetter:
@@ -12,8 +13,6 @@ class CompileCommandGetter:
         self.commands: dict[str, str] = {}
         self.__setup_commands()
 
-    class CompileCommandError(Exception):
-        pass
 
     def __get_json(self, path: str) -> list[dict[str, str]]:
         path = join(path, "build", "compile_commands.json")
@@ -28,7 +27,7 @@ class CompileCommandGetter:
         command_object: dict[str, str]
         for command_object in self.compile_commands_json:
             if "command" not in command_object:
-                raise self.CompileCommandError(f"Command Object {command_object} does not contain command")
+                raise CompileCommandError(f"Command Object {command_object} does not contain command")
             self.commands[self.__get_ofile_path(command_object["command"], command_object["directory"])] = command_object["command"]
 
     def __get_name_from_path(self, path: str) -> str:
@@ -40,12 +39,12 @@ class CompileCommandGetter:
         for i in range(args.__len__() - 1):
             if args[i] == "-o":
                 return join(dir, args[i+1])
-        raise self.CompileCommandError(f"no object file path found in compile-command")
+        raise CompileCommandError(f"no object file path found in compile-command")
 
     def get_compile_command(self, source_file: SourceFile) -> str:
         ofilepath = source_file.path
         if ofilepath not in self.commands:
-            raise self.CompileCommandError(f"Source file does not have a stored command \n {ofilepath}")
+            raise CompileCommandError(f"Source file does not have a stored command \n {ofilepath}")
         return self.commands[ofilepath]
     
     def generate_hierarchy_command(self, source_file: SourceFile) -> str:
@@ -56,7 +55,7 @@ class CompileCommandGetter:
             if args[i] == "-o":
                 delindex = i
         if delindex == -1:
-            raise self.CompileCommandError(f"no object file path found in compile-command \n {source_file.path}")
+            raise CompileCommandError(f"no object file path found in compile-command \n {source_file.path}")
         else:
             del args[delindex: delindex + 2]
         args.append("-H")

@@ -1,5 +1,6 @@
 import time
 from threading import Thread
+from subprocess import CalledProcessError
 
 from src.fetcher.FetcherInterface import FetcherInterface
 from src.fetcher.hierarchy_fetcher.GCCCommandExecutor import GCCCommandExecutor
@@ -9,6 +10,7 @@ from src.model.core.Project import Project
 from src.model.core.SourceFile import SourceFile
 from src.model.core.CFile import CFile
 from src.model.core.Header import Header
+from src.exceptions.CompileCommandError import CompileCommandError
 
 
 class HierarchyFetcher(FetcherInterface):
@@ -42,8 +44,12 @@ class HierarchyFetcher(FetcherInterface):
         """the main Method of the Hierarchy Fetcher class, to be called in a separate thread"""
         source_files: list[SourceFile] = self.__setup_source_files(project)
         for source_file in source_files:
-            self.__set_compile_command(source_file)
-            self.__update_headers(source_file)
+            try:
+                self.__set_compile_command(source_file)
+                self.__update_headers(source_file)
+            except (CompileCommandError, CalledProcessError) as e:
+                print(f"\033[93m{e.__str__()}\033[0m")
+                source_file.error = True
 
     def __setup_source_files(self, project: Project) -> list[SourceFile]:
         created_source_files: list[SourceFile] = []
