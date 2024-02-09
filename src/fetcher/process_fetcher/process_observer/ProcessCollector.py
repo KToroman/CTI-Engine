@@ -54,7 +54,7 @@ class ProcessCollector:
                 continue
         return False
 
-    def project_checker(self, proc: psutil.Process):
+    def __project_checker(self, proc: psutil.Process):
         try:
             time.sleep(0.1)
             project_name: str = self.__get_project_name(proc)
