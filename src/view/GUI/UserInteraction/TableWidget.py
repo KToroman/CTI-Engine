@@ -170,9 +170,10 @@ class TableWidget(QTableWidget):
     def sort_table(self, column: int):
         self.sortItems(column, order=2)
         for row_index in range(self.rowCount()):
-            current = self.item(row_index, 1).data(Qt.UserRole)
-            for row in self.rows:
-                if current == row.displayable.name:
-                    self.rows.remove(row)
-                    self.rows.insert(row_index, row)
-                    break
+            if self.item(row_index, 1):
+                current = self.item(row_index, 1).data(Qt.UserRole)
+                for row in self.rows:
+                    if current == row.displayable.name:
+                        self.rows.remove(row)
+                        self.rows.insert(row_index, row)
+                        break
