@@ -1,5 +1,7 @@
 from typing import Protocol
-from model.ModelReadViewInterface import ModelReadViewInterface
+from src.model.ModelReadViewInterface import ModelReadViewInterface
+from src.model.core.StatusSettings import StatusSettings
+
 
 class UIInterface(Protocol):
     """provides an Interface for Implemetations of a User Interface. All contained Methods must be implemented by subclasses."""
@@ -12,10 +14,9 @@ class UIInterface(Protocol):
         """receives an Exception, displays information regarding that exception to the user."""
         raise NotImplementedError
     
-    def update_statusbar(self, status: str):
+    def update_statusbar(self, status: StatusSettings):
         """receives a status string, changes the ui's status string accordingly."""
         raise NotImplementedError
     
-    def run_commands(self):
-        """call for the UI to execute all queued commands."""
+    def execute(self):
         raise NotImplementedError

@@ -1,6 +1,9 @@
-import json
+import json, shlex
 from io import FileIO
+from os.path import join
 from src.model.core.SourceFile import SourceFile
+from os.path import join
+from src.exceptions.CompileCommandError import CompileCommandError
 
 
 class CompileCommandGetter:
@@ -10,13 +13,9 @@ class CompileCommandGetter:
         self.commands: dict[str, str] = {}
         self.__setup_commands()
 
-    class CompileCommandError(Exception):
-        pass
 
     def __get_json(self, path: str) -> list[dict[str, str]]:
-        if not path.endswith("\\"):
-            path = path + "\\"
-        path = path + "compile_commands.json"
+        path = join(path, "build", "compile_commands.json")
         json_file: FileIO
         try:
             with open(path, "r") as json_file:
@@ -28,22 +27,44 @@ class CompileCommandGetter:
         command_object: dict[str, str]
         for command_object in self.compile_commands_json:
             if "command" not in command_object:
-                raise self.CompileCommandError(f"Command Object {command_object} does not contain command")
-            self.commands[command_object["file"]] = command_object["command"]
+                raise CompileCommandError(f"Command Object {command_object} does not contain command")
+            self.commands[self.__get_ofile_path(command_object["command"], command_object["directory"])] = command_object["command"]
+
+    def __get_name_from_path(self, path: str) -> str:
+        name: str = path.split("/")[-1]
+        return name.removesuffix(".o")
+
+    def __get_ofile_path(self, command: str, dir: str) -> str:
+        args: list[str] = shlex.split(command)
+        for i in range(args.__len__() - 1):
+            if args[i] == "-o":
+                return join(dir, args[i+1])
+        raise CompileCommandError(f"no object file path found in compile-command")
 
     def get_compile_command(self, source_file: SourceFile) -> str:
-        if source_file not in self.commands:
-            raise self.CompileCommandError("Source file does not have a stored command")
-        return self.commands[source_file.path]
+        ofilepath = source_file.path
+        if ofilepath not in self.commands:
+            raise CompileCommandError(f"Source file does not have a stored command \n {ofilepath}")
+        return self.commands[ofilepath]
     
     def generate_hierarchy_command(self, source_file: SourceFile) -> str:
-        origin_command: str = self.commands[source_file.path]
-        if origin_command.startswith("gcc "):
-            return origin_command.replace("gcc", "gpp -H", 1)
-        elif origin_command.startswith("g++ "):
-            return origin_command.replace("g++", "gpp -H", 1)
-        elif origin_command.startswith("c++"):
-            return origin_command.replace("c++", "gpp -H", 1)
+        origin_command: str = self.get_compile_command(source_file)
+        args: list[str] = shlex.split(origin_command)
+        delindex: int = -1
+        for i in range(len(args)):
+            if args[i] == "-o":
+                delindex = i
+        if delindex == -1:
+            raise CompileCommandError(f"no object file path found in compile-command \n {source_file.path}")
         else:
-            raise self.CompileCommandError(f"the stored command is not a recognized command\n {origin_command}")
+            del args[delindex: delindex + 2]
+        args.append("-H")
+        args.append("-E")
+        return shlex.join(args)
 
+    def get_all_opaths(self) -> list[str]:
+        command_object: dict[str, str]
+        opaths: list[str] = []
+        for command_object in self.compile_commands_json:
+            opaths.append(self.__get_ofile_path(command_object["command"], command_object["directory"]))
+        return opaths

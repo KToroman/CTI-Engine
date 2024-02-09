@@ -1,36 +1,84 @@
+from typing import List
+from PyQt5.QtCore import pyqtSignal, pyqtSlot
+from matplotlib.backend_bases import PickEvent
 from matplotlib.backends.backend_template import FigureCanvas
 from PyQt5.QtWidgets import QVBoxLayout, QWidget
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
+from src.view.GUI.Graph.CustomToolbar import CustomToolbar
+from src.view.GUI.Graph.Plot import Plot
+
 
 class BarWidget(QWidget):
+
+    X_AXIS: str = "Sourcefiles"
+    Y_AXIS: str = "Runtime (in sec)"
+    click_signal: pyqtSignal = pyqtSignal()
+
     def __init__(self):
         super(BarWidget, self).__init__()
+
+        self.categories: List[str] = []
+        self.values: List[float] = []
+        self.colors: List[str] = []
+        self.clear_flag: bool = True
+        self.bar_clicked: str = ""
 
         self.figure = Figure(figsize=(5, 4), dpi=100)
         self.canvas = FigureCanvas(self.figure)
 
         layout = QVBoxLayout(self)
+        self.toolbar = CustomToolbar(self.canvas, self)
+        layout.addWidget(self.toolbar)
         layout.addWidget(self.canvas)
-        self.plot_bar_chart()
+        self.__plot_bar_chart()
 
-    # Auch nur Beispiel
-    def plot_bar_chart(self):
-        # Daten für das Säulendiagramm
-        categories = ['Category 1', 'Category 2', 'Category 3', 'Category 4', 'Category 5']
-        values = [5, 12, 8, 15, 10]
+        # Connect pick events for the bar chart
+        self.canvas.mpl_connect('pick_event', self.on_pick)
 
-        # Erstelle einen Subplot für das Säulendiagramm
-        ax = self.figure.add_subplot(111)
+    def add_bar(self, plot: Plot):
+        """adds bar to bar chart"""
+        self.categories.append(plot.name)
+        self.values.append(plot.y_values[0])
+        self.colors.append(plot.color)
 
-        # Erstelle das Säulendiagramm
-        ax.bar(categories, values, color='blue')
+        # Update chart
+        self.__plot_bar_chart()
 
-        # Beschriftungen und Titel hinzufügen
-        ax.set_xlabel('Categories')
-        ax.set_ylabel('Values')
-        ax.set_title('Bar Chart Example')
+    def remove_bar(self, plot: Plot):
+        """removes bar from bar chart"""
+        self.categories.remove(plot.name)
+        self.values.remove(plot.y_values[0])
+        self.colors.remove(plot.color)
 
-        # Zeichne das Diagramm auf das Canvas
+        # Update chart
+        self.__plot_bar_chart()
+
+    def __plot_bar_chart(self):
+        """(re)draws bar chart"""
+
+        # Remove previous axes labels
+        self.figure.clear()
+        #self.figure.set_facecolor("#61b3bf")
+        # Create subplot for bar chart
+        self.ax = self.figure.add_subplot(111)
+
+        # Create bar chart
+        bars = self.ax.bar(self.categories, self.values, color=self.colors, label=self.categories)
+        self.ax.set_xticks([])
+        # Add title and labels for axes
+        self.ax.set_xlabel(self.X_AXIS)
+        self.ax.set_ylabel(self.Y_AXIS)
+
+        # Draw diagram on canvas
         self.canvas.draw()
+
+        # Set the clickable property for each bar
+        for bar in bars:
+            bar.set_picker(True)
+
+    def on_pick(self, event: PickEvent):
+        """reacts to click on bar"""
+        self.bar_clicked = event.artist.get_label().__str__()
+        self.click_signal.emit()

@@ -25,3 +25,10 @@ class CFileReadViewInterface(Protocol):
     def get_timestamps(self) -> List[float]:
         """Returns every timestamp tracked for that CFile."""
         pass
+
+    def get_headers(self):
+        pass
+
+    def has_error(self) -> bool:
+        """Returns true if there is an error in this CFile."""
+        pass
