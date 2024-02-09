@@ -62,6 +62,7 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         if self.__has_gui:
             self.__UI.update_statusbar(StatusSettings.WAITING)
         while self.__is_running:
+            self.__UI.execute()
             if self.__visiulize:
                 self.__UI.update_statusbar(StatusSettings.FINISHED)
                 self.__UI.visualize(self.__model)
@@ -105,8 +106,9 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
     def __fetch(self) -> None:
         if self.__has_gui:
             self.__UI.update_statusbar(StatusSettings.MEASURING)
-        while self.__continue_measuring:
-            self.__continue_measuring = self.__fetcher.update_project()
+        while self.__continue_fetching:
+            self.__UI.execute()
+            self.__continue_fetching = self.__fetcher.update_project()
         if self.__has_gui:
             self.__UI.update_statusbar(StatusSettings.FINISHED)
 
@@ -139,7 +141,9 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
             self.__get_project(name)
         return project
 
-    def start_active_measurement(self, source_file_name: str) -> None:
+    def start_active_measurement(self, source_file_name: str) -> None:   
+        self.__continue_measuring = False
+        self.__continue_fetching = True
         self.__fetcher = ActiveDataFetcher(source_file_name, self.__model,
                                            f"{self.__cti_dir_path}/{self.__model.get_project_name}/build")
         self.__fetch()
@@ -147,8 +151,8 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
             self.__UI.visualize(self.__model)
 
     def load_from_directory(self, path: str) -> None:
-        self.__UI.update_statusbar(StatusSettings.MEASURING)
-        print(self.__model.current_project.path_to_save)
+        self.__continue_measuring = False
+        self.__continue_fetching = True
         self.__fetcher = FileLoader(path, self.__model)
         self.__fetch()
         self.__curr_project_name = self.__model.get_project_name()

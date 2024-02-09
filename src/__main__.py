@@ -26,7 +26,6 @@ def start_active_measurement_command(self, source_file_name: str, path: str):
     app.start_active_measurement(source_file_name)
     app.run()
 
-
 def run_app():
     app: App = App(True)
     app.run()
