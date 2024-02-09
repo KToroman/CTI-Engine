@@ -3,10 +3,8 @@ import os
 import sys
 
 import random
-<<<<<<< HEAD
-=======
+from threading import Thread
 import time
->>>>>>> main
 from threading import Thread
 from typing import List
 
