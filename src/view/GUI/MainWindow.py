@@ -25,7 +25,7 @@ from src.view.GUI.Graph.Plot import Plot
 from src.model.core.MetricName import MetricName
 from src.view.GUI.Visuals.ErrorWindow import ErrorWindow
 from src.view.GUI.Visuals.StatusBar import StatusBar
-from src.view.GUI.Visuals.StatusSettings import StatusSettings
+from src.model.core.StatusSettings import StatusSettings
 from src.view.UIInterface import UIInterface
 from src.view.GUI.Visuals.ErrorWindow import ErrorWindow
 from src.view.AppRequestsInterface import AppRequestsInterface

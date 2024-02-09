@@ -40,7 +40,7 @@ class ProcessCollector:
         process = self.__create_processes(line)
         if process is not None and not self.__is_process_in_list(process):
             if self.__check_for_project:
-                self.project_checker(process)
+                self.__project_checker(process)
             self.process_list.append(process)
             return process
         return None
