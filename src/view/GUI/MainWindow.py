@@ -1,11 +1,17 @@
 import colorsys
+import os
 import sys
 
 import random
+<<<<<<< HEAD
+=======
+import time
+>>>>>>> main
 from threading import Thread
 from typing import List
 
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QWidget,
                              QStackedWidget, QApplication, QHBoxLayout, QSplitter, QCheckBox)
 from src.view.GUI.Graph.BarWidget import BarWidget
@@ -35,14 +41,15 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     RAM_Y_AXIS: str = "RAM (in mb)"
     CPU_Y_AXIS: str = "CPU (in %)"
 
-    __visible_plots: List[Displayable] = []
-    __ram: bool = False
-    __cpu: bool = False
-    __runtime: bool = False
-
     def __init__(self, q_application: QApplication, app: AppRequestsInterface):
         self.__q_application: QApplication = q_application
         super(MainWindow, self).__init__()
+
+        self.__ram: bool = False
+        self.__cpu: bool = False
+        self.__runtime: bool = False
+        self.__visible_plots: List[Displayable] = []
+        self.project_time: float = 0
 
         self.setWindowTitle(self.WINDOWTITLE)
         self.resize(self.WINDOWSIZE1, self.WINDOWSIZE2)
@@ -99,7 +106,21 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.metric_bar: MetricBar = MetricBar(self.metric_bar_frame_layout)
 
         self.setup_resource_connections()
-        self.project_time: float = 0
+
+        images_folder = os.path.join(os.path.dirname(__file__), "Images")
+        logo_path = os.path.join(images_folder, "CTIEngineLogo.png")
+        icon: QIcon = QIcon(logo_path)
+        self.setWindowIcon(icon)
+        self.setStyleSheet("background-color: #ECEFF1;")
+        """
+        colors from cti engine logo:
+        #237277
+        #4095a1
+        #61b3bf
+        chatgpt: #ECEFF1
+        himmelgrau: #CFD8DC
+        caspars farbe: #444447
+        """
         self.show()
         
 
@@ -194,9 +215,10 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         secondary_headers: List[List[str]] = list()
         for header in cfile.get_headers():
             headers.append(header.get_name())
+            subheaders: List[str] = []
             for secondary_header in header.get_headers():
-                secondary_headers.append(secondary_header.get_name())
-
+                subheaders.append(secondary_header.get_name())
+            secondary_headers.append(subheaders)
         return Displayable(name, ram_plot, cpu_plot, runtime_plot, ram_peak, cpu_peak, headers, secondary_headers)
 
     def __generate_random_color(self):
@@ -248,14 +270,14 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
     def __add_to_graph(self, displayable: Displayable):
         """adds plots of given displayable to graph and bar chart widgets"""
-        self.ram_graph_widget.add_plot(displayable.ram_plot)
-        self.cpu_graph_widget.add_plot(displayable.cpu_plot)
+        Thread(target=self.ram_graph_widget.add_plot, args=[displayable.ram_plot]).start()
+        Thread(target=self.cpu_graph_widget.add_plot, args=[displayable.cpu_plot]).start()
         self.bar_chart_widget.add_bar(displayable.runtime_plot)
 
     def __remove_from_graph(self, displayable: Displayable):
         """removes plots of given displayable from graph and bar chart widgets"""
-        self.ram_graph_widget.remove_plot(displayable.ram_plot)
-        self.cpu_graph_widget.remove_plot(displayable.cpu_plot)
+        Thread(target=self.ram_graph_widget.remove_plot, args=[displayable.ram_plot]).start()
+        Thread(target=self.cpu_graph_widget.remove_plot, args=[displayable.cpu_plot]).start()
         self.bar_chart_widget.remove_bar(displayable.runtime_plot)
 
     def setup_click_connections(self):
