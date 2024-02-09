@@ -56,6 +56,7 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         while self.__is_running:
             if self.__continue_measuring:
                 Thread(target=self.__passive_fetch).start()
+                #TODO hierarchy fetcher starting even when no project is found (only loaded)
             if self.__model.get_current_working_directory() != "" and not self.__hierarchy_fetcher.is_done: # if there is a new project
                 Thread(target=self.__hierarchy_fetcher.update_project).start()
                 Thread(target=self.__save_project(self.__model.get_current_working_directory()))
@@ -101,6 +102,7 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         print(self.__model.current_project.path_to_save)
         self.__fetcher = FileLoader(path, self.__model)
         self.__fetch()
+        self.__hierarchy_fetcher.is_done = True
         if self.__has_gui:
             self.__UI.visualize(self.__model)
 
