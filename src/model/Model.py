@@ -58,7 +58,7 @@ class Model(ModelReadViewInterface):
     def add_project(self, project: Project) -> None:
         """adds new project to model"""
 
-        if not self.does_project_exist(project.working_dir) and "/src/app" not in project.working_dir:
+        if not self.does_project_exist(project.working_dir) and os.getcwd().split("/")[-1] not in project.working_dir:
             self.projects.append(project)
             self.current_project = project
             print("new project")
