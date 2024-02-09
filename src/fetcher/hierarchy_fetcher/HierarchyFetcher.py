@@ -24,6 +24,7 @@ class HierarchyFetcher(FetcherInterface):
 
 
     def update_project(self) -> bool:
+        print("hierarchy update")
         """Updates the current project by adding a hierarchical structure of header objects to all source files"""
         project: Project = self.__model.current_project
         try:
@@ -39,8 +40,7 @@ class HierarchyFetcher(FetcherInterface):
                 print(e.__str__() + "\n trying again...")
                 return True
 
-        hierarchy_thread: Thread = Thread(target=self.__setup_hierarchy, args=[project], daemon=False)
-        hierarchy_thread.start()
+        self.__setup_hierarchy(project)
         self.is_done = True
         return False
 
