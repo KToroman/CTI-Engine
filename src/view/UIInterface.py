@@ -1,6 +1,6 @@
 from typing import Protocol
 from src.model.ModelReadViewInterface import ModelReadViewInterface
-from src.view.GUI.Visuals.StatusSettings import StatusSettings
+from src.model.core.StatusSettings import StatusSettings
 
 
 class UIInterface(Protocol):
