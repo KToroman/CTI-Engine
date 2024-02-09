@@ -167,7 +167,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
     def deploy_error(self, error: BaseException):
         """receives an Exception, displays information regarding that exception to the user."""
-        error_window = ErrorWindow(error.__str__())
+        error_window = ErrorWindow(error)
         error_window.show()
 
     def update_statusbar(self, status: StatusSettings):
