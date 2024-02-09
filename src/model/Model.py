@@ -1,4 +1,5 @@
 import copy
+import os.path
 from optparse import Option
 import time
 from typing import List, Optional
@@ -55,9 +56,16 @@ class Model(ModelReadViewInterface):
                 return True
         return False
 
+    def does_project_exist(self, name: str) -> bool:
+        for project in self.projects:
+            if name == project.working_dir:
+                return True
+        return False
+
     def add_project(self, project: Project) -> None:
         """adds new project to model"""
-        if not self.does_project_exist(project.working_dir) and project.working_dir != "/common/homes/students/uvhuj_heusinger/Documents/git/cti-engine-prototype/src/app":
+
+        if not self.does_project_exist(project.working_dir) and "/src/app" not in project.working_dir:
             self.projects.append(project)
             self.current_project = project
 
@@ -68,7 +76,7 @@ class Model(ModelReadViewInterface):
         try:
             return copy.deepcopy(self.current_project)
         except:
-            self.get_current_project()
+            return None
 
     def get_project_time(self) -> float:
         return self.current_project.project_time

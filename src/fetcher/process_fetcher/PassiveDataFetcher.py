@@ -1,10 +1,12 @@
-
+import os.path
 import time
 from os.path import join
 from threading import Thread
 from typing import List
 
 import psutil
+from psutil import NoSuchProcess
+
 from src.fetcher.hierarchy_fetcher.HierarchyFetcher import HierarchyFetcher
 
 from src.fetcher.process_fetcher.DataFetcher import DataFetcher
@@ -45,7 +47,9 @@ class PassiveDataFetcher(DataFetcher):
         if processes is None:
             return
         for line in processes:
+            #print("line being processed")
             Thread(target=self.__create_process, args=[line]).start()
+        processes.close()
 
     def __create_process(self, line: str):
         Thread(target=self.__get_data, args=[self.__process_collector.make_process(line)]).start()
@@ -60,17 +64,19 @@ class PassiveDataFetcher(DataFetcher):
         except:
             self.__process_collector.process_list.remove(process)
 
-    def __make_entry(self, process_point: ProcessPoint):
+    def __make_entry(self, process_point: ProcessPoint) -> None:
         try:
             cmdline: List[str] = process_point.process.cmdline()
             path: str = process_point.process.cwd()
+            if "src/app" in path:
+                return
             for line in cmdline:
                 if line.endswith(".o"):
-                    path = join(path.split("build/")[0], "build",path.split("build/")[1], "build", line)
+                    path = join(path, "CMakeFiles", line.split("CMakeFiles/")[-1])
                     break
-            if path == "":
-                return
             entry: DataEntry = DataEntry(path, process_point.timestamp, process_point.metrics)
             self.add_data_entry(entry)
-        except:
+        except NoSuchProcess:
+            return
+        except FileNotFoundError:
             return
