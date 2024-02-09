@@ -1,101 +1,79 @@
 import unittest
-from typing import List
-
-import jsonpickle
-import picklejson
-
-from src.model.Model import Model
+from datetime import datetime
+import time
 from src.model.core.CFile import CFile
 from src.model.core.DataEntry import DataEntry
 from src.model.core.Metric import Metric
 from src.model.core.MetricName import MetricName
-from src.model.core.Project import Project
-from src.model.core.SourceFile import SourceFile
 
 
-class TestModel(unittest.TestCase):
-    test_project_1: Project = Project("", 123, "")
-    test_project_2: Project = Project("", 1234, "")
-    test_metrics: List[Metric] = [Metric(10, MetricName.CPU), Metric(10, MetricName.RAM)]
-    test_entry_1: DataEntry = DataEntry("test_cfile", 2, test_metrics)
-    test_entry_2: DataEntry = DataEntry("test_cfile", 3, test_metrics)
-    test_entry_list: List[DataEntry] = [test_entry_1, test_entry_2]
-    test_model: Model = Model()
+class TestCFile(unittest.TestCase):
+    def setUp(self):
+        self.cfile = CFile("test_path")
+        self.metric_name = MetricName.CPU
 
-    def test_insert_datapoints_for_existing_cfile(self):
-        self.__clear()
+    def test_get_name(self):
+        self.assertEqual(self.cfile.get_name(), "test_path")
 
-        self.test_project_1.get_sourcefile("test_cfile")
-        self.test_model.add_project(self.test_project_1)
-        self.test_model.insert_datapoints(self.test_entry_list)
-        test_result: CFile = self.test_model.current_project.source_files[0]
+    def test_get_total_time_empty_entries(self):
+        self.assertEqual(self.cfile.get_total_time(), 0)
 
-        test_cfile: CFile = SourceFile("test_cfile")
-        test_cfile.data_entries.extend(self.test_entry_list)
+    def test_get_total_time(self):
+        timestamp1 = datetime.timestamp(datetime.now())
+        time.sleep(0.1)
+        timestamp2 = datetime.timestamp(datetime.now())
+        data_entry1 = DataEntry("test_path", timestamp1, [Metric(10, self.metric_name)])
+        data_entry2 = DataEntry("test_path", timestamp2, [Metric(10, self.metric_name)])
+        self.cfile.data_entries = [data_entry1, data_entry2]
+        self.assertAlmostEqual(self.cfile.get_total_time(), timestamp2 - timestamp1, delta=0.01)
 
-        self.assertEqual(jsonpickle.encode(test_result), jsonpickle.encode(test_cfile))
+    def test_get_max_empty_entries(self):
+        self.assertEqual(self.cfile.get_max(self.metric_name), 0)
 
-    def test_insert_datapoints_for_non_existing_cfile(self):
-        self.__clear()
+    def test_get_max(self):
+        metric_value1 = 10
+        metric_value2 = 20
+        data_entry1 = DataEntry("test_path", datetime.timestamp(datetime.now()), [Metric(metric_value1, self.metric_name)])
+        data_entry2 = DataEntry("test_path", datetime.timestamp(datetime.now()), [Metric(metric_value2, self.metric_name)])
+        self.cfile.data_entries = [data_entry1, data_entry2]
+        self.assertEqual(self.cfile.get_max(self.metric_name), metric_value2)
 
-        self.test_model.add_project(self.test_project_1)
-        self.test_model.insert_datapoints(self.test_entry_list)
+    def test_get_metrics_empty_entries(self):
+        self.assertEqual(self.cfile.get_metrics(self.metric_name), [])
 
-        test_result: CFile = self.test_model.current_project.source_files[0]
-        test_cfile: CFile = SourceFile("test_cfile")
-        test_cfile.data_entries.extend(self.test_entry_list)
+    def test_get_metrics(self):
+        metric_value1 = 10
+        metric_value2 = 20
+        data_entry1 = DataEntry("test_path", datetime.timestamp(datetime.now()), [Metric(metric_value1, self.metric_name)])
+        data_entry2 = DataEntry("test_path", datetime.timestamp(datetime.now()), [Metric(metric_value2, self.metric_name)])
+        self.cfile.data_entries = [data_entry1, data_entry2]
+        self.assertEqual(self.cfile.get_metrics(self.metric_name), [metric_value1, metric_value2])
 
-        self.assertEqual(jsonpickle.encode(test_result), jsonpickle.encode(test_cfile))
+    def test_get_header_by_name(self):
+        header_name = "test_header"
+        header = CFile(header_name)
+        self.cfile.headers.append(header)
+        self.assertEqual(header_name, self.cfile.headers[-1].get_name())
 
-    def test_add_project(self):
-        self.__clear()
-        self.test_model.add_project(self.test_project_1)
+    def test_get_timestamps_empty_entries(self):
+        self.assertEqual(self.cfile.get_timestamps(), [])
 
-        self.assertEqual(jsonpickle.encode(self.test_model.projects[0]), jsonpickle.encode(self.test_project_1))
+    def test_get_timestamps(self):
+        timestamp1 = datetime.timestamp(datetime.now())
+        time.sleep(0.1)
+        timestamp2 = datetime.timestamp(datetime.now())
+        data_entry1 = DataEntry("test_path", timestamp1, [Metric(10, self.metric_name)])
+        data_entry2 = DataEntry("test_path", timestamp2, [Metric(20, self.metric_name)])
+        self.cfile.data_entries = [data_entry1, data_entry2]
+        self.assertEqual(self.cfile.get_timestamps(), [timestamp1, timestamp2])
 
-    def test_current_project(self):
-        self.__clear()
+    def test_get_headers(self):
+        header1 = CFile("header1")
+        header2 = CFile("header2")
+        self.cfile.headers = [header1, header2]
+        self.assertEqual(self.cfile.get_headers(), [header1, header2])
 
-        self.test_model.add_project(self.test_project_1)
-        self.test_model.add_project(self.test_project_2)
-
-        self.assertEqual(jsonpickle.encode(self.test_model.current_project), jsonpickle.encode(self.test_project_2))
-
-    def test_get_sourcefile_by_name_for_existing_cfile(self):
-        self.__clear()
-
-        self.test_model.add_project(self.test_project_1)
-        self.test_model.insert_datapoints(self.test_entry_list)
-        test_result = self.test_model.get_sourcefile_by_name("test_cfile")
-
-        test_cfile: CFile = SourceFile("test_cfile")
-        test_cfile.data_entries.extend(self.test_entry_list)
-        self.assertEqual(jsonpickle.encode(test_result), jsonpickle.encode(test_cfile))
-
-    def test_get_sourcefile_by_name_for_non_existing_cfile(self):
-        self.__clear()
-
-        self.test_model.add_project(self.test_project_1)
-
-        test_result = self.test_model.get_sourcefile_by_name("test_cfile")
-        test_cfile: CFile = SourceFile("test_cfile")
-
-        self.assertEqual(jsonpickle.encode(test_result), jsonpickle.encode(test_cfile))
-
-    def test_get_project_name(self):
-        pass
-
-    def test_get_cfiles(self):
-        pass
-
-    def test_two_projects(self):
-        pass
-
-    def __clear(self):
-        self.test_project_1 = Project("", 123, "")
-        self.test_project_2 = Project("", 1234, "")
-        self.test_metrics = [Metric(10, MetricName.CPU), Metric(10, MetricName.RAM)]
-        self.test_entry_1 = DataEntry("test_cfile", 2, self.test_metrics)
-        self.test_entry_2 = DataEntry("test_cfile", 3, self.test_metrics)
-        self.test_entry_list = [self.test_entry_1, self.test_entry_2]
-        self.test_model = Model()
+    def test_has_header(self):
+        self.assertFalse(self.cfile.has_header())
+        self.cfile.error = True
+        self.assertTrue(self.cfile.has_header())
