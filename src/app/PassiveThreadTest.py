@@ -34,7 +34,7 @@ class PassiveThread:
     def __passive_measurement(self):
         curr_project_name: str
         curr_project_name = self.__model.get_current_working_directory()
-        Process(target=self.passsss).start()
+        Thread(target=self.passsss).start()
         while not self.__cancel_measurement:
             if curr_project_name != self.__model.get_current_working_directory():
                 Thread(target=self.__make_hierarchy).start()
@@ -96,6 +96,8 @@ class PassiveThread:
     def set_model(self, model: Model):
         self.__model = model
 
+
+
     def length(self):
         counter = 0
         print("Project Count: " + self.__model.projects.__len__().__str__())
@@ -113,7 +115,7 @@ class PassiveThread:
 
         print("insgesamt: " + counter.__str__())
 
-"""
+
 if __name__ == '__main__':
     p = PassiveThread()
 
@@ -121,6 +123,8 @@ if __name__ == '__main__':
 
     time.sleep(1)
     p.length()
+
+
 """
 
 
@@ -144,7 +148,9 @@ loader = FileLoader(
     "/common/homes/students/uvhuj_heusinger/Documents/git/cti-engine-prototype/saves/deps/opencv-3/main/opencv-3.4.16/1707483711.1979697/CTI_ENGINE_SAVE opencv-3.4.16 2024-02-09",
     m)
 loader.update_project()
+
 p.set_model(m)
 p.length()
 
 length(m.current_project)
+"""
