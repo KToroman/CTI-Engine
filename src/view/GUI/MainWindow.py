@@ -165,6 +165,8 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         for cfile in cfile_list:
             # self.table_widget.add_subrow(self.__create_displayable(cfile))
             self.table_widget.fill_subrows(self.__create_displayable(cfile))
+        
+        self.table_widget.rebuild_table()
 
         # Update other Widgets
         self.setup_connections()

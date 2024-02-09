@@ -62,6 +62,7 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         if self.__has_gui:
             self.__UI.update_statusbar(StatusSettings.WAITING)
         while self.__is_running:
+            self.__UI.execute()
             if self.__visiulize:
                 self.__UI.update_statusbar(StatusSettings.FINISHED)
                 self.__UI.visualize(self.__model)
@@ -106,6 +107,7 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         if self.__has_gui:
             self.__UI.update_statusbar(StatusSettings.MEASURING)
         while self.__continue_fetching:
+            self.__UI.execute()
             self.__continue_fetching = self.__fetcher.update_project()
         if self.__has_gui:
             self.__UI.update_statusbar(StatusSettings.FINISHED)
