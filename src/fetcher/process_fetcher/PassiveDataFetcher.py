@@ -1,4 +1,4 @@
-
+import os.path
 import time
 from os.path import join
 from threading import Thread
@@ -71,12 +71,11 @@ class PassiveDataFetcher(DataFetcher):
                 return
             for line in cmdline:
                 if line.endswith(".o"):
-                    if path.split("build").__len__() > 2:
-                        path = join(path.split("build/")[0], "build", path.split("build/")[1], "build", line.split("build/")[-1])
-                    else:
-                        path = join(path.split("build")[0], "build", line.split("build/")[-1])
+                    path = join(path, "CMakeFiles", line.split("CMakeFiles/")[-1])
                     break
             entry: DataEntry = DataEntry(path, process_point.timestamp, process_point.metrics)
             self.add_data_entry(entry)
         except NoSuchProcess:
+            return
+        except FileNotFoundError:
             return

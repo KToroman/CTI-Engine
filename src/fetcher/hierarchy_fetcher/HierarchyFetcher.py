@@ -30,6 +30,7 @@ class HierarchyFetcher(FetcherInterface):
         except FileNotFoundError as e:
             time.sleep(5)
             if self.__open_timeout > 2:
+                self.__open_timeout = 0
                 raise e
             else:
                 self.__open_timeout += 1
@@ -43,7 +44,18 @@ class HierarchyFetcher(FetcherInterface):
     def __setup_hierarchy(self, project: Project) -> None:
         """the main Method of the Hierarchy Fetcher class, to be called in a separate thread"""
         source_files: list[SourceFile] = self.__setup_source_files(project)
+        source_files_retry: list[SourceFile] = []
         for source_file in source_files:
+            try:
+                self.__set_compile_command(source_file)
+                self.__update_headers(source_file)
+            except CompileCommandError as e:
+                print(f"\033[93m{e.__str__()}\033[0m")
+                source_file.error = True
+            except CalledProcessError as e:
+                print(f"\033[93m{e.__str__()}\033[0m")
+                source_files_retry.append(source_file)
+        for source_file in source_files_retry:
             try:
                 self.__set_compile_command(source_file)
                 self.__update_headers(source_file)

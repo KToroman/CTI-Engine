@@ -34,8 +34,8 @@ class PassiveThread:
     def __passive_measurement(self):
         curr_project_name: str
         curr_project_name = self.__model.get_current_working_directory()
+        Process(target=self.passsss).start()
         while not self.__cancel_measurement:
-            self.__is_measuring = self.__passive_data_fetcher.update_project()
             if curr_project_name != self.__model.get_current_working_directory():
                 Thread(target=self.__make_hierarchy).start()
                 curr_project_name = self.__model.get_current_working_directory()
@@ -48,8 +48,14 @@ class PassiveThread:
             self.__is_measuring = self.__passive_data_fetcher.update_project()
 
     def __make_hierarchy(self):
-        time.sleep(2)
-        self.__hierarchy.update_project()
+        try:
+            time.sleep(2)
+            hier_bool = True
+            while hier_bool:
+                time.sleep(3)
+                hier_bool = self.__hierarchy.update_project()
+        except:
+            print("Hierarchy err")
 
     def __save_project(self, name: str):
         saver: SaveInterface = SaveToJSON()
@@ -107,24 +113,38 @@ class PassiveThread:
 
         print("insgesamt: " + counter.__str__())
 
-
-
-p = PassiveThread()
-
-p.main_loop()
-
-time.sleep(1)
-p.length()
 """
+if __name__ == '__main__':
+    p = PassiveThread()
+
+    p.main_loop()
+
+    time.sleep(1)
+    p.length()
+"""
+
+
+def length(p: Project):
+    counter_has_entry = 0
+    counter_has_none = 0
+    for c in p.source_files:
+        if c.data_entries.__len__() > 1:
+            counter_has_entry += 1
+        else:
+            counter_has_none += 1
+
+    print(f" has found {counter_has_entry} CFiles with entrys, and {counter_has_none} without")
+
 
 p = PassiveThread()
 
 m = Model()
 
 loader = FileLoader(
-    "/common/homes/students/uvhuj_heusinger/Documents/git/cti-engine-prototype/saves/CTI_ENGINE_SAVE simox 2024-02-07",
+    "/common/homes/students/uvhuj_heusinger/Documents/git/cti-engine-prototype/saves/deps/opencv-3/main/opencv-3.4.16/1707483711.1979697/CTI_ENGINE_SAVE opencv-3.4.16 2024-02-09",
     m)
 loader.update_project()
 p.set_model(m)
 p.length()
-"""
+
+length(m.current_project)
