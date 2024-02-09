@@ -18,6 +18,6 @@ class AppRequestsInterface(Protocol):
         '''loads files from given path as a new project in model'''
         raise NotImplementedError
     
-    def restart_measurement(self) -> bool:
+    def restart_measurement(self):
         raise NotImplementedError
     

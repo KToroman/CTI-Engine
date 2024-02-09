@@ -20,16 +20,18 @@ from src.saving.SaveToJSON import SaveToJSON
 from src.view.AppRequestsInterface import AppRequestsInterface
 from src.view.GUI.prepare_gui import prepare_gui
 from src.view.UIInterface import UIInterface
-from multiprocessing import Process, process
+from PyQt5.QtWidgets import QApplication
 
 
-class App(AppRequestsInterface):
+
+class AppMeta(type(QApplication), type(AppRequestsInterface)):
+    pass
+
+class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
     CTI_DIR_PATH: str = "/common/homes/students/upufw_toroman/cti-engine"  # TODO change
     __DEFAULT_GUI: bool = True
 
     def __init__(self, start_with_gui: bool = __DEFAULT_GUI, cti_dir_path: str = CTI_DIR_PATH) -> None:
-        if start_with_gui:
-            self.__UI: UIInterface = prepare_gui()
         self.__has_gui: bool = start_with_gui
         self.__model = Model()
         self.__cti_dir_path = cti_dir_path
@@ -38,6 +40,17 @@ class App(AppRequestsInterface):
         self.__fetcher: FetcherInterface
         self.__continue_measuring: bool = True
         self.__is_running: bool = True
+        if start_with_gui:
+            self.__UI: UIInterface = prepare_gui(self)
+            self.__UI.execute()
+            #Thread(target=self.gui_loop).start()
+
+    """
+    def gui_loop(self):
+        while True:
+            self.__UI.execute()
+            time.sleep(0.1)
+            """
 
     def run(self):
         while self.__is_running:
@@ -46,6 +59,7 @@ class App(AppRequestsInterface):
             if self.__model.get_current_working_directory() != "" and not self.__hierarchy_fetcher.is_done: # if there is a new project
                 Thread(target=self.__hierarchy_fetcher.update_project).start()
                 Thread(target=self.__save_project(self.__model.get_current_working_directory()))
+
         if self.__has_gui:
             self.__UI.visualize(self.__model)
 
@@ -84,8 +98,11 @@ class App(AppRequestsInterface):
             self.__UI.visualize(self.__model)
 
     def load_from_directory(self, path: str):
+        print(self.__model.current_project.path_to_save)
         self.__fetcher = FileLoader(path, self.__model)
         self.__fetch()
+        if self.__has_gui:
+            self.__UI.visualize(self.__model)
 
     def quit_application(self) -> bool:
         self.__is_running = False
