@@ -26,6 +26,7 @@ from src.view.GUI.Visuals.StatusBar import StatusBar
 from src.view.GUI.Visuals.StatusSettings import StatusSettings
 from src.view.UIInterface import UIInterface
 from src.view.GUI.Visuals.ErrorWindow import ErrorWindow
+from src.view.AppRequestsInterface import AppRequestsInterface
 
 
 class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
@@ -38,7 +39,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
     def __init__(self, q_application: QApplication):
         self.__q_application: QApplication = q_application
-        super().__init__()
+        super(MainWindow, self).__init__()
 
         self.__ram: bool = False
         self.__cpu: bool = False
@@ -94,10 +95,10 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.stacked_widget.addWidget(self.bar_chart_widget)
         self.splitter1.addWidget(self.stacked_widget)
 
-        self.table_widget: TableWidget = TableWidget()
+        self.table_widget: TableWidget = TableWidget(app)
         self.splitter1.addWidget(self.table_widget)
 
-        self.menu_bar: MenuBar = MenuBar(self.menu_bar_frame_layout)
+        self.menu_bar: MenuBar = MenuBar(self.menu_bar_frame_layout, app)
         self.metric_bar: MetricBar = MetricBar(self.metric_bar_frame_layout)
 
         self.setup_resource_connections()
@@ -115,6 +116,9 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         caspars farbe: #444447
         """
         self.show()
+
+    def execute(self):
+        self.__q_application.exec()
 
     def visualize(self, model: ModelReadViewInterface):
         """receives a Model, displays the data contained in that Model to the user."""
@@ -139,6 +143,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         # Update other Widgets
         self.setup_connections()
         self.status_bar.update_status(StatusSettings.FINISHED)
+        self.table_widget.rebuild_table()
 
     def __visualize_active(self, model: ModelReadViewInterface):
         """visualizes data from active mode"""
@@ -259,19 +264,15 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
     def __add_to_graph(self, displayable: Displayable):
         """adds plots of given displayable to graph and bar chart widgets"""
-        ti = time.time()
         self.ram_graph_widget.add_plot(displayable.ram_plot)
         self.cpu_graph_widget.add_plot(displayable.cpu_plot)
         self.bar_chart_widget.add_bar(displayable.runtime_plot)
-        print((time.time() - ti).__str__())
 
     def __remove_from_graph(self, displayable: Displayable):
-        ti = time.time()
         """removes plots of given displayable from graph and bar chart widgets"""
         self.ram_graph_widget.remove_plot(displayable.ram_plot)
         self.cpu_graph_widget.remove_plot(displayable.cpu_plot)
         self.bar_chart_widget.remove_bar(displayable.runtime_plot)
-        print((time.time() - ti).__str__())
 
     def setup_click_connections(self):
         self.bar_chart_widget.click_signal.connect(
