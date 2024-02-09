@@ -38,7 +38,7 @@ class ProcessCollector:
     def make_process(self, line: str) -> Optional[psutil.Process]:
         process = self.__create_processes(line)
         if process is not None and not self.__is_process_in_list(process):
-            self.project_checker(process)
+            self.__project_checker(process)
             self.process_list.append(process)
             return process
         return None
@@ -52,7 +52,7 @@ class ProcessCollector:
                 continue
         return False
 
-    def project_checker(self, proc: psutil.Process):
+    def __project_checker(self, proc: psutil.Process):
         try:
             time.sleep(0.1)
             project_name: str = self.__get_project_name(proc)
