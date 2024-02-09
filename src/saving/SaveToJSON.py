@@ -37,7 +37,6 @@ class SaveToJSON(SaveInterface):
     def __set_name(self, project: Project) -> bool:
         if self.__current_project_dir != project.working_dir:
             time_date = date.today()
-            print(project.working_dir)
             proc_name = project.working_dir.split("/")
             name = proc_name[proc_name.__len__()-1]
             if name is None or name == "":
