@@ -69,7 +69,7 @@ class PassiveDataFetcher(DataFetcher):
         try:
             cmdline: List[str] = process_point.process.cmdline()
             path: str = process_point.process.cwd()
-            if "src/app" in path:
+            if os.getcwd().split("/")[-1] in path:
                 return
             has_o: bool = False
             for line in cmdline:
@@ -84,4 +84,6 @@ class PassiveDataFetcher(DataFetcher):
         except NoSuchProcess:
             return
         except FileNotFoundError:
+            return
+        except PermissionError:
             return

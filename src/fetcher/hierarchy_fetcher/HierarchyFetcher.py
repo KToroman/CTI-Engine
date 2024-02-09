@@ -34,6 +34,7 @@ class HierarchyFetcher(FetcherInterface):
             time.sleep(5)
             if self.__open_timeout > 2:
                 self.__open_timeout = 0
+                self.is_done = True
                 raise e
             else:
                 self.__open_timeout += 1
