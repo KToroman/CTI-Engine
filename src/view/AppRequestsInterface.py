@@ -21,3 +21,6 @@ class AppRequestsInterface(Protocol):
     def restart_measurement(self):
         raise NotImplementedError
     
+    def run(self):
+        raise NotImplementedError
+    

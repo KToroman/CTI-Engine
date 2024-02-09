@@ -90,7 +90,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.stacked_widget.addWidget(self.cpu_graph_widget)
         self.stacked_widget.addWidget(self.bar_chart_widget)
         self.splitter1.addWidget(self.stacked_widget)
-
+        self.__app: AppRequestsInterface = app
         self.table_widget: TableWidget = TableWidget(app)
         self.splitter1.addWidget(self.table_widget)
 
@@ -100,9 +100,11 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.setup_resource_connections()
         self.project_time: float = 0
         self.show()
+        self.__app.run()
+        self.__q_application.exec()
 
     def execute(self):
-        self.__q_application.exec()
+        pass
 
     def visualize(self, model: ModelReadViewInterface):
         """receives a Model, displays the data contained in that Model to the user."""

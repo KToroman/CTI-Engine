@@ -52,7 +52,6 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         while self.__is_running:
             if self.__continue_measuring:
                 Thread(target=self.__passive_fetch).start()
-                #TODO hierarchy fetcher starting even when no project is found (only loaded)
             if self.__model.get_current_working_directory() != "" and not self.__hierarchy_fetcher.is_done: # if there is a new project
                 Thread(target=self.__hierarchy_fetcher.update_project).start()
                 Thread(target=self.__save_project(self.__model.get_current_working_directory()))
@@ -67,7 +66,8 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
     def __passive_fetch(self):
         self.__hierarchy_fetcher.is_done = False # hierarchy fetcher will need to be run when project is found
         while self.__continue_measuring:
-            self.__continue_measuring = self.__passive_data_fetcher.update_project()
+            found_project: bool = self.__passive_data_fetcher.update_project()
+
 
     def __save_project(self, name: str):
         saver: SaveInterface = SaveToJSON(self.__cti_dir_path)
@@ -89,7 +89,7 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         return project
     
     def start_active_measurement(self, source_file_name: str):
-        self.__fetcher = ActiveDataFetcher(source_file_name, self.__model, f"{self.CTI_DIR_PATH}/{self.__model.get_project_name}/build")
+        self.__fetcher = ActiveDataFetcher(source_file_name, self.__model, f"{self.__cti_dir_path}/{self.__model.get_project_name}/build")
         self.__fetch()
         if self.__has_gui:
             self.__UI.visualize(self.__model)
