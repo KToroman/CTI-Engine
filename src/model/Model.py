@@ -49,12 +49,6 @@ class Model(ModelReadViewInterface):
             if name == project.working_dir:
                 return project
         raise ProjectNotFoundException
-    
-    def does_project_exist(self, name: str) -> bool:
-        for project in self.projects:
-            if name == project.working_dir:
-                return True
-        return False
 
     def does_project_exist(self, name: str) -> bool:
         for project in self.projects:
@@ -68,6 +62,7 @@ class Model(ModelReadViewInterface):
         if not self.does_project_exist(project.working_dir) and "/src/app" not in project.working_dir:
             self.projects.append(project)
             self.current_project = project
+            print("new project")
 
     def get_sourcefile_by_name(self, name: str) -> SourceFile:
         return self.current_project.get_sourcefile(name)

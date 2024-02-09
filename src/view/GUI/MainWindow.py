@@ -2,6 +2,7 @@ import colorsys
 import sys
 
 import random
+from threading import Thread
 from typing import List
 
 from PyQt5.QtCore import Qt
@@ -100,11 +101,10 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.setup_resource_connections()
         self.project_time: float = 0
         self.show()
-        self.__app.run()
-        self.__q_application.exec()
+        
 
     def execute(self):
-        pass
+        self.__q_application.processEvents()
 
     def visualize(self, model: ModelReadViewInterface):
         """receives a Model, displays the data contained in that Model to the user."""

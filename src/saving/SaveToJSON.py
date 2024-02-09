@@ -24,7 +24,6 @@ class SaveToJSON(SaveInterface):
             self.__set_path()
 
         self.__save_path.mkdir(exist_ok=True, parents=True)
-
         project_string: str = jsonpickle.encode(project)
 
         self.__write_file(project_string)
@@ -43,7 +42,7 @@ class SaveToJSON(SaveInterface):
                 name = proc_name[proc_name.__len__()-2]
 
             self.__current_project_dir = project.working_dir
-            self.__current_project_name = ("CTI_ENGINE_SAVE/ " + name + " " + time_date.__str__())
+            self.__current_project_name = (name + " " + time_date.__str__())
             return True
         return False
 

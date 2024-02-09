@@ -1,3 +1,4 @@
+from multiprocessing import Process
 import os
 import sys
 import time
@@ -41,35 +42,43 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         self.__is_running: bool = True
         if start_with_gui:
             self.__UI: UIInterface = prepare_gui(self)
-            self.__UI.execute()
 
     def __get_cti_folder_path(self) -> str:
         path: str = ""
         path += join(os.getcwd().split("cti-engine-prototype")[0])
         return path
 
-    def run(self):
+    def run(self) -> None:
         while self.__is_running:
+            self.__UI.execute()
             if self.__continue_measuring:
                 Thread(target=self.__passive_fetch).start()
             if self.__model.get_current_working_directory() != "" and not self.__hierarchy_fetcher.is_done: # if there is a new project
-                Thread(target=self.__hierarchy_fetcher.update_project).start()
+                self.__hierarchy_needed = True
+                Thread(target=self.__hierarchy_fetch).start()
                 Thread(target=self.__save_project(self.__model.get_current_working_directory()))
-
+        print("done running")
         if self.__has_gui:
             self.__UI.visualize(self.__model)
 
-    def __fetch(self):
+    def __hierarchy_fetch(self):
+        while self.__hierarchy_needed:
+            self.__hierarchy_needed = self.__hierarchy_fetcher.update_project()
+
+    def __fetch(self) -> None:
         while (self.__continue_measuring):
             self.__continue_measuring = self.__fetcher.update_project()
 
-    def __passive_fetch(self):
-        self.__hierarchy_fetcher.is_done = False # hierarchy fetcher will need to be run when project is found
+    def __passive_fetch(self) -> None:
+        self.__hierarchy_fetcher.is_done = False 
+        # hierarchy fetcher will need to be run when project is found
+        found_project: bool = False 
         while self.__continue_measuring:
-            found_project: bool = self.__passive_data_fetcher.update_project()
+            found_project = self.__passive_data_fetcher.update_project()
+        if found_project:
+            self.__UI.visualize(self.__model)
 
-
-    def __save_project(self, name: str):
+    def __save_project(self, name: str) -> None:
         saver: SaveInterface = SaveToJSON(self.__cti_dir_path)
         stop_time: float = time.time() + 10
         while stop_time > time.time() and self.__continue_measuring:
@@ -79,8 +88,9 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
             if project.working_dir == self.__model.get_current_working_directory():
                 stop_time = time.time() + 10
         saver.save_project(self.__model.get_project_by_name(name))
+        print("saver exit")
 
-    def __get_project(self, name: str):
+    def __get_project(self, name: str) -> Project:
         project: Project = Project("", "")
         try: 
             project = self.__model.get_project_by_name(name)
@@ -88,13 +98,13 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
             self.__get_project
         return project
     
-    def start_active_measurement(self, source_file_name: str):
+    def start_active_measurement(self, source_file_name: str) -> None:
         self.__fetcher = ActiveDataFetcher(source_file_name, self.__model, f"{self.__cti_dir_path}/{self.__model.get_project_name}/build")
         self.__fetch()
         if self.__has_gui:
             self.__UI.visualize(self.__model)
 
-    def load_from_directory(self, path: str):
+    def load_from_directory(self, path: str) -> None:
         print(self.__model.current_project.path_to_save)
         self.__fetcher = FileLoader(path, self.__model)
         self.__fetch()
