@@ -1,6 +1,6 @@
 from typing import List
 
-from src.view.GUI.Graph import Plot
+from src.view.GUI.Graph.Plot import Plot
 
 
 class Displayable:

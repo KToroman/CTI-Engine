@@ -28,13 +28,12 @@ class AppMeta(type(QApplication), type(AppRequestsInterface)):
     pass
 
 class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
-    CTI_DIR_PATH: str = "/common/homes/students/upufw_toroman/cti-engine"  # TODO change
     __DEFAULT_GUI: bool = True
 
-    def __init__(self, start_with_gui: bool = __DEFAULT_GUI, cti_dir_path: str = CTI_DIR_PATH) -> None:
+    def __init__(self, start_with_gui: bool = __DEFAULT_GUI) -> None:
         self.__has_gui: bool = start_with_gui
         self.__model = Model()
-        self.__cti_dir_path = cti_dir_path
+        self.__cti_dir_path = self.__get_cti_folder_path()
         self.__passive_data_fetcher: PassiveDataFetcher = PassiveDataFetcher(self.__model)
         self.__hierarchy_fetcher: HierarchyFetcher = HierarchyFetcher(self.__model)
         self.__fetcher: FetcherInterface
@@ -43,14 +42,11 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         if start_with_gui:
             self.__UI: UIInterface = prepare_gui(self)
             self.__UI.execute()
-            #Thread(target=self.gui_loop).start()
 
-    """
-    def gui_loop(self):
-        while True:
-            self.__UI.execute()
-            time.sleep(0.1)
-            """
+    def __get_cti_folder_path(self) -> str:
+        path: str = ""
+        path += join(os.getcwd().split("cti-engine-prototype")[0])
+        return path
 
     def run(self):
         while self.__is_running:
@@ -74,7 +70,7 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
             self.__continue_measuring = self.__passive_data_fetcher.update_project()
 
     def __save_project(self, name: str):
-        saver: SaveInterface = SaveToJSON()
+        saver: SaveInterface = SaveToJSON(self.__cti_dir_path)
         stop_time: float = time.time() + 10
         while stop_time > time.time() and self.__continue_measuring:
             project: Project = self.__get_project(name)
