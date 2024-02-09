@@ -27,7 +27,7 @@ class ActiveDataFetcher(FetcherInterface):
         self.__source_file: SourceFile = model.get_sourcefile_by_name(
             source_file_name)
         self.__data_observer = DataObserver()
-        self.__process_collector = ProcessCollector(model)
+        self.__process_collector = ProcessCollector(model, False)
         self.__compiling_tool: BuilderInterface = CompilingTool(curr_project_dir = model.current_project.working_dir, 
             source_file = self.__source_file, path = build_dir_path
         )

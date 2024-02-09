@@ -17,7 +17,8 @@ from src.model.core.Project import Project
 class ProcessCollector:
     PROC_NAME_FILTER = "cc1plus"
 
-    def __init__(self, model: Model):
+    def __init__(self, model: Model, check_for_project: bool):
+        self.__check_for_project = check_for_project
         self.process_list: List[psutil.Process] = list()
         self.__model = model
 
@@ -38,7 +39,8 @@ class ProcessCollector:
     def make_process(self, line: str) -> Optional[psutil.Process]:
         process = self.__create_processes(line)
         if process is not None and not self.__is_process_in_list(process):
-            self.project_checker(process)
+            if self.__check_for_project:
+                self.project_checker(process)
             self.process_list.append(process)
             return process
         return None
