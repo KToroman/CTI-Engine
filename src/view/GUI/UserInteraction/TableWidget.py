@@ -106,7 +106,7 @@ class TableWidget(QTableWidget):
         item2.setData(Qt.DisplayRole, row.displayable.cpu_peak)
         self.setItem(index, 2, item2)
         item3: QTableWidgetItem = QTableWidgetItem()
-        item3.setData(Qt.DisplayRole, ("abc"))
+        item3.setData(Qt.DisplayRole, row.displayable.runtime_plot.y_values[0])
         self.setItem(index, 3, item3)
 
     def fill_subrow(self, displayable : Displayable):

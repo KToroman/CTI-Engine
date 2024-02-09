@@ -130,7 +130,6 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
             self.__visualize_active(model)
         else:
             self.__visualize_passive(model)
-        self.table_widget.sort_table(1)
 
     def __visualize_passive(self, model: ModelReadViewInterface):
         """visualizes data from passive mode."""

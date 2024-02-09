@@ -44,7 +44,7 @@ class GraphWidget(QWidget):
 
         # Update graph
         self.canvas.draw()
-        line.set_picker(True)  # Aktivieren Sie das Picker-Ereignis für die Linie
+        line.set_picker(True)
 
         # Add line to cpu list
         self.lines.append(line)

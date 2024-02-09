@@ -9,6 +9,7 @@ class MenuBar:
         self.load_file_button: QPushButton = QPushButton("Load file")
         self.load_file_button.setStyleSheet("background-color: #61b3bf;")
         self.load_file_button.clicked.connect(lambda: self.show_input_dialog())
+
         self.pause_resume_button: QPushButton = QPushButton("Restart")
         self.pause_resume_button.clicked.connect(lambda: self.app.restart_measurement())
         self.pause_resume_button.setStyleSheet("background-color: #61b3bf;")
