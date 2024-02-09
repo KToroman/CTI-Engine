@@ -17,3 +17,6 @@ class UIInterface(Protocol):
     def update_statusbar(self, status: StatusSettings):
         """receives a status string, changes the ui's status string accordingly."""
         raise NotImplementedError
+    
+    def execute(self):
+        raise NotImplementedError

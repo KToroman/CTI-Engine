@@ -16,9 +16,9 @@ class TableWidget(QTableWidget):
     COLUMN_3_LABEL = "Peak CPU (%)"
     COLUMN_4_LABEL = "Runtime"
 
-    def __init__(self):
+    def __init__(self, app: AppRequestsInterface):
         super().__init__()
-        self.app_request_interface : AppRequestsInterface = AppRequestsInterface
+        self.app_request_interface = app
         self.setColumnCount(self.NUMBER_OF_COLUMNS)
         self.rows: List[TableRow] = []
         self.setHorizontalHeaderLabels([self.COLUMN_1_LABEL, self.COLUMN_2_LABEL,

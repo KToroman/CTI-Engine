@@ -15,7 +15,7 @@
             "name": "load",
             "args": [
                 "load",
-                "/common/homes/students/upufw_toroman/PSE/cti-engine-prototype/saves/CTI_ENGINE_SAVE ArmarXCore 2024-02-06/CTI_ENGINE_SAVE ArmarXCore 2024-02-06.json"
+                "/common/homes/students/upufw_toroman/Downloads/CTI_ENGINE_SAVE bullet3 2024-02-09"
             ],
             "type": "python",
             "request": "launch",

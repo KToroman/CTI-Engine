@@ -48,10 +48,16 @@ class Model(ModelReadViewInterface):
             if name == project.working_dir:
                 return project
         raise ProjectNotFoundException
+    
+    def does_project_exist(self, name: str) -> bool:
+        for project in self.projects:
+            if name == project.working_dir:
+                return True
+        return False
 
     def add_project(self, project: Project) -> None:
         """adds new project to model"""
-        if self.get_project_by_name(project.working_dir) is None and project.working_dir != "/common/homes/students/uvhuj_heusinger/Documents/git/cti-engine-prototype/src/app":
+        if not self.does_project_exist(project.working_dir) and project.working_dir != "/common/homes/students/uvhuj_heusinger/Documents/git/cti-engine-prototype/src/app":
             self.projects.append(project)
             self.current_project = project
 
