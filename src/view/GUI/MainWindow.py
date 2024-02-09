@@ -4,6 +4,7 @@ import sys
 
 import random
 import time
+from threading import Thread
 from typing import List
 
 from PyQt5.QtCore import Qt
@@ -37,7 +38,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     RAM_Y_AXIS: str = "RAM (in mb)"
     CPU_Y_AXIS: str = "CPU (in %)"
 
-    def __init__(self, q_application: QApplication):
+    def __init__(self, q_application: QApplication, app: AppRequestsInterface):
         self.__q_application: QApplication = q_application
         super(MainWindow, self).__init__()
 
@@ -107,12 +108,14 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         logo_path = os.path.join(images_folder, "CTIEngineLogo.png")
         icon: QIcon = QIcon(logo_path)
         self.setWindowIcon(icon)
-        #self.setStyleSheet("background-color: #237277;")
+        self.setStyleSheet("background-color: #ECEFF1;")
         """
         colors from cti engine logo:
         #237277
         #4095a1
         #61b3bf
+        chatgpt: #ECEFF1
+        himmelgrau: #CFD8DC
         caspars farbe: #444447
         """
         self.show()
@@ -264,14 +267,14 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
     def __add_to_graph(self, displayable: Displayable):
         """adds plots of given displayable to graph and bar chart widgets"""
-        self.ram_graph_widget.add_plot(displayable.ram_plot)
-        self.cpu_graph_widget.add_plot(displayable.cpu_plot)
+        Thread(target=self.ram_graph_widget.add_plot, args=[displayable.ram_plot]).start()
+        Thread(target=self.cpu_graph_widget.add_plot, args=[displayable.cpu_plot]).start()
         self.bar_chart_widget.add_bar(displayable.runtime_plot)
 
     def __remove_from_graph(self, displayable: Displayable):
         """removes plots of given displayable from graph and bar chart widgets"""
-        self.ram_graph_widget.remove_plot(displayable.ram_plot)
-        self.cpu_graph_widget.remove_plot(displayable.cpu_plot)
+        Thread(target=self.ram_graph_widget.remove_plot, args=[displayable.ram_plot]).start()
+        Thread(target=self.cpu_graph_widget.remove_plot, args=[displayable.cpu_plot]).start()
         self.bar_chart_widget.remove_bar(displayable.runtime_plot)
 
     def setup_click_connections(self):

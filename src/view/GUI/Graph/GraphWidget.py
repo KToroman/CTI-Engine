@@ -40,7 +40,7 @@ class GraphWidget(QWidget):
 
     def add_plot(self, plot: Plot):
         """adds plot to graph widget"""
-        line, = self.ax.plot(plot.x_values, plot.y_values, label=plot.name, color=plot.color)
+        line, = self.ax.plot(plot.x_values, plot.y_values, label=plot.name, color=plot.color, linewidth=1.5)
 
         # Update graph
         self.canvas.draw()

@@ -12,13 +12,9 @@ class MenuBar:
         self.pause_resume_button: QPushButton = QPushButton("Restart")
         self.pause_resume_button.clicked.connect(lambda: self.app.restart_measurement())
         self.pause_resume_button.setStyleSheet("background-color: #61b3bf;")
-        self.pause_resume_button.clicked.connect(lambda: self.app_request_interface.pause_measurement(
-            self.app_request_interface))
 
         self.cancel_button: QPushButton = QPushButton("Cancel")
         self.cancel_button.setStyleSheet("background-color: #61b3bf;")
-        self.cancel_button.clicked.connect(lambda: self.app_request_interface.quit_measurement(
-            self.app_request_interface))
         self.cancel_button.clicked.connect(lambda: self.app.quit_measurement())
 
         menu_bar_layout.addWidget(self.load_file_button)

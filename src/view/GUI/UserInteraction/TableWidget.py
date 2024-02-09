@@ -4,7 +4,7 @@ from typing import List
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QInputDialog, QWidget, QHBoxLayout
+from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QInputDialog, QWidget, QHBoxLayout, QCheckBox
 
 # from src.view.AppRequestsInterface import AppRequestsInterface
 from src.view.GUI.UserInteraction.Displayable import Displayable
@@ -26,7 +26,9 @@ class TableWidget(QTableWidget):
         self.rows: List[TableRow] = []
         self.setHorizontalHeaderLabels([self.COLUMN_1_LABEL, self.COLUMN_2_LABEL,
                                         self.COLUMN_3_LABEL, self.COLUMN_4_LABEL])
+        self.setStyleSheet("::section{Background-color: #4095a1}")
         self.horizontalHeader().setStyleSheet("::section{Background-color: #4095a1}")
+        self.verticalHeader().setStyleSheet("::section{Background-color: #4095a1}")
         for column in range(self.columnCount()):
             self.horizontalHeader().sectionClicked.connect(lambda col=column: self.sort_table(col))
         self.insertion_point: str = ""
@@ -98,6 +100,7 @@ class TableWidget(QTableWidget):
         self.setItem(index, 0, QTableWidgetItem(self.setCellWidget(index, 0, cell_widget)))
         item: QTableWidgetItem = QTableWidgetItem()
         item.setData(Qt.DisplayRole, row.displayable.ram_peak)
+        item.setData(Qt.UserRole, row.displayable.name)
         self.setItem(index, 1, item)
         item2: QTableWidgetItem = QTableWidgetItem()
         item2.setData(Qt.DisplayRole, row.displayable.cpu_peak)
@@ -159,3 +162,13 @@ class TableWidget(QTableWidget):
             else:
                 row.checkbox.setChecked(False)
         self.all_selected = not self.all_selected
+
+    def sort_table(self, column: int):
+        self.sortItems(column, order=2)
+        for row_index in range(self.rowCount()):
+            current = self.item(row_index, 1).data(Qt.UserRole)
+            for row in self.rows:
+                if current == row.displayable.name:
+                    self.rows.remove(row)
+                    self.rows.insert(row_index, row)
+                    break
