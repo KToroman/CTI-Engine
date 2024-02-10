@@ -132,7 +132,9 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
             except FileNotFoundError as e:
                 self.__error_handling()
                 self.error_list.append(e)
+                self.__curr_project_name = self.__model.get_current_working_directory()
                 return
+        self.__curr_project_name = self.__model.get_current_working_directory()
         self.__visiulize = True
         self.__curr_status = StatusSettings.FINISHED
         self.__last_change = time.time() + 10
@@ -193,7 +195,7 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         self.__continue_fetching = True
         self.__fetcher = FileLoader(self.__path_to_load, self.__model)
         self.__fetch()
-        self.__curr_project_name = self.__model.get_project_name()
+
 
     def quit_application(self) -> bool:
         self.__is_running = False
