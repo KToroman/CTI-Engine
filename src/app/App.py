@@ -43,7 +43,7 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         self.__passive_fetching: bool = True
         self.__is_running: bool = True
         self.__curr_project_name: str
-        self.__visiulize = False
+        self.__visualize = False
         self.__last_change: int = 0
         self.__curr_status: StatusSettings = StatusSettings.WAITING
         self.__load_project: bool = False
@@ -86,11 +86,11 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
     def __gui_handling(self):
         self.__UI.execute()
         self.__UI.update_statusbar(self.__curr_status)
-        if self.__visiulize:
+        if self.__visualize:
             self.__curr_status = StatusSettings.FINISHED
             self.__last_change = time.time() + 10
             self.__UI.visualize(self.__model)
-            self.__visiulize = False
+            self.__visualize = False
         if self.__last_change <= time.time():
             self.__curr_status = StatusSettings.WAITING
             self.__last_change = time.time() + 10
@@ -135,7 +135,7 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
                 self.__curr_project_name = self.__model.get_current_working_directory()
                 return
         self.__curr_project_name = self.__model.get_current_working_directory()
-        self.__visiulize = True
+        self.__visualize = True
         self.__curr_status = StatusSettings.FINISHED
         self.__last_change = time.time() + 10
 
@@ -162,7 +162,7 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
             saver.save_project(project)
             time.sleep(3)
         saver.save_project(self.__model.get_project_by_name(name))
-        self.__visiulize = True
+        self.__visualize = True
         print("saver exit")
 
     def __get_project(self, name: str) -> Project:
