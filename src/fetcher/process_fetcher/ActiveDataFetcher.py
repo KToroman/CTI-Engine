@@ -35,14 +35,14 @@ class ActiveDataFetcher(FetcherInterface):
         self.__done_building = False
     
     def update_project(self) -> bool:
-        self.__move_on_to_next_header
+        self.__move_on_to_next_header()
         Thread(target=self.__fetch_process, daemon=True).start()
         return self.__done_building
 
     #TODO wiederholen bis header weg
 
     def __fetch_process(self):
-        if self.__time_header_last_found + self.__seconds__to_move_on > time.time():
+        if self.__time_header_last_found + self.__seconds__to_move_on > time():
             return
         processes = self.__process_collector.catch_process()
         if processes is None:
@@ -79,7 +79,7 @@ class ActiveDataFetcher(FetcherInterface):
             if path == "":
                 return
             entry: DataEntry = DataEntry(path, process_point.timestamp, process_point.metrics)
-            self.__time_header_last_found = time.time()
+            self.__time_header_last_found = time()
             self.add_data_entry(entry)
         except:
             return

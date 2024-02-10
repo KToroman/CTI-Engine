@@ -143,13 +143,13 @@ class TableWidget(QTableWidget):
 
     def start_active_measurement(self, name):
         self.insertion_point: str = name
-
+        self.app_request_interface.start_active_measurement(name)
         # Test nur als Beispiel
 
     def show_input_dialog_active(self, name):
         text, ok = QInputDialog.getText(None, "Active measurement", 'Start active measurement with following file?: ',
                                         text=name)
-        if ok: self.start_active_measurement(name)
+        if ok: self.start_active_measurement(text)
 
     def highlight_row(self, name: str):
         row_id: int = 0
