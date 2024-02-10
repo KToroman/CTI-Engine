@@ -40,10 +40,17 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         self.__passive_data_fetcher: PassiveDataFetcher = PassiveDataFetcher(self.__model)
         self.__hierarchy_fetcher: HierarchyFetcher = HierarchyFetcher(self.__model)
         self.__fetcher: FetcherInterface
-        self.__continue_measuring: bool = True
+        self.__passive_fetching: bool = True
         self.__is_running: bool = True
         self.__curr_project_name: str
         self.__visiulize = False
+        self.__last_change: int = 0
+        self.__curr_status: StatusSettings = StatusSettings.WAITING
+        self.__load_project: bool = False
+        self.__path_to_load: str = ""
+        self.__active_fetching_bool: bool = False
+        self.__curr_source_file_name: str = ""
+        self.__continue_fetching: bool = False
         if start_with_gui:
             self.__UI: UIInterface = prepare_gui(self)
         super(App, self).__init__([])
@@ -59,37 +66,48 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
 
     def run(self) -> None:
         self.__curr_project_name = self.__model.get_current_working_directory()
-        if self.__has_gui:
-            self.__UI.update_statusbar(StatusSettings.WAITING)
         while self.__is_running:
-            if self.__visiulize:
-                self.__UI.update_statusbar(StatusSettings.FINISHED)
-                self.__UI.visualize(self.__model)
-                self.__visiulize = False
-            for error in self.error_list:
-                self.__UI.deploy_error(error)
-                self.error_list.remove(error)
             if self.__has_gui:
-                self.__UI.execute()
-            if self.__continue_measuring:
-
-                if not self.__passive_fetching_on:
-                    Thread(target=self.__passive_fetch).start()
-                # passive fetcher is always running
-            # hierarchy fetching if there is a new project and fetching is needed
-                if self.__curr_project_name != self.__model.get_current_working_directory():
-                    hierarchy_fetcher = HierarchyFetcher(self.__model)
-                    self.__curr_project_name = self.__model.get_current_working_directory()
-                    Thread(target=self.__hierarchy_fetch, args=[hierarchy_fetcher]).start()
-                    Thread(target=self.__save_project, args=[hierarchy_fetcher]).start()
-                    if self.__has_gui:
-                        self.__UI.update_statusbar(StatusSettings.MEASURING)
+                self.__gui_handling()
+            if self.__passive_fetching:
+                self.__passive_measuring()
+            if self.__load_project:
+                Thread(target=self.__load).start()
+            if self.__active_fetching_bool:
+                Thread(target=self.__active_fetching).start()
         print("done running")
 
         if self.__has_gui:
             print("ok... not running i guess?")
-            self.__UI.update_statusbar(StatusSettings.FINISHED)
+            self.__curr_status = StatusSettings.FINISHED
+            self.__last_change = time.time() + 10
             self.__UI.visualize(self.__model)
+
+    def __gui_handling(self):
+        self.__UI.execute()
+        self.__UI.update_statusbar(self.__curr_status)
+        if self.__visiulize:
+            self.__curr_status = StatusSettings.FINISHED
+            self.__last_change = time.time() + 10
+            self.__UI.visualize(self.__model)
+            self.__visiulize = False
+        if self.__last_change <= time.time():
+            self.__curr_status = StatusSettings.WAITING
+            self.__last_change = time.time() + 10
+        for error in self.error_list:
+            self.__UI.deploy_error(error)
+            self.error_list.remove(error)
+
+    def __passive_measuring(self):
+        if not self.__passive_fetching_on:
+            Thread(target=self.__passive_fetch).start()
+        if self.__curr_project_name != self.__model.get_current_working_directory():
+            hierarchy_fetcher = HierarchyFetcher(self.__model)
+            self.__curr_project_name = self.__model.get_current_working_directory()
+            Thread(target=self.__hierarchy_fetch, args=[hierarchy_fetcher]).start()
+            Thread(target=self.__save_project, args=[hierarchy_fetcher]).start()
+            self.__curr_status = StatusSettings.MEASURING
+            self.__last_change = time.time() + 10
 
     def __hierarchy_fetch(self, hierarchy_fetcher: HierarchyFetcher) -> None:
         __hierarchy_needed: bool = True
@@ -97,23 +115,36 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
             try:
                 __hierarchy_needed = hierarchy_fetcher.update_project()
             except FileNotFoundError:
+                self.__error_handling()
                 self.error_list.append(FileNotFoundError("could not find the compile-commands.json file"))
                 self.__hierarchy_needed = False
                 self.__hierarchy_fetcher.is_done = True
                 return
 
     def __fetch(self) -> None:
-        if self.__has_gui:
-            self.__UI.update_statusbar(StatusSettings.MEASURING)
-        while self.__continue_measuring:
-            self.__continue_measuring = self.__fetcher.update_project()
-        if self.__has_gui:
-            self.__UI.update_statusbar(StatusSettings.FINISHED)
+        self.__curr_status = StatusSettings.MEASURING
+        self.__last_change = time.time() + 10
+        while self.__continue_fetching:
+            try:
+                self.__continue_fetching = self.__fetcher.update_project()
+                self.__curr_status = StatusSettings.MEASURING
+                self.__last_change = time.time() + 10
+            except FileNotFoundError as e:
+                self.__error_handling()
+                self.error_list.append(e)
+                return
+        self.__visiulize = True
+        self.__curr_status = StatusSettings.FINISHED
+        self.__last_change = time.time() + 10
+
+    def __error_handling(self):
+        self.__curr_status = StatusSettings.FAILED
+        self.__last_change = time.time() + 20
 
     def __passive_fetch(self) -> None:
         # hierarchy fetcher will need to be run when project is found
         self.__passive_fetching_on = True
-        while self.__continue_measuring:
+        while self.__passive_fetching:
             self.__found_project = self.__passive_data_fetcher.update_project()
         self.__passive_fetching_on = False
 
@@ -123,12 +154,13 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         while (self.__found_project and (
                 name == self.__model.get_current_working_directory())) or not hierarchy_fetcher.is_done:
             # if the current project is still being watched or the hierarchy is not yet completed
+            self.__curr_status = StatusSettings.MEASURING
+            self.__last_change = time.time() + 10
             project: Project = self.__get_project(name)
             saver.save_project(project)
             time.sleep(3)
         saver.save_project(self.__model.get_project_by_name(name))
-        if self.__has_gui:
-            self.__visiulize = True
+        self.__visiulize = True
         print("saver exit")
 
     def __get_project(self, name: str) -> Project:
@@ -140,28 +172,38 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         return project
 
     def start_active_measurement(self, source_file_name: str) -> None:
-        self.__fetcher = ActiveDataFetcher(source_file_name, self.__model,
+        self.__active_fetching_bool = True
+        self.__curr_source_file_name = source_file_name
+
+    def __active_fetching(self):
+        self.__active_fetching_bool = False
+        self.__passive_fetching = False
+        self.__continue_fetching = True
+        self.__fetcher = ActiveDataFetcher(self.__curr_source_file_name, self.__model,
                                            f"{self.__cti_dir_path}/{self.__model.get_project_name}/build")
         self.__fetch()
-        if self.__has_gui:
-            self.__UI.visualize(self.__model)
 
     def load_from_directory(self, path: str) -> None:
-        self.__UI.update_statusbar(StatusSettings.MEASURING)
-        print(self.__model.current_project.path_to_save)
-        self.__fetcher = FileLoader(path, self.__model)
+        self.__path_to_load = path
+        self.__load_project = True
+
+    def __load(self):
+        self.__load_project = False
+        self.__passive_fetching = False
+        self.__continue_fetching = True
+        self.__fetcher = FileLoader(self.__path_to_load, self.__model)
         self.__fetch()
         self.__curr_project_name = self.__model.get_project_name()
-        if self.__has_gui:
-            self.__UI.visualize(self.__model)
 
     def quit_application(self) -> bool:
         self.__is_running = False
+        self.__passive_fetching = False
+        self.__continue_fetching = False
         return not self.__is_running
 
     def restart_measurement(self):
-        self.__continue_measuring = True
-        self.run()
+        self.__passive_fetching = True
 
     def quit_measurement(self):
-        self.__continue_measuring = False
+        self.__passive_fetching = False
+        self.__continue_fetching = False
