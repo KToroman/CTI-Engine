@@ -103,10 +103,9 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.table_widget: TableWidget = TableWidget(app)
         self.splitter1.addWidget(self.table_widget)
 
-        self.menu_bar: MenuBar = MenuBar(self.menu_bar_frame_layout, app)
-        self.HIERARCHY_DEPTH: int = 3
+        self.HIERARCHY_DEPTH: int = 2
 
-        self.menu_bar: MenuBar = MenuBar(self.menu_bar_frame_layout)
+        self.menu_bar: MenuBar = MenuBar(self.menu_bar_frame_layout, app)
         self.metric_bar: MetricBar = MetricBar(self.metric_bar_frame_layout)
 
         self.setup_resource_connections()
@@ -126,7 +125,6 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         caspars farbe: #444447
         """
         self.show()
-
 
     def execute(self):
         self.__q_application.processEvents()
@@ -154,8 +152,6 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         # Update other Widgets
         self.setup_connections()
         self.status_bar.update_status(StatusSettings.FINISHED)
-        self.table_widget.rebuild_table()
-
 
     def __visualize_active(self, model: ModelReadViewInterface):
         """visualizes data from active mode"""
@@ -174,7 +170,6 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
             # self.table_widget.add_subrow(self.__create_displayable(cfile))
             self.table_widget.fill_subrows(self.__create_displayable(cfile))
 
-        self.table_widget.rebuild_table()
 
         # Update other Widgets
         self.setup_connections()

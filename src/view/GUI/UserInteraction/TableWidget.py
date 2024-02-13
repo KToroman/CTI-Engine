@@ -64,12 +64,15 @@ class TableWidget(QTableWidget):
 
         sub_row: TableRow = TableRow(displayable, True)
         caller_row.children.append(sub_row)
-        self.rows.insert(self.rows.index(caller_row) + 1, sub_row)
-        self.insertRow(self.rowCount())
+        self.rows.insert(self.rows.index(caller_row) + caller_row.children.index(sub_row) + 1, sub_row)
+        self.insertRow(self.rows.index(caller_row) + caller_row.children.index(sub_row) + 1)
         self.fill_row(sub_row, self.rows.index(caller_row) + caller_row.children.index(sub_row) + 1)
         self.setRowHeight(self.rows.index(sub_row), 30)
         sub_row.toggle_button.clicked.connect(lambda: self.toggle_row_vis(sub_row))
         sub_row.name_button.clicked.connect(lambda: self.show_input_dialog_active(sub_row.displayable.name))
+
+        caller_row.toggle_button.clicked.connect(lambda: self.toggle_row_vis(caller_row))
+        caller_row.name_button.clicked.connect(lambda: self.show_input_dialog_active(caller_row.displayable.name))
 
         self.set_row_color(self.rows.index(sub_row), QColor(220, 220, 220))
         if caller_row.is_child:
