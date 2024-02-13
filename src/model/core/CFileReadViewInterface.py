@@ -28,3 +28,7 @@ class CFileReadViewInterface(Protocol):
 
     def get_headers(self):
         pass
+
+    def has_error(self) -> bool:
+        """Returns true if there is an error in this CFile."""
+        pass

@@ -1,13 +1,12 @@
 import os.path
-import subprocess
 import time
 from os.path import join
 from threading import Thread
 from typing import List
 
-import jsonpickle
 import psutil
-from src.fetcher import hierarchy_fetcher
+from psutil import NoSuchProcess
+
 from src.fetcher.hierarchy_fetcher.HierarchyFetcher import HierarchyFetcher
 
 from src.fetcher.process_fetcher.DataFetcher import DataFetcher
@@ -16,20 +15,16 @@ from src.fetcher.process_fetcher.process_observer.metrics_observer.DataObserver 
 from src.model.Model import Model
 from src.model.core.DataEntry import DataEntry
 from src.model.core.ProcessPoint import ProcessPoint
-from src.model.core.Project import Project
 
 
 class PassiveDataFetcher(DataFetcher):
 
-    def __init__(self, model: Model, path_to_save: str):
+    def __init__(self, model: Model):
         self.__model = model
-        self.__path_to_save = path_to_save
-        self.__process_collector: ProcessCollector = ProcessCollector(model, path_to_save)
+        self.__process_collector: ProcessCollector = ProcessCollector(model, True)
         self.__data_observer: DataObserver = DataObserver()
-        self.__entry_list: List[DataEntry] = list()
-
-        self.__time_to_wait: int = 15
-        self.__time_till_false: int = 0
+        self.__time_to_wait: float = 15
+        self.__time_till_false: float = 0
 
     def update_project(self) -> bool:
         Thread(target=self.__fetch_process, daemon=True).start()
@@ -49,8 +44,11 @@ class PassiveDataFetcher(DataFetcher):
 
     def __fetch_process(self):
         processes = self.__process_collector.catch_process()
+        if processes is None:
+            return
         for line in processes:
             Thread(target=self.__create_process, args=[line]).start()
+        processes.close()
 
     def __create_process(self, line: str):
         Thread(target=self.__get_data, args=[self.__process_collector.make_process(line)]).start()
@@ -59,23 +57,33 @@ class PassiveDataFetcher(DataFetcher):
         try:
             if process is None:
                 return
+            Thread(target=self.__make_entry, args=[self.fetch_metrics(process)]).start()
             while process.is_running():
                 Thread(target=self.__make_entry, args=[self.fetch_metrics(process)]).start()
+                time.sleep(0.1)
             self.__process_collector.process_list.remove(process)
         except:
             self.__process_collector.process_list.remove(process)
 
-    def __make_entry(self, process_point: ProcessPoint):
+    def __make_entry(self, process_point: ProcessPoint) -> None:
         try:
             cmdline: List[str] = process_point.process.cmdline()
             path: str = process_point.process.cwd()
+            if os.getcwd().split("/")[-1] in path:
+                return
+            has_o: bool = False
             for line in cmdline:
                 if line.endswith(".o"):
-                    path = join(path.split("build/")[0], "build",path.split("build/")[1], "build", line)
+                    path = join(path, "CMakeFiles", line.split("CMakeFiles/")[-1])
+                    has_o = True
                     break
-            if path == "":
+            if not has_o:
                 return
             entry: DataEntry = DataEntry(path, process_point.timestamp, process_point.metrics)
             self.add_data_entry(entry)
-        except:
+        except NoSuchProcess:
+            return
+        except FileNotFoundError:
+            return
+        except PermissionError:
             return

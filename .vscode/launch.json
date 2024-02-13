@@ -5,6 +5,35 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "normal_start",
+            "type": "python",
+            "request": "launch",
+            "module": "src",
+            "justMyCode": true
+        },
+        {
+            "name": "load",
+            "args": [
+                "load",
+                "/common/homes/students/upufw_toroman/Downloads/CTI_ENGINE_SAVE bullet3 2024-02-09"
+            ],
+            "type": "python",
+            "request": "launch",
+            "module": "src",
+            "justMyCode": true
+        },
+        {
+            "name": "actv",
+            "args": [
+                "actv",
+                "/common/homes/students/upufw_toroman/code/pse/simox/build/3rdParty/rbdl/CMakeFiles/rbdl.dir/src/rbdl/Dynamics.cc.o",                "/common/homes/students/upufw_toroman/PSE/simox 2024-02-09"
+            ],
+            "type": "python",
+            "request": "launch",
+            "module": "src",
+            "justMyCode": true
+        },
+        {
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",

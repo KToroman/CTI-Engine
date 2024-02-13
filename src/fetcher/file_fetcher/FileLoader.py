@@ -17,13 +17,13 @@ class FileLoader(FetcherInterface):
     def update_project(self) -> bool:
         if self.__is_valid_file():
             self.__model.add_project(self.__create_project())
-            return True
+            return False
 
         elif self.__is_valid_path() and self.__search_json():
             self.__model.add_project(self.__create_project())
-            return True
+            return False
 
-        return False
+        raise FileNotFoundError("Couldn't find any saved projects on the given path")
 
     def __create_project(self) -> Project:
         project_string: str = self.__read_file()

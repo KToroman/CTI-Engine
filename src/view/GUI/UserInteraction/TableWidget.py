@@ -1,10 +1,13 @@
 import copy
 import time
 from threading import Thread
+import time
+from random import randrange
 from typing import List
 
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QInputDialog, QWidget, QHBoxLayout
+from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QInputDialog, QWidget, QHBoxLayout, QCheckBox
 
 from src.view.GUI.Graph.Plot import Plot
 # from src.view.AppRequestsInterface import AppRequestsInterface
@@ -22,13 +25,18 @@ class TableWidget(QTableWidget):
     COLUMN_3_LABEL = "Peak CPU (%)"
     COLUMN_4_LABEL = "Runtime"
 
-    def __init__(self):
+    def __init__(self, app: AppRequestsInterface):
         super().__init__()
-        self.app_request_interface: AppRequestsInterface = AppRequestsInterface
+        self.app_request_interface = app
         self.setColumnCount(self.NUMBER_OF_COLUMNS)
         self.rows: List[TableRow] = []
         self.setHorizontalHeaderLabels([self.COLUMN_1_LABEL, self.COLUMN_2_LABEL,
                                         self.COLUMN_3_LABEL, self.COLUMN_4_LABEL])
+        self.setStyleSheet("::section{Background-color: #4095a1}")
+        self.horizontalHeader().setStyleSheet("::section{Background-color: #4095a1}")
+        self.verticalHeader().setStyleSheet("::section{Background-color: #4095a1}")
+        for column in range(self.columnCount()):
+            self.horizontalHeader().sectionClicked.connect(lambda col=column: self.sort_table(col))
         self.insertion_point: str = ""
         self.active_started: bool = False
         self.all_selected: bool = False
@@ -79,21 +87,29 @@ class TableWidget(QTableWidget):
 
     def fill_row(self, row, index):
         if len(row.children) != 0:
-            row.toggle_button.setText("^")
+            row.toggle_button.setText("v")
 
         cell_widget = QWidget()
         layout = QHBoxLayout(cell_widget)
         layout.addWidget(row.checkbox)
         layout.addWidget(row.name_button)
         layout.addWidget(row.toggle_button)
-        self.setItem(index, 0,
-                     QTableWidgetItem(self.setCellWidget(index, 0, cell_widget)))
-        self.setItem(index, 1, QTableWidgetItem(str(row.displayable.ram_peak)))
-        self.setItem(index, 2, QTableWidgetItem(str(row.displayable.cpu_peak)))
+
+        self.setItem(index, 0, QTableWidgetItem(self.setCellWidget(index, 0, cell_widget)))
+        item: QTableWidgetItem = QTableWidgetItem()
+        item.setData(Qt.DisplayRole, row.displayable.ram_peak)
+        item.setData(Qt.UserRole, row.displayable.name)
+        self.setItem(index, 1, item)
+        item2: QTableWidgetItem = QTableWidgetItem()
+        item2.setData(Qt.DisplayRole, row.displayable.cpu_peak)
+        self.setItem(index, 2, item2)
+        item3: QTableWidgetItem = QTableWidgetItem()
         if row.displayable.runtime_plot.y_values:
-            self.setItem(index, 3, QTableWidgetItem(str(row.displayable.runtime_plot.y_values[0])))
+            item3.setData(Qt.DisplayRole, row.displayable.runtime_plot.y_values[0])
+            self.setItem(index, 3, item3)
         else:
-            self.setItem(index, 3, QTableWidgetItem(str(0)))
+            item3.setData(Qt.DisplayRole, 0)
+            self.setItem(index, 3, item3)
 
     def fill_subrow(self, displayable: Displayable):
         for row in self.rows:
@@ -107,13 +123,10 @@ class TableWidget(QTableWidget):
             pos = self.rows.index(subrow)
             if self.isRowHidden(pos):
                 self.setRowHidden(pos, False)
+                row.toggle_button.setText("^")
             else:
                 self.setRowHidden(pos, True)
-
-        if row.toggle_button.text() == "v":
-            row.toggle_button.setText("^")
-        elif row.toggle_button.text() == "^":
-            row.toggle_button.setText("v")
+                row.toggle_button.setText("v")
 
     def hide_rows(self, row):
         for subrow in row.children:
@@ -130,7 +143,7 @@ class TableWidget(QTableWidget):
     def show_input_dialog_active(self, name):
         text, ok = QInputDialog.getText(None, "Active measurement", 'Start active measurement with following file?: ',
                                         text=name)
-        if ok: self.start_active_measurement(name)
+        if ok: self.start_active_measurement(text)
 
     def highlight_row(self, name: str):
         row_id: int = 0
@@ -147,3 +160,14 @@ class TableWidget(QTableWidget):
             else:
                 row.checkbox.setChecked(False)
         self.all_selected = not self.all_selected
+
+    def sort_table(self, column: int):
+        self.sortItems(column, order=2)
+        for row_index in range(self.rowCount()):
+            if self.item(row_index, 1):
+                current = self.item(row_index, 1).data(Qt.UserRole)
+                for row in self.rows:
+                    if current == row.displayable.name:
+                        self.rows.remove(row)
+                        self.rows.insert(row_index, row)
+                        break

@@ -1,16 +1,21 @@
 import colorsys
+import os
 import sys
 
 import random
+from threading import Thread
 import time
+from threading import Thread
 from typing import List
 
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QWidget,
                              QStackedWidget, QApplication, QHBoxLayout, QSplitter, QCheckBox)
 from src.view.GUI.Graph.BarWidget import BarWidget
 from src.view.GUI.Graph.GraphWidget import GraphWidget
 from src.view.GUI.MainWindowMeta import MainWindowMeta
+from src.view.GUI.UserInteraction.DisplayableHolder import DisplayableHolder
 from src.view.GUI.UserInteraction.DisplayableHolder import DisplayableHolder
 from src.view.GUI.UserInteraction.DisplayableInterface import DisplayableInterface
 from src.view.GUI.UserInteraction.MenuBar import MenuBar
@@ -23,9 +28,10 @@ from src.view.GUI.Graph.Plot import Plot
 from src.model.core.MetricName import MetricName
 from src.view.GUI.Visuals.ErrorWindow import ErrorWindow
 from src.view.GUI.Visuals.StatusBar import StatusBar
-from src.view.GUI.Visuals.StatusSettings import StatusSettings
+from src.model.core.StatusSettings import StatusSettings
 from src.view.UIInterface import UIInterface
 from src.view.GUI.Visuals.ErrorWindow import ErrorWindow
+from src.view.AppRequestsInterface import AppRequestsInterface
 
 
 class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
@@ -36,15 +42,15 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     RAM_Y_AXIS: str = "RAM (in mb)"
     CPU_Y_AXIS: str = "CPU (in %)"
 
-
-    def __init__(self, q_application: QApplication):
+    def __init__(self, q_application: QApplication, app: AppRequestsInterface):
         self.__q_application: QApplication = q_application
-        super().__init__()
+        super(MainWindow, self).__init__()
 
-        self.__visible_plots: List[Displayable] = []
         self.__ram: bool = False
         self.__cpu: bool = False
         self.__runtime: bool = False
+        self.__visible_plots: List[Displayable] = []
+        self.project_time: float = 0
 
         self.setWindowTitle(self.WINDOWTITLE)
         self.resize(self.WINDOWSIZE1, self.WINDOWSIZE2)
@@ -60,7 +66,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.user_interaction_frame_layout: QVBoxLayout = QVBoxLayout()
         self.top_frame_layout.addLayout(self.user_interaction_frame_layout)
 
-        self.status_bar_frame_layout: QHBoxLayout = QVBoxLayout()
+        self.status_bar_frame_layout: QVBoxLayout = QVBoxLayout()
         self.status_bar: StatusBar = StatusBar()
         self.status_bar.setMaximumHeight(100)
         self.status_bar_frame_layout.addWidget(self.status_bar)
@@ -93,18 +99,37 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.stacked_widget.addWidget(self.cpu_graph_widget)
         self.stacked_widget.addWidget(self.bar_chart_widget)
         self.splitter1.addWidget(self.stacked_widget)
-
-        self.table_widget: TableWidget = TableWidget()
+        self.__app: AppRequestsInterface = app
+        self.table_widget: TableWidget = TableWidget(app)
         self.splitter1.addWidget(self.table_widget)
 
+        self.menu_bar: MenuBar = MenuBar(self.menu_bar_frame_layout, app)
         self.HIERARCHY_DEPTH: int = 3
 
         self.menu_bar: MenuBar = MenuBar(self.menu_bar_frame_layout)
         self.metric_bar: MetricBar = MetricBar(self.metric_bar_frame_layout)
 
         self.setup_resource_connections()
-        self.project_time: float = 0
+
+        images_folder = os.path.join(os.path.dirname(__file__), "Images")
+        logo_path = os.path.join(images_folder, "CTIEngineLogo.png")
+        icon: QIcon = QIcon(logo_path)
+        self.setWindowIcon(icon)
+        self.setStyleSheet("background-color: #ECEFF1;")
+        """
+        colors from cti engine logo:
+        #237277
+        #4095a1
+        #61b3bf
+        chatgpt: #ECEFF1
+        himmelgrau: #CFD8DC
+        caspars farbe: #444447
+        """
         self.show()
+
+
+    def execute(self):
+        self.__q_application.processEvents()
 
     def visualize(self, model: ModelReadViewInterface):
         """receives a Model, displays the data contained in that Model to the user."""
@@ -129,6 +154,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         # Update other Widgets
         self.setup_connections()
         self.status_bar.update_status(StatusSettings.FINISHED)
+        self.table_widget.rebuild_table()
 
 
     def __visualize_active(self, model: ModelReadViewInterface):
@@ -148,13 +174,15 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
             # self.table_widget.add_subrow(self.__create_displayable(cfile))
             self.table_widget.fill_subrows(self.__create_displayable(cfile))
 
+        self.table_widget.rebuild_table()
+
         # Update other Widgets
         self.setup_connections()
         self.status_bar.update_status(StatusSettings.FINISHED)
 
     def deploy_error(self, error: BaseException):
         """receives an Exception, displays information regarding that exception to the user."""
-        error_window = ErrorWindow(error.__str__())
+        error_window = ErrorWindow(error)
         error_window.show()
 
     def update_statusbar(self, status: StatusSettings):
@@ -246,14 +274,14 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
     def __add_to_graph(self, displayable: Displayable):
         """adds plots of given displayable to graph and bar chart widgets"""
-        self.ram_graph_widget.add_plot(displayable.ram_plot)
-        self.cpu_graph_widget.add_plot(displayable.cpu_plot)
+        Thread(target=self.ram_graph_widget.add_plot, args=[displayable.ram_plot]).start()
+        Thread(target=self.cpu_graph_widget.add_plot, args=[displayable.cpu_plot]).start()
         self.bar_chart_widget.add_bar(displayable.runtime_plot)
 
     def __remove_from_graph(self, displayable: Displayable):
         """removes plots of given displayable from graph and bar chart widgets"""
-        self.ram_graph_widget.remove_plot(displayable.ram_plot)
-        self.cpu_graph_widget.remove_plot(displayable.cpu_plot)
+        Thread(target=self.ram_graph_widget.remove_plot, args=[displayable.ram_plot]).start()
+        Thread(target=self.cpu_graph_widget.remove_plot, args=[displayable.cpu_plot]).start()
         self.bar_chart_widget.remove_bar(displayable.runtime_plot)
 
     def setup_click_connections(self):

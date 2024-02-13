@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QLabel, QWidget, QHBoxLayout
-from src.view.GUI.Visuals.StatusSettings import StatusSettings
+from src.model.core.StatusSettings import StatusSettings
 
 
 class StatusBar(QWidget):

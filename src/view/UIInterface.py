@@ -1,6 +1,6 @@
 from typing import Protocol
 from src.model.ModelReadViewInterface import ModelReadViewInterface
-from src.view.GUI.Visuals.StatusSettings import StatusSettings
+from src.model.core.StatusSettings import StatusSettings
 
 
 class UIInterface(Protocol):
@@ -16,4 +16,7 @@ class UIInterface(Protocol):
     
     def update_statusbar(self, status: StatusSettings):
         """receives a status string, changes the ui's status string accordingly."""
+        raise NotImplementedError
+    
+    def execute(self):
         raise NotImplementedError

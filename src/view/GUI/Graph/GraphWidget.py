@@ -13,19 +13,19 @@ from src.view.GUI.Graph.Plot import Plot
 class GraphWidget(QWidget):
 
     X_AXIS: str = "Time (in sec)"
-    lines: List[plt.plot] = []
-    plot_clicked: str = ""
     click_signal: pyqtSignal = pyqtSignal()
 
     def __init__(self, axis_label: str, parent=None):
         super(GraphWidget, self).__init__(parent)
+
+        self.lines: List[plt.plot] = []
+        self.plot_clicked: str = ""
 
         self.figure, self.ax = plt.subplots(figsize=(5, 4), dpi=100)
 
         # Add title and labels for axes
         self.ax.set_xlabel(self.X_AXIS)
         self.ax.set_ylabel(axis_label)
-
         # Add layout
         self.canvas = FigureCanvas(self.figure)
         self.layout = QVBoxLayout()
@@ -40,11 +40,11 @@ class GraphWidget(QWidget):
 
     def add_plot(self, plot: Plot):
         """adds plot to graph widget"""
-        line, = self.ax.plot(plot.x_values, plot.y_values, label=plot.name, color=plot.color)
+        line, = self.ax.plot(plot.x_values, plot.y_values, label=plot.name, color=plot.color, linewidth=1.5)
 
         # Update graph
         self.canvas.draw()
-        line.set_picker(True)  # Aktivieren Sie das Picker-Ereignis für die Linie
+        line.set_picker(True)
 
         # Add line to cpu list
         self.lines.append(line)
