@@ -160,15 +160,18 @@ class TableWidget(QTableWidget):
             row_id = row_id + 1
 
     def toggle_all_rows(self):
+        visibility: bool = not self.all_selected
         for row in self.rows:
-            if not self.all_selected:
-                row.checkbox.setChecked(True)
-            else:
-                row.checkbox.setChecked(False)
+            if row.displayable.name.endswith((".o")):
+                print(row.displayable.name)
+                row.checkbox.setChecked(visibility)
         self.all_selected = not self.all_selected
 
     def sort_table(self, column: int):
+        #self.custom_sort(1)
         self.sortItems(column, order=2)
+        #self.rebuild_table()
+        """self.sortItems(column, order=2)
         for row_index in range(self.rowCount()):
             if self.item(row_index, 1):
                 current = self.item(row_index, 1).data(Qt.UserRole)
@@ -176,4 +179,12 @@ class TableWidget(QTableWidget):
                     if current == row.displayable.name:
                         self.rows.remove(row)
                         self.rows.insert(row_index, row)
-                        break
+                        break"""
+
+    def custom_sort(self, column: int):
+        print("hi")
+        for row_index in range(self.rowCount()):
+            self.item(row_index, 1).set
+            print(self.item(row_index, 1).whatsThis())
+        pass
+
