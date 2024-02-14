@@ -51,6 +51,7 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         self.__active_fetching_bool: bool = False
         self.__curr_source_file_name: str = ""
         self.__continue_fetching: bool = False
+        self.__found_project: bool = False
         if start_with_gui:
             self.__UI: UIInterface = prepare_gui(self)
         super(App, self).__init__([])
@@ -88,9 +89,10 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         self.__UI.update_statusbar(self.__curr_status)
         if self.__visualize:
             self.__curr_status = StatusSettings.FINISHED
-            self.__last_change = time.time() + 10
+            self.__last_change = time.time() + 30
             self.__UI.visualize(self.__model)
             self.__visualize = False
+            self.__last_change = time.time() + 30
         if self.__last_change <= time.time():
             self.__curr_status = StatusSettings.WAITING
             self.__last_change = time.time() + 10
@@ -122,12 +124,9 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
                 return
 
     def __fetch(self) -> None:
-        self.__curr_status = StatusSettings.MEASURING
-        self.__last_change = time.time() + 10
         while self.__continue_fetching:
             try:
                 self.__continue_fetching = self.__fetcher.update_project()
-                self.__curr_status = StatusSettings.MEASURING
                 self.__last_change = time.time() + 10
             except FileNotFoundError as e:
                 self.__error_handling()
@@ -147,7 +146,14 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         # hierarchy fetcher will need to be run when project is found
         self.__passive_fetching_on = True
         while self.__passive_fetching:
+            if self.__found_project:
+                self.__curr_status = StatusSettings.MEASURING
+                self.__last_change = time.time() + 10
+            else:
+                self.__curr_status = StatusSettings.SEARCHING
+                self.__last_change = time.time() + 10
             self.__found_project = self.__passive_data_fetcher.update_project()
+
         self.__passive_fetching_on = False
 
     def __save_project(self, hierarchy_fetcher: HierarchyFetcher) -> None:
@@ -183,6 +189,8 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         self.__continue_fetching = True
         self.__fetcher = ActiveDataFetcher(self.__curr_source_file_name, self.__model,
                                            f"{self.__cti_dir_path}/{self.__model.get_project_name}/build")
+        self.__curr_status = StatusSettings.MEASURING
+        self.__last_change = time.time() + 10
         self.__fetch()
 
     def load_from_directory(self, path: str) -> None:
@@ -194,6 +202,8 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         self.__passive_fetching = False
         self.__continue_fetching = True
         self.__fetcher = FileLoader(self.__path_to_load, self.__model)
+        self.__curr_status = StatusSettings.LOADING
+        self.__last_change = time.time() + 15
         self.__fetch()
 
 
@@ -207,5 +217,10 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         self.__passive_fetching = True
 
     def quit_measurement(self):
+        if self.__passive_fetching or self.__continue_fetching:
+            self.__curr_status = StatusSettings.CANCELLED
+            self.__last_change = time.time() + 3
         self.__passive_fetching = False
         self.__continue_fetching = False
+
+
