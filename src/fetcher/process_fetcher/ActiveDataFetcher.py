@@ -37,7 +37,7 @@ class ActiveDataFetcher(FetcherInterface):
     def update_project(self) -> bool:
         self.__move_on_to_next_header()
         Thread(target=self.__fetch_process, daemon=True).start()
-        return self.__done_building
+        return not self.__done_building
 
     #TODO wiederholen bis header weg
 
@@ -75,6 +75,10 @@ class ActiveDataFetcher(FetcherInterface):
             for line in cmdline:
                 if line.endswith(".o"):
                     path = join(path.split("build/")[0], "build",path.split("build/")[1], "build", line)
+
+                    path = path.removesuffix(".cpp.o")
+                    path = path.replace("_", "/")
+
                     break
             if path == "":
                 return
@@ -85,13 +89,14 @@ class ActiveDataFetcher(FetcherInterface):
             return
         
     def add_data_entry(self, data_entry: DataEntry):
+        print("in add_data_entry")
         self.__model.insert_datapoint(data_entry)
 
 
     def __move_on_to_next_header(self) -> None:
-        if self.__done_building:
+        if not self.__done_building:
             self.__header: Header = self.__compiling_tool.get_next_header()
-            self.__done_building: bool = self.__compiling_tool.build()
+            self.__done_building: bool = not self.__compiling_tool.build()
 
 
 
