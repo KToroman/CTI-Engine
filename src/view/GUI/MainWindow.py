@@ -19,6 +19,7 @@ from src.view.GUI.UserInteraction.DisplayableHolder import DisplayableHolder
 from src.view.GUI.UserInteraction.DisplayableHolder import DisplayableHolder
 from src.view.GUI.UserInteraction.DisplayableInterface import DisplayableInterface
 from src.view.GUI.UserInteraction.MenuBar import MenuBar
+from src.view.GUI.UserInteraction.TableRow import TableRow
 from src.view.GUI.UserInteraction.TableWidget import TableWidget
 from src.view.GUI.UserInteraction.Displayable import Displayable
 from src.view.GUI.UserInteraction.MetricBar import MetricBar
@@ -150,7 +151,8 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
             self.table_widget.insert_values(c_disp)
 
         # Update other Widgets
-        self.setup_connections()
+        self.setup_connections(self.table_widget.rows)
+        self.setup_click_connections()
         self.status_bar.update_status(StatusSettings.FINISHED)
 
     def __visualize_active(self, model: ModelReadViewInterface):
@@ -172,7 +174,8 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
 
         # Update other Widgets
-        self.setup_connections()
+        self.setup_connections(self.table_widget.rows)
+        self.setup_click_connections()
         self.status_bar.update_status(StatusSettings.FINISHED)
 
     def deploy_error(self, error: BaseException):
@@ -239,15 +242,17 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
         return random_color_hex
 
-    def setup_connections(self):
+    def setup_connections(self, rows: List[TableRow]):
         """sets up connections between table and graph widgets"""
-        for row in self.table_widget.rows:
-            if not row.is_child and not row.connected:
+        for row in rows:
+            if row.children:
+                self.setup_connections(row.children)
+            if not row.connected:
                 row.checkbox.stateChanged.connect(
                     lambda state, current_row=row: self.update_visibility(current_row.displayable))
                 row.connected = True
 
-        self.setup_click_connections()
+
 
     def setup_resource_connections(self):
         """sets up connections between metric bar and graph/bar chart widgets"""

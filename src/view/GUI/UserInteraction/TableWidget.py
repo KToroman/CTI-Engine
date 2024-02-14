@@ -7,7 +7,8 @@ from typing import List
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QInputDialog, QWidget, QHBoxLayout, QCheckBox
+from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QInputDialog, QWidget, QHBoxLayout, QCheckBox, QVBoxLayout, \
+    QLineEdit
 
 from src.view.GUI.Graph.Plot import Plot
 # from src.view.AppRequestsInterface import AppRequestsInterface
@@ -29,12 +30,15 @@ class TableWidget(QTableWidget):
         super().__init__()
         self.app_request_interface = app
         self.setColumnCount(self.NUMBER_OF_COLUMNS)
-        self.rows: List[TableRow] = []
+        self.rows: List[TableRow] = list()
         self.setHorizontalHeaderLabels([self.COLUMN_1_LABEL, self.COLUMN_2_LABEL,
                                         self.COLUMN_3_LABEL, self.COLUMN_4_LABEL])
+        self.setVerticalHeaderLabels(["Headers"])
+
         self.setStyleSheet("::section{Background-color: #4095a1}")
         self.horizontalHeader().setStyleSheet("::section{Background-color: #4095a1}")
         self.verticalHeader().setStyleSheet("::section{Background-color: #4095a1}")
+
         for column in range(self.columnCount()):
             self.horizontalHeader().sectionClicked.connect(lambda col=column: self.sort_table(col))
         self.insertion_point: str = ""
@@ -57,36 +61,22 @@ class TableWidget(QTableWidget):
             row: TableRow = TableRow(displayable, False)
             self.rows.append(row)
             self.fill_row(row, row_pos)
-            self.setRowHeight(self.rows.index(row), 40)
+            self.setRowHeight(self.rows.index(row), 50)
             row.toggle_button.clicked.connect(lambda: self.toggle_row_vis(row))
             row.name_button.clicked.connect(lambda: self.show_input_dialog_active(row.displayable.name))
             return row
 
-        sub_row: TableRow = TableRow(displayable, True)
-        caller_row.children.append(sub_row)
-        self.rows.insert(self.rows.index(caller_row) + caller_row.children.index(sub_row) + 1, sub_row)
-        self.insertRow(self.rows.index(caller_row) + caller_row.children.index(sub_row) + 1)
-        self.fill_row(sub_row, self.rows.index(caller_row) + caller_row.children.index(sub_row) + 1)
-        self.setRowHeight(self.rows.index(sub_row), 30)
+        sub_row = caller_row.make_row(displayable)
         sub_row.toggle_button.clicked.connect(lambda: self.toggle_row_vis(sub_row))
         sub_row.name_button.clicked.connect(lambda: self.show_input_dialog_active(sub_row.displayable.name))
-
-        caller_row.toggle_button.clicked.connect(lambda: self.toggle_row_vis(caller_row))
-        caller_row.name_button.clicked.connect(lambda: self.show_input_dialog_active(caller_row.displayable.name))
-
-        self.set_row_color(self.rows.index(sub_row), QColor(220, 220, 220))
-        if caller_row.is_child:
-            self.set_row_color(self.rows.index(sub_row), QColor(170, 170, 170))
-
         return sub_row
 
     def insert_values(self, displayable_holder: DisplayableHolder):
         self.insert_data_row(displayable_holder, None)
-
-    def set_row_color(self, row, color):
-        for column in range(self.columnCount()):
-            item = self.item(row, column)
-            item.setBackground(color)
+        if self.rows[-1].children:
+            self.insertRow(self.rows.index(self.rows[-1]) + 1)
+            self.setCellWidget(self.rows.index(self.rows[-1]) + 1, 1, self.rows[-1])
+            self.resizeRowsToContents()
 
     def fill_row(self, row, index):
         if len(row.children) != 0:
@@ -114,29 +104,27 @@ class TableWidget(QTableWidget):
             item3.setData(Qt.DisplayRole, 0)
             self.setItem(index, 3, item3)
 
-    def fill_subrow(self, displayable: Displayable):
-        for row in self.rows:
-            if row.displayable.name == displayable.name:
-                row.displayable = displayable
-
-    def toggle_row_vis(self, row):
+    def toggle_row_vis(self, row: TableRow):
         for subrow in row.children:
-            if len(subrow.children) != 0:
-                self.hide_rows(subrow)
-            pos = self.rows.index(subrow)
+            pos = row.children.index(subrow)
+            row.setRowHidden(pos, False)
+            row.toggle_button.setText("v")
+
+            pos = self.rows.index(row)
             if self.isRowHidden(pos):
                 self.setRowHidden(pos, False)
                 row.toggle_button.setText("^")
             else:
                 self.setRowHidden(pos, True)
                 row.toggle_button.setText("v")
+                self.hide_rows(row)
 
     def hide_rows(self, row):
         for subrow in row.children:
-            self.hide_rows(subrow)
-            pos = self.rows.index(subrow)
-            self.setRowHidden(pos, True)
+            pos = row.children.index(subrow)
+            row.setRowHidden(pos, True)
             row.toggle_button.setText("v")
+            self.hide_rows(subrow)
 
     def start_active_measurement(self, name):
         self.insertion_point: str = name
