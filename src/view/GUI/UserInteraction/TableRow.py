@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import QCheckBox, QPushButton, QWidget, QHBoxLayout, QTable
 
 
 class TableRow(QTableWidget):
-    NUMBER_OF_COLUMNS = 4
+    NUMBER_OF_COLUMNS = 5
     COLUMN_1_LABEL = "Name"
     COLUMN_2_LABEL = "Peak RAM(MB)"
     COLUMN_3_LABEL = "Peak CPU (%)"
@@ -80,6 +80,6 @@ class TableRow(QTableWidget):
             self.setItem(index, 3, item3)
 
     def set_row_color(self, row, color):
-        for column in range(self.columnCount()):
+        for column in range(self.columnCount()-1):
             item = self.item(row, column)
             item.setBackground(color)

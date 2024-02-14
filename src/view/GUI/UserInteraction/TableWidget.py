@@ -73,17 +73,23 @@ class TableWidget(QTableWidget):
     def insert_values(self, displayable_holder: DisplayableHolder):
         self.insert_data_row(displayable_holder, None)
         if self.rows[-1].children:
-
             self.setCellWidget(self.rows.index(self.rows[-1]), 4, self.rows[-1])
+            self.header_in_list(self.rows[-1])
             self.resizeColumnToContents(4)
             self.resizeRowsToContents()
 
+    def header_in_list(self, row: TableRow):
+        for child in row.children:
+            if child.children:
+                self.header_in_list(child)
+                row.setCellWidget(row.children.index(child), 4, child)
+                row.resizeColumnToContents(4)
+                row.resizeRowsToContents()
 
     def fill_row(self, row, index):
         if len(row.children) != 0:
             row.toggle_button.setText("v")
 
-        self.col
         cell_widget = QWidget()
         layout = QHBoxLayout(cell_widget)
         layout.addWidget(row.checkbox)

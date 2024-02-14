@@ -104,7 +104,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.table_widget: TableWidget = TableWidget(app)
         self.splitter1.addWidget(self.table_widget)
 
-        self.HIERARCHY_DEPTH: int = 2
+        self.HIERARCHY_DEPTH: int = 3
 
         self.menu_bar: MenuBar = MenuBar(self.menu_bar_frame_layout, app)
         self.metric_bar: MetricBar = MetricBar(self.metric_bar_frame_layout)
