@@ -45,8 +45,12 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.__path_queue = path_queue
         self.__active_mode_queue = active_mode_queue
         self.__error_queue = error_queue
+
+        # queue and event for visualize and status
+        self.model_queue = Queue()
+        self.status_queue = Queue()
         self.visualize = Event()
-        
+
         self.__q_application: QApplication = q_application
         super(MainWindow, self).__init__()
 

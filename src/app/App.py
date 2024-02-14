@@ -41,17 +41,14 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         self.__passive_data_fetcher: PassiveDataFetcher = PassiveDataFetcher(self.__model)
         self.__hierarchy_fetcher: HierarchyFetcher
         self.__fetcher: FetcherInterface
+        self.__curr_project_name: str = ""
 
+        # Events for GUI
         self.shutdown_event = Event()
         self.active_mode_event = Event()
         self.passive_mode_event = Event()
+        self.passive_mode_event.set()
         self.load_event = Event()
-
-        self.__curr_project_name: str
-
-
-        self.__fetch: bool = False
-        self.__hierarchy_fetch: bool = False
 
         # Queues for GUI messages
         self.load_path_queue: Queue = Queue(1)
@@ -63,50 +60,32 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
             self.__UI: UIInterface = prepare_gui(self, self.load_path_queue, self.active_mode_queue, self.error_queue)
         super(App, self).__init__([])
 
-        self.__curr_project_name: str = ""
+
+
+    def run(self) -> None:
+        self.__curr_project_name = self.__model.get_current_working_directory()
+        while not self.shutdown_event.is_set():
+            if self.__has_gui:
+                self.__update_GUI()
+            if self.passive_mode_event.is_set():
+                self.__fetch_passive()
+            if self.load_event.is_set():
+                self.__fetch_load()
+            if self.active_mode_event.is_set():
+                self.__fetch_active()
+
+    def __update_GUI(self) -> None:
+        if self.__visualize:
+            self.__UI.visualize.set()
+            self.__UI.model_queue.put(self.__model)
+            self.__UI.status_queue.put(StatusSettings.FINISHED)
+            self.__visualize = False
 
     def __get_cti_folder_path(self) -> str:
         path: str = ""
         path += join(os.getcwd().split("cti-engine-prototype")[0])
         return path
-
-
-
-    def run(self) -> None:
-        self.__curr_project_name = self.__model.get_current_working_directory()
-        if self.__has_gui:
-            self.__UI.update_statusbar(StatusSettings.WAITING)
-        while self.__is_running:
-            self.__UI.execute()
-            if self.__visualize:
-                self.__UI.update_statusbar(StatusSettings.FINISHED)
-                self.__UI.visualize(self.__model)
-                self.__visualize = False
-            for error in self.error_list:
-                self.__UI.deploy_error(error)
-                self.error_list.remove(error)
-            if self.__has_gui:
-                self.__UI.execute()
-            if self.__continue_measuring:
-
-                if not self.__passive_fetching_on:
-                    Thread(target=self.__passive_fetch).start()
-                # passive fetcher is always running
-            # hierarchy fetching if there is a new project and fetching is needed
-                if self.__curr_project_name != self.__model.get_current_working_directory():
-                    hierarchy_fetcher = HierarchyFetcher(self.__model)
-                    self.__curr_project_name = self.__model.get_current_working_directory()
-                    Thread(target=self.__hierarchy_fetch, args=[hierarchy_fetcher]).start()
-                    Thread(target=self.__save_project, args=[hierarchy_fetcher]).start()
-                    if self.__has_gui:
-                        self.__UI.update_statusbar(StatusSettings.MEASURING)
-        print("done running")
-
-        if self.__has_gui:
-            print("ok... not running i guess?")
-            self.__UI.update_statusbar(StatusSettings.FINISHED)
-            self.__UI.visualize(self.__model)
-
+  
     def __hierarchy_fetch(self, hierarchy_fetcher: HierarchyFetcher) -> None:
         __hierarchy_needed: bool = True
         while __hierarchy_needed:
