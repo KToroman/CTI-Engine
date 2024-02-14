@@ -8,7 +8,7 @@ from typing import List
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QInputDialog, QWidget, QHBoxLayout, QCheckBox, QVBoxLayout, \
-    QLineEdit
+    QLineEdit, QGridLayout
 
 from src.view.GUI.Graph.Plot import Plot
 # from src.view.AppRequestsInterface import AppRequestsInterface
@@ -20,7 +20,7 @@ from src.view.AppRequestsInterface import AppRequestsInterface
 
 
 class TableWidget(QTableWidget):
-    NUMBER_OF_COLUMNS = 4
+    NUMBER_OF_COLUMNS = 5
     COLUMN_1_LABEL = "Name"
     COLUMN_2_LABEL = "Peak RAM(MB)"
     COLUMN_3_LABEL = "Peak CPU (%)"
@@ -33,7 +33,6 @@ class TableWidget(QTableWidget):
         self.rows: List[TableRow] = list()
         self.setHorizontalHeaderLabels([self.COLUMN_1_LABEL, self.COLUMN_2_LABEL,
                                         self.COLUMN_3_LABEL, self.COLUMN_4_LABEL])
-        self.setVerticalHeaderLabels(["Headers"])
 
         self.setStyleSheet("::section{Background-color: #4095a1}")
         self.horizontalHeader().setStyleSheet("::section{Background-color: #4095a1}")
@@ -74,21 +73,25 @@ class TableWidget(QTableWidget):
     def insert_values(self, displayable_holder: DisplayableHolder):
         self.insert_data_row(displayable_holder, None)
         if self.rows[-1].children:
-            self.insertRow(self.rows.index(self.rows[-1]) + 1)
-            self.setCellWidget(self.rows.index(self.rows[-1]) + 1, 1, self.rows[-1])
+
+            self.setCellWidget(self.rows.index(self.rows[-1]), 4, self.rows[-1])
+            self.resizeColumnToContents(4)
             self.resizeRowsToContents()
+
 
     def fill_row(self, row, index):
         if len(row.children) != 0:
             row.toggle_button.setText("v")
 
+        self.col
         cell_widget = QWidget()
         layout = QHBoxLayout(cell_widget)
         layout.addWidget(row.checkbox)
         layout.addWidget(row.name_button)
         layout.addWidget(row.toggle_button)
 
-        self.setItem(index, 0, QTableWidgetItem(self.setCellWidget(index, 0, cell_widget)))
+        # self.setItem(index, 0, QTableWidgetItem(self.setCellWidget(index, 0, cell_widget)))
+        self.setCellWidget(index, 0, cell_widget)
         item: QTableWidgetItem = QTableWidgetItem()
         item.setData(Qt.DisplayRole, row.displayable.ram_peak)
         item.setData(Qt.UserRole, row.displayable.name)
