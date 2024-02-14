@@ -145,9 +145,11 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         self.__continue_measuring = False
         self.__continue_fetching = True
         self.__fetcher = ActiveDataFetcher(source_file_name, self.__model,
-                                           f"{self.__cti_dir_path}/{self.__model.get_project_name}/build")
+                                           f"{self.__cti_dir_path}/build")
         self.__fetch()
         if self.__has_gui:
+            time.sleep(5)
+            print("now visualizing")
             self.__UI.visualize(self.__model)
 
     def load_from_directory(self, path: str) -> None:

@@ -1,3 +1,4 @@
+import os.path
 from threading import Thread
 from time import time
 from typing import List
@@ -42,13 +43,12 @@ class ActiveDataFetcher(FetcherInterface):
     #TODO wiederholen bis header weg
 
     def __fetch_process(self):
-        if self.__time_header_last_found + self.__seconds__to_move_on > time():
-            return
-        processes = self.__process_collector.catch_process()
-        if processes is None:
-            return
-        for line in processes:
-            Thread(target=self.__create_process, args=[line]).start()
+        while self.__time_header_last_found + self.__seconds__to_move_on < time():
+            processes = self.__process_collector.catch_process()
+            if processes is None:
+                return
+            for line in processes:
+                Thread(target=self.__create_process, args=[line]).start()
 
     def __create_process(self, line: str):
         Thread(target=self.__get_data, args=[self.__process_collector.make_process(line)]).start()
@@ -60,7 +60,9 @@ class ActiveDataFetcher(FetcherInterface):
             if not self.filter_for_str(process, self.__header.build_file_name):
                 return
             while process.is_running():
+                print("is running")
                 Thread(target=self.__make_entry, args=[self.fetch_metrics(process)]).start()
+                self.__time_header_last_found = time()
             self.__process_collector.process_list.remove(process)
         except:
             self.__process_collector.process_list.remove(process)
@@ -71,26 +73,25 @@ class ActiveDataFetcher(FetcherInterface):
     def __make_entry(self, process_point: ProcessPoint):
         try:
             cmdline: List[str] = process_point.process.cmdline()
-            path: str = process_point.process.cwd()
+            path: str = ""
             for line in cmdline:
                 if line.endswith(".o"):
-                    path = join(path.split("build/")[0], "build",path.split("build/")[1], "build", line)
-
+                    path = os.path.split(line)[-1].replace("#", "/")
                     path = path.removesuffix(".cpp.o")
-                    path = path.replace("_", "/")
-
+                    print(path)
                     break
             if path == "":
                 return
             entry: DataEntry = DataEntry(path, process_point.timestamp, process_point.metrics)
             self.__time_header_last_found = time()
             self.add_data_entry(entry)
-        except:
+            print("added data entry")
+        except psutil.NoSuchProcess:
             return
         
     def add_data_entry(self, data_entry: DataEntry):
-        print("in add_data_entry")
-        self.__model.insert_datapoint(data_entry)
+        print(f"adding dataEntry to {data_entry.path}")
+        self.__model.insert_datapoint_header(data_entry, self.__source_file)
 
 
     def __move_on_to_next_header(self) -> None:
