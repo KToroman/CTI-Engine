@@ -1,4 +1,4 @@
-from multiprocessing import Process
+from multiprocessing import Process, Queue, Event
 import os
 import sys
 import time
@@ -35,21 +35,34 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
 
     def __init__(self, start_with_gui: bool = __DEFAULT_GUI) -> None:
         self.__has_gui: bool = start_with_gui
+
         self.__model = Model()
         self.__cti_dir_path = self.__get_cti_folder_path()
         self.__passive_data_fetcher: PassiveDataFetcher = PassiveDataFetcher(self.__model)
-        self.__hierarchy_fetcher: HierarchyFetcher = HierarchyFetcher(self.__model)
+        self.__hierarchy_fetcher: HierarchyFetcher
         self.__fetcher: FetcherInterface
-        self.__continue_measuring: bool = True
-        self.__is_running: bool = True
+
+        self.shutdown_event = Event()
+        self.active_mode_event = Event()
+        self.passive_mode_event = Event()
+        self.load_event = Event()
+
         self.__curr_project_name: str
-        self.__visiulize = False
+
+
+        self.__fetch: bool = False
+        self.__hierarchy_fetch: bool = False
+
+        # Queues for GUI messages
+        self.load_path_queue: Queue = Queue(1)
+        self.active_mode_queue: Queue = Queue(1)
+        self.error_queue: Queue = Queue(5)
+
+        # set up GUI
         if start_with_gui:
-            self.__UI: UIInterface = prepare_gui(self)
+            self.__UI: UIInterface = prepare_gui(self, self.load_path_queue, self.active_mode_queue, self.error_queue)
         super(App, self).__init__([])
 
-        self.__passive_fetching_on = False
-        self.error_list: List[Exception] = list()
         self.__curr_project_name: str = ""
 
     def __get_cti_folder_path(self) -> str:
@@ -57,16 +70,18 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         path += join(os.getcwd().split("cti-engine-prototype")[0])
         return path
 
+
+
     def run(self) -> None:
         self.__curr_project_name = self.__model.get_current_working_directory()
         if self.__has_gui:
             self.__UI.update_statusbar(StatusSettings.WAITING)
         while self.__is_running:
             self.__UI.execute()
-            if self.__visiulize:
+            if self.__visualize:
                 self.__UI.update_statusbar(StatusSettings.FINISHED)
                 self.__UI.visualize(self.__model)
-                self.__visiulize = False
+                self.__visualize = False
             for error in self.error_list:
                 self.__UI.deploy_error(error)
                 self.error_list.remove(error)
@@ -130,7 +145,7 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
             time.sleep(3)
         saver.save_project(self.__model.get_project_by_name(name))
         if self.__has_gui:
-            self.__visiulize = True
+            self.__visualize = True
         print("saver exit")
 
     def __get_project(self, name: str) -> Project:

@@ -7,6 +7,7 @@ from threading import Thread
 import time
 from threading import Thread
 from typing import List
+from _multiprocessing import Queue, Event
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
@@ -39,13 +40,16 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     RAM_Y_AXIS: str = "RAM (in mb)"
     CPU_Y_AXIS: str = "CPU (in %)"
 
-    def __init__(self, q_application: QApplication, app: AppRequestsInterface):
+    def __init__(self, q_application: QApplication, app: AppRequestsInterface, path_queue: Queue, active_mode_queue: Queue, error_queue: Queue):
+        # message-queues and events:
+        self.__path_queue = path_queue
+        self.__active_mode_queue = active_mode_queue
+        self.__error_queue = error_queue
+        self.visualize = Event()
+        
         self.__q_application: QApplication = q_application
         super(MainWindow, self).__init__()
 
-        self.__ram: bool = False
-        self.__cpu: bool = False
-        self.__runtime: bool = False
         self.__visible_plots: List[Displayable] = []
         self.project_time: float = 0
 
