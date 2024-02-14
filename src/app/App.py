@@ -42,6 +42,11 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         self.__hierarchy_fetcher: HierarchyFetcher
         self.__fetcher: FetcherInterface
         self.__curr_project_name: str = ""
+        self.__last_found_processes: float = time.time()
+
+        self.__watching_processes: bool = False
+        self.__found_processes: bool = False
+
 
         # Events for GUI
         self.shutdown_event = Event()
@@ -65,6 +70,7 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
     def run(self) -> None:
         self.__curr_project_name = self.__model.get_current_working_directory()
         while not self.shutdown_event.is_set():
+            self.__update_status()
             if self.__has_gui:
                 self.__update_GUI()
             if self.passive_mode_event.is_set():
@@ -78,24 +84,71 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         if self.__visualize:
             self.__UI.visualize.set()
             self.__UI.model_queue.put(self.__model)
-            self.__UI.status_queue.put(StatusSettings.FINISHED)
+            self.__UI.status_queue.put(self.__status)
             self.__visualize = False
 
-    def __get_cti_folder_path(self) -> str:
-        path: str = ""
-        path += join(os.getcwd().split("cti-engine-prototype")[0])
-        return path
-  
+    def update_status(self) -> None:
+        if not self.__hierarchy_fetcher.is_done:
+            self.__UI.status_queue.put(StatusSettings.MEASURING)
+            return
+        if self.active_mode_event.is_set():
+            self.__UI.status_queue.put(StatusSettings.MEASURING)
+            return
+        if self.load_event.is_set():
+            self.__UI.status_queue.put(StatusSettings.LOADING)
+            return
+        if self.passive_mode_event.is_set():
+            if time.time() < self.__last_found_processes + 10:
+                self.__UI.status_queue.put(StatusSettings.MEASURING)
+            else: 
+                self.__UI.status_queue.put(StatusSettings.WAITING)
+
+    def __fetch_passive(self):
+        if not self.__watching_processes:
+            Thread(target=self.__watch_processes).start()
+        if self.__curr_project_name != self.__model.get_current_working_directory():
+            # set up hierarchy fetching
+            hierarchy_fetcher = HierarchyFetcher(self.__model)
+            self.__curr_project_name = self.__model.get_current_working_directory()
+            #start hierarchy fetching and saving threads
+            Thread(target=self.__hierarchy_fetch, args=[hierarchy_fetcher]).start()
+            Thread(target=self.__save_project, args=[hierarchy_fetcher]).start()
+            self.__last_found_processes = time.time()
+
+    def __watch_processes(self):
+        self.__watching_processes = True
+        while self.passive_mode_event.is_set():
+            if self.__found_processes:
+                self.__last_found_processes = time.time()
+            self.__found_processes = self.__passive_data_fetcher.update_project()
+
     def __hierarchy_fetch(self, hierarchy_fetcher: HierarchyFetcher) -> None:
         __hierarchy_needed: bool = True
         while __hierarchy_needed:
             try:
                 __hierarchy_needed = hierarchy_fetcher.update_project()
             except FileNotFoundError:
-                self.error_list.append(FileNotFoundError("could not find the compile-commands.json file"))
-                self.__hierarchy_needed = False
+                self.__UI.error_queue.put(FileNotFoundError("could not find the compile-commands.json file"))
                 self.__hierarchy_fetcher.is_done = True
                 return
+
+    def __fetch_load(self) -> None:
+        if not self.load_path_queue.empty():
+            path: str = self.load_path_queue.get(block=True, timeout=0.05)
+            # will raise queue.Empty exception if no paths can be found
+            self.__file_loader = FileLoader(path, self.__model)
+            Thread(target=self.__load_project_from_file).start()
+
+    def __load_project_from_file(self):
+        try:
+            self.__file_loader.update_project()
+
+        except FileNotFoundError:
+            self.__UI.error_queue.put(FileNotFoundError("could not find the project file"))
+            return
+        self.load_event.clear()
+        self.__visualize
+        
 
     def __fetch(self) -> None:
         if self.__has_gui:
@@ -106,12 +159,12 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         if self.__has_gui:
             self.__UI.update_statusbar(StatusSettings.FINISHED)
 
-    def __passive_fetch(self) -> None:
-        # hierarchy fetcher will need to be run when project is found
-        self.__passive_fetching_on = True
-        while self.__continue_measuring:
-            self.__found_project = self.__passive_data_fetcher.update_project()
-        self.__passive_fetching_on = False
+
+    def __get_cti_folder_path(self) -> str:
+        path: str = ""
+        path += join(os.getcwd().split("cti-engine-prototype")[0])
+        return path
+  
 
     def __save_project(self, hierarchy_fetcher: HierarchyFetcher) -> None:
         name: str = self.__model.get_current_working_directory()
@@ -144,14 +197,6 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         if self.__has_gui:
             self.__UI.visualize(self.__model)
 
-    def load_from_directory(self, path: str) -> None:
-        self.__continue_measuring = False
-        self.__continue_fetching = True
-        self.__fetcher = FileLoader(path, self.__model)
-        self.__fetch()
-        self.__curr_project_name = self.__model.get_project_name()
-        if self.__has_gui:
-            self.__UI.visualize(self.__model)
 
     def quit_application(self) -> bool:
         self.__is_running = False

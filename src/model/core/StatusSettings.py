@@ -7,3 +7,4 @@ class StatusSettings(Enum):
     MEASURING = "measuring", "#FFA500"  # Orange
     FINISHED = "finished", "#4CAF50"  # Green
     FAILED = "build failed", "#FF0000"  # Red
+    LOADING = "loading your file", "#FFA500"  # Orange

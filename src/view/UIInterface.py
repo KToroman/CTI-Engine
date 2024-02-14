@@ -11,6 +11,7 @@ class UIInterface(Protocol):
     model_queue: Queue
     visualize = Event()
     status_queue: Queue
+    error_queue: Queue
     """App can insert model-objects for visualization"""
 
     def deploy_error(self, error: BaseException):

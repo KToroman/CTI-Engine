@@ -49,6 +49,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         # queue and event for visualize and status
         self.model_queue = Queue()
         self.status_queue = Queue()
+        self.error_queue = Queue()
         self.visualize = Event()
 
         self.__q_application: QApplication = q_application
