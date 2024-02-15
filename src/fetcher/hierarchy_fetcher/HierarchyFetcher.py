@@ -15,8 +15,9 @@ from src.exceptions.CompileCommandError import CompileCommandError
 
 class HierarchyFetcher(FetcherInterface):
 
-    def __init__(self, model: Model) -> None:
+    def __init__(self, model: Model, project_name: str) -> None:
         self.__model: Model = model
+        self.project_name = project_name
         self.__gcc_command_executor: GCCCommandExecutor = GCCCommandExecutor()
         self.command_getter: CompileCommandGetter
         self.__open_timeout: int = 0
