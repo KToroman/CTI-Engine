@@ -150,15 +150,6 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         self.__visualize
         
 
-    def __fetch(self) -> None:
-        if self.__has_gui:
-            self.__UI.update_statusbar(StatusSettings.MEASURING)
-        while self.__continue_fetching:
-            self.__UI.execute()
-            self.__continue_fetching = self.__fetcher.update_project()
-        if self.__has_gui:
-            self.__UI.update_statusbar(StatusSettings.FINISHED)
-
 
     def __get_cti_folder_path(self) -> str:
         path: str = ""
