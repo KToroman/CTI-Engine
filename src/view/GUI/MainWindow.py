@@ -133,6 +133,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
     def __visualize_passive(self, model: ModelReadViewInterface):
         """visualizes data from passive mode."""
+        self.table_widget.clear_table()
 
         # Select spot for Displayables to be inserted into
         self.table_widget.insertion_point = model.get_project_name()
@@ -145,7 +146,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         # Update other Widgets
         self.setup_connections()
         self.status_bar.update_status(StatusSettings.FINISHED)
-        self.table_widget.rebuild_table()
+        self.table_widget.rebuild_table(self.table_widget.rows)
 
     def __visualize_active(self, model: ModelReadViewInterface):
         """visualizes data from active mode"""
