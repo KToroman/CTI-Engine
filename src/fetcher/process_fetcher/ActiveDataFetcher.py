@@ -60,7 +60,6 @@ class ActiveDataFetcher(FetcherInterface):
             if not self.filter_for_str(process, self.__header.build_file_name):
                 return
             while process.is_running():
-                print("is running")
                 Thread(target=self.__make_entry, args=[self.fetch_metrics(process)]).start()
                 self.__time_header_last_found = time()
             self.__process_collector.process_list.remove(process)
@@ -78,19 +77,16 @@ class ActiveDataFetcher(FetcherInterface):
                 if line.endswith(".o"):
                     path = os.path.split(line)[-1].replace("#", "/")
                     path = path.removesuffix(".cpp.o")
-                    print(path)
                     break
             if path == "":
                 return
             entry: DataEntry = DataEntry(path, process_point.timestamp, process_point.metrics)
             self.__time_header_last_found = time()
             self.add_data_entry(entry)
-            print("added data entry")
         except psutil.NoSuchProcess:
             return
         
     def add_data_entry(self, data_entry: DataEntry):
-        print(f"adding dataEntry to {data_entry.path}")
         self.__model.insert_datapoint_header(data_entry, self.__source_file)
 
 
