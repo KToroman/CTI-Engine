@@ -35,6 +35,8 @@ class ProcessCollector:
             return process
         except NoSuchProcess:
             return None
+        except ValueError:
+            return None
         return None
 
     def catch_process(self) -> IO[str] | None:
@@ -79,7 +81,6 @@ class ProcessCollector:
                 self.__model.add_project(Project(project_name))
             self.__model_lock.release()
         except NoSuchProcess:
-            self.__model_lock.release()
             return
 
     def __get_project_name(self, process: psutil.Process) -> str:

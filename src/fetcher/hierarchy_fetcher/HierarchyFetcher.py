@@ -32,7 +32,7 @@ class HierarchyFetcher(FetcherInterface):
         project: Project = self.__model.current_project
         self.__model_lock.release()
         try:
-            self.command_getter = CompileCommandGetter(project.working_dir)
+            self.command_getter = CompileCommandGetter(project.working_dir, self.__model_lock)
             self.__open_timeout = 0
         except FileNotFoundError as e:
             time.sleep(5)
