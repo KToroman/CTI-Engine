@@ -1,4 +1,5 @@
 import os.path
+import threading
 import time
 from os.path import join
 from threading import Thread
@@ -19,20 +20,27 @@ from src.model.core.ProcessPoint import ProcessPoint
 
 class PassiveDataFetcher(DataFetcher):
 
-    def __init__(self, model: Model):
+    def __init__(self, model: Model, model_lock: threading.Lock):
         self.__model = model
-        self.__process_collector: ProcessCollector = ProcessCollector(model, True)
+        self.__model_lock = model_lock
+        self.__process_collector: ProcessCollector = ProcessCollector(model, True, model_lock)
         self.__data_observer: DataObserver = DataObserver()
         self.__time_to_wait: float = 15
         self.__time_till_false: float = 0
+        self.__time_til_false_lock: threading.Lock = threading.Lock()
 
     def update_project(self) -> bool:
         Thread(target=self.__fetch_process, daemon=True).start()
         return self.__time_keeper()
 
     def add_data_entry(self, data_entry: DataEntry):
+        self.__model_lock.acquire()
         self.__model.insert_datapoint(data_entry)
+        self.__model_lock.release()
+
+        self.__time_til_false_lock.acquire()
         self.__time_till_false = time.time() + self.__time_to_wait
+        self.__time_til_false_lock.release()
 
     def fetch_metrics(self, process: psutil.Process) -> ProcessPoint:
         return self.__data_observer.observe(process)
@@ -60,10 +68,11 @@ class PassiveDataFetcher(DataFetcher):
             Thread(target=self.__make_entry, args=[self.fetch_metrics(process)]).start()
             while process.is_running():
                 Thread(target=self.__make_entry, args=[self.fetch_metrics(process)]).start()
-                time.sleep(0.1)
-            self.__process_collector.process_list.remove(process)
-        except:
-            self.__process_collector.process_list.remove(process)
+                time.sleep(0.01)
+
+            self.__process_collector.remove_process_from_list(process)
+        except NoSuchProcess:
+            self.__process_collector.remove_process_from_list(process)
 
     def __make_entry(self, process_point: ProcessPoint) -> None:
         try:
@@ -87,3 +96,6 @@ class PassiveDataFetcher(DataFetcher):
             return
         except PermissionError:
             return
+
+
+
