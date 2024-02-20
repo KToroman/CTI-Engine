@@ -23,7 +23,6 @@ from src.model.ModelReadViewInterface import ModelReadViewInterface
 from src.model.core.CFileReadViewInterface import CFileReadViewInterface
 from src.view.GUI.Graph.Plot import Plot
 from src.model.core.MetricName import MetricName
-from src.view.GUI.Visuals.ErrorWindow import ErrorWindow
 from src.view.GUI.Visuals.StatusBar import StatusBar
 from src.model.core.StatusSettings import StatusSettings
 from src.view.UIInterface import UIInterface
@@ -104,7 +103,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.stacked_widget.addWidget(self.cpu_graph_widget)
         self.stacked_widget.addWidget(self.bar_chart_widget)
         self.splitter1.addWidget(self.stacked_widget)
-        self.__app: AppRequestsInterface = app
+
         self.table_widget: TableWidget = TableWidget(app)
         self.splitter1.addWidget(self.table_widget)
 
@@ -149,6 +148,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
     def __visualize_passive(self, model: ModelReadViewInterface):
         """visualizes data from passive mode."""
+        self.table_widget.clear_table()
 
         # Select spot for Displayables to be inserted into
         self.table_widget.insertion_point = model.get_project_name()
@@ -161,7 +161,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         # Update other Widgets
         self.setup_connections()
         self.status_bar.update_status(StatusSettings.FINISHED)
-        self.table_widget.rebuild_table()
+        self.table_widget.rebuild_table(self.table_widget.rows)
 
     def __visualize_active(self, model: ModelReadViewInterface):
         """visualizes data from active mode"""
@@ -179,8 +179,6 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         for cfile in cfile_list:
             # self.table_widget.add_subrow(self.__create_displayable(cfile))
             self.table_widget.fill_subrows(self.__create_displayable(cfile))
-        
-        self.table_widget.rebuild_table()
 
         # Update other Widgets
         self.setup_connections()
