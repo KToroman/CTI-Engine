@@ -1,5 +1,6 @@
 import os
 import subprocess
+import threading
 import time
 from os.path import join
 from re import split
@@ -17,9 +18,13 @@ from src.model.core.Project import Project
 class ProcessCollector:
     PROC_NAME_FILTER = "cc1plus"
 
-    def __init__(self, model: Model, check_for_project: bool):
+    def __init__(self, model: Model, check_for_project: bool, model_lock: threading.Lock):
         self.__check_for_project = check_for_project
-        self.process_list: List[psutil.Process] = list()
+
+        self.__process_list_lock: threading.Lock = threading.Lock()
+        self.__process_list: List[psutil.Process] = list()
+
+        self.__model_lock = model_lock
         self.__model = model
 
     def __create_processes(self, line: str) -> Optional[psutil.Process]:
@@ -28,7 +33,9 @@ class ProcessCollector:
             proc_id: str = proc_info[0]
             process = psutil.Process(int(proc_id))
             return process
-        except:
+        except NoSuchProcess:
+            return None
+        except ValueError:
             return None
         return None
 
@@ -36,30 +43,43 @@ class ProcessCollector:
         grep = subprocess.Popen('ps -e | grep cc1plus', stdout=subprocess.PIPE, shell=True, encoding='utf-8')
         return grep.stdout
 
+    def remove_process_from_list(self, process: psutil.Process):
+        self.__process_list_lock.acquire()
+        self.__process_list.remove(process)
+        self.__process_list_lock.release()
+
     def make_process(self, line: str) -> Optional[psutil.Process]:
         process = self.__create_processes(line)
         if process is not None and not self.__is_process_in_list(process):
             if self.__check_for_project:
                 self.__project_checker(process)
-            self.process_list.append(process)
+
+            self.__process_list_lock.acquire()
+            self.__process_list.append(process)
+            self.__process_list_lock.release()
             return process
         return None
 
     def __is_process_in_list(self, process: psutil.Process) -> bool:
-        for proc in self.process_list:
+        self.__process_list_lock.acquire()
+        for proc in self.__process_list:
             try:
                 if proc.pid == process.pid:
+                    self.__process_list_lock.release()
                     return True
-            except:
+            except NoSuchProcess:
                 continue
+        self.__process_list_lock.release()
         return False
 
     def __project_checker(self, proc: psutil.Process):
         try:
             time.sleep(0.1)
             project_name: str = self.__get_project_name(proc)
+            self.__model_lock.acquire()
             if project_name != self.__model.get_current_working_directory():
                 self.__model.add_project(Project(project_name))
+            self.__model_lock.release()
         except NoSuchProcess:
             return
 
