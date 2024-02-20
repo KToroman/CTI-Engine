@@ -2,7 +2,7 @@ import copy
 import os.path
 from optparse import Option
 import time
-from typing import List, Optional
+from typing import List, Optional, cast
 from src.exceptions.ProjectNotFoundException import ProjectNotFoundException
 
 from src.model.ModelReadViewInterface import ModelReadViewInterface
@@ -39,9 +39,15 @@ class Model(ModelReadViewInterface):
         cfile: CFile = self.current_project.get_sourcefile(data_point.path)
         cfile.data_entries.append(data_point)
 
-    def insert_datapoints_header(self, data_points: List[DataEntry], header: Header):
-        for data_point in data_points:
-            header.data_entries.append(data_point)
+    def insert_datapoint_header(self, data_point: DataEntry, current_cfile: CFile = None):
+        if current_cfile is None:
+            for cfile in self.current_project.source_files:
+                self.insert_datapoint_header(data_point, cfile)
+        else:
+            if current_cfile.path == data_point.path:
+                current_cfile.data_entries.append(data_point)
+            for header in cast(list[Header], current_cfile.headers):
+                self.insert_datapoint_header(data_point, header)
 
     def get_project_by_name(self, name: str) -> Project:
         for project in self.projects:
