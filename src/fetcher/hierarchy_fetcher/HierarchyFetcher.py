@@ -48,7 +48,7 @@ class HierarchyFetcher(FetcherInterface):
     def __setup_hierarchy(self, project: Project) -> None:
         """the main Method of the Hierarchy Fetcher class, to be called in a separate thread"""
         source_files: list[SourceFile] = self.__setup_source_files(project)
-        print(f"\033[96 {len(source_files)} Sourcefiles added to Project\033[0m")
+        print(f"\033[96m {len(source_files)} Sourcefiles added to Project\033[0m")
         source_files_retry: list[SourceFile] = []
         for source_file in source_files:
             try:
@@ -68,7 +68,7 @@ class HierarchyFetcher(FetcherInterface):
             except (CompileCommandError, CalledProcessError) as e:
                 print(f"\033[93m{e.__str__()}\033[0m")
                 source_file.error = True
-        print(f"\033[96mHierarchy Fetching completed")
+        print(f"\033[96mHierarchy Fetching completed\033[0m")
 
     def __setup_source_files(self, project: Project) -> list[SourceFile]:
         created_source_files: list[SourceFile] = []
