@@ -1,4 +1,5 @@
 import json, shlex
+import threading
 from io import FileIO
 from os.path import join
 from src.model.core.SourceFile import SourceFile
@@ -8,7 +9,8 @@ from src.exceptions.CompileCommandError import CompileCommandError
 
 class CompileCommandGetter:
 
-    def __init__(self, compile_commands_path: str) -> None:
+    def __init__(self, compile_commands_path: str, model_lock: threading.Lock) -> None:
+        self.__model_lock = model_lock
         self.compile_commands_json: list[dict[str, str]] = self.__get_json(compile_commands_path)
         self.commands: dict[str, str] = {}
         self.__setup_commands()
@@ -42,7 +44,10 @@ class CompileCommandGetter:
         raise CompileCommandError(f"no object file path found in compile-command")
 
     def get_compile_command(self, source_file: SourceFile) -> str:
+        self.__model_lock.acquire()
         ofilepath = source_file.path
+        self.__model_lock.release()
+
         if ofilepath not in self.commands:
             raise CompileCommandError(f"Source file does not have a stored command \n {ofilepath}")
         return self.commands[ofilepath]
@@ -50,14 +55,18 @@ class CompileCommandGetter:
     def generate_hierarchy_command(self, source_file: SourceFile) -> str:
         origin_command: str = self.get_compile_command(source_file)
         args: list[str] = shlex.split(origin_command)
-        delindex: int = -1
+        delindeces: list[int] = []
         for i in range(len(args)):
             if args[i] == "-o":
-                delindex = i
-        if delindex == -1:
+                delindeces.extend([i, i+1])
+            if args[i] == "-c":
+                delindeces.append(i)
+        if not delindeces:
             raise CompileCommandError(f"no object file path found in compile-command \n {source_file.path}")
         else:
-            del args[delindex: delindex + 2]
+            delindeces.sort(reverse=True)
+            for delindex in delindeces:
+                del args[delindex]
         args.append("-H")
         args.append("-E")
         return shlex.join(args)

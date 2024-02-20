@@ -1,4 +1,5 @@
 import os
+import threading
 from os.path import isfile, join
 
 import jsonpickle
@@ -10,17 +11,24 @@ from src.model.core.Project import Project
 
 class FileLoader(FetcherInterface):
 
-    def __init__(self, path: str, model: Model):
+    def __init__(self, path: str, model: Model, model_lock: threading.Lock):
+        self.__model_lock = model_lock
         self.__path = path
         self.__model = model
 
     def update_project(self) -> bool:
         if self.__is_valid_file():
-            self.__model.add_project(self.__create_project())
+            project: Project = self.__create_project()
+            self.__model_lock.acquire()
+            self.__model.add_project(project)
+            self.__model_lock.release()
             return False
 
         elif self.__is_valid_path() and self.__search_json():
-            self.__model.add_project(self.__create_project())
+            project: Project = self.__create_project()
+            self.__model_lock.acquire()
+            self.__model.add_project(project)
+            self.__model_lock.release()
             return False
 
         raise FileNotFoundError("Couldn't find any saved projects on the given path")

@@ -3,7 +3,7 @@ from src.model.core.Header import Header
 from typing import cast, Self
 
 
-class HeaderIterator():
+class HeaderIterator:
     """iterator class for headers in a source file to a given depth
 
     A depth of 0 returns only the headers directly included in the source file

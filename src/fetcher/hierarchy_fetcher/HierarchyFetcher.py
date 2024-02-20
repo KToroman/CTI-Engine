@@ -1,3 +1,4 @@
+import threading
 import time
 from threading import Thread
 from subprocess import CalledProcessError
@@ -15,9 +16,11 @@ from src.exceptions.CompileCommandError import CompileCommandError
 
 class HierarchyFetcher(FetcherInterface):
 
-    def __init__(self, model: Model, project_name: str) -> None:
+    def __init__(self, model: Model, project_name: str, model_lock: threading.Lock) -> None:
         self.__model: Model = model
         self.project_name = project_name
+        self.__model_lock = model_lock
+>>>>>>> src/fetcher/hierarchy_fetcher/HierarchyFetcher.py
         self.__gcc_command_executor: GCCCommandExecutor = GCCCommandExecutor()
         self.command_getter: CompileCommandGetter
         self.__open_timeout: int = 0
@@ -27,9 +30,11 @@ class HierarchyFetcher(FetcherInterface):
     def update_project(self) -> bool:
         print("hierarchy update")
         """Updates the current project by adding a hierarchical structure of header objects to all source files"""
+        self.__model_lock.acquire()
         project: Project = self.__model.current_project
+        self.__model_lock.release()
         try:
-            self.command_getter = CompileCommandGetter(project.working_dir)
+            self.command_getter = CompileCommandGetter(project.working_dir, self.__model_lock)
             self.__open_timeout = 0
         except FileNotFoundError as e:
             time.sleep(5)
@@ -49,7 +54,7 @@ class HierarchyFetcher(FetcherInterface):
     def __setup_hierarchy(self, project: Project) -> None:
         """the main Method of the Hierarchy Fetcher class, to be called in a separate thread"""
         source_files: list[SourceFile] = self.__setup_source_files(project)
-        print(f"\033[96 {len(source_files)} Sourcefiles added to Project\033[0m")
+        print(f"\033[96m {len(source_files)} Sourcefiles added to Project\033[0m")
         source_files_retry: list[SourceFile] = []
         for source_file in source_files:
             try:
@@ -69,18 +74,22 @@ class HierarchyFetcher(FetcherInterface):
             except (CompileCommandError, CalledProcessError) as e:
                 print(f"\033[93m{e.__str__()}\033[0m")
                 source_file.error = True
-        print(f"\033[96mHierarchy Fetching completed")
+        print(f"\033[96mHierarchy Fetching completed\033[0m")
 
     def __setup_source_files(self, project: Project) -> list[SourceFile]:
         created_source_files: list[SourceFile] = []
         for opath in self.command_getter.get_all_opaths():
+            self.__model_lock.acquire()
             created_source_files.append(project.get_sourcefile(opath))
+            self.__model_lock.release()
         return created_source_files
 
     def __set_compile_command(self, source_file: SourceFile) -> None:
         compile_command: str = self.command_getter.get_compile_command(
             source_file)
+        self.__model_lock.acquire()
         source_file.compile_command = compile_command
+        self.__model_lock.release()
 
     def __update_headers(self, source_file: SourceFile) -> None:
         hierarchy_command: str = self.command_getter.generate_hierarchy_command(
@@ -112,7 +121,9 @@ class HierarchyFetcher(FetcherInterface):
 
     def __append_header_to_file(self, cfile: CFile, new_header_path: str) -> Header:
         new_header = Header(new_header_path)
+        self.__model_lock.acquire()
         cfile.headers.append(new_header)
+        self.__model_lock.release()
         return new_header
 
     def __get_depth(self, line: str) -> int:
