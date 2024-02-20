@@ -36,11 +36,12 @@ class CompilingTool(BuilderInterface):
         self.__header_iterator = HeaderIterator(self.source_file, header_depth)
 
     def build(self) -> bool:
+        """returns true if there is another header to be built"""
         if not self.__header_iterator.has_next_header():
             return False
         header: Header = self.__header_iterator.pop_next_header()
 
-        build_thread = threading.Thread(target=self.build_header, args=([header]), daemon=True)
+        build_thread = threading.Thread(target=self.build_header, args=([header]), daemon=False)
         build_thread.start()
 
         return self.__header_iterator.has_next_header()
@@ -54,6 +55,7 @@ class CompilingTool(BuilderInterface):
         except CalledProcessError:
             header.error = True
             print(f"\033[93mError found in file: \n {header.path}\033[0m")
+        print("Header built sucessfully")
 
     def __compile(self, file_name: Path) -> CompletedProcess:
         print(f"compiling header: {file_name}")
