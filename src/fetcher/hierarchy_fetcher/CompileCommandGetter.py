@@ -1,4 +1,5 @@
 import json, shlex
+import threading
 from io import FileIO
 from os.path import join
 from src.model.core.SourceFile import SourceFile
@@ -8,7 +9,8 @@ from src.exceptions.CompileCommandError import CompileCommandError
 
 class CompileCommandGetter:
 
-    def __init__(self, compile_commands_path: str) -> None:
+    def __init__(self, compile_commands_path: str, model_lock: threading.Lock) -> None:
+        self.__model_lock = model_lock
         self.compile_commands_json: list[dict[str, str]] = self.__get_json(compile_commands_path)
         self.commands: dict[str, str] = {}
         self.__setup_commands()
@@ -42,7 +44,10 @@ class CompileCommandGetter:
         raise CompileCommandError(f"no object file path found in compile-command")
 
     def get_compile_command(self, source_file: SourceFile) -> str:
+        self.__model_lock.acquire()
         ofilepath = source_file.path
+        self.__model_lock.release()
+
         if ofilepath not in self.commands:
             raise CompileCommandError(f"Source file does not have a stored command \n {ofilepath}")
         return self.commands[ofilepath]
