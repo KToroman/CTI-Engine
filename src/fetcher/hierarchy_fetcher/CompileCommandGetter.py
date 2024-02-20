@@ -55,14 +55,18 @@ class CompileCommandGetter:
     def generate_hierarchy_command(self, source_file: SourceFile) -> str:
         origin_command: str = self.get_compile_command(source_file)
         args: list[str] = shlex.split(origin_command)
-        delindex: int = -1
+        delindeces: list[int] = []
         for i in range(len(args)):
             if args[i] == "-o":
-                delindex = i
-        if delindex == -1:
+                delindeces.extend([i, i+1])
+            if args[i] == "-c":
+                delindeces.append(i)
+        if not delindeces:
             raise CompileCommandError(f"no object file path found in compile-command \n {source_file.path}")
         else:
-            del args[delindex: delindex + 2]
+            delindeces.sort(reverse=True)
+            for delindex in delindeces:
+                del args[delindex]
         args.append("-H")
         args.append("-E")
         return shlex.join(args)
