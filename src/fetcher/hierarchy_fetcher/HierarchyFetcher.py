@@ -1,12 +1,10 @@
 import threading
 import time
-from threading import Thread
 from subprocess import CalledProcessError
 
 from src.fetcher.FetcherInterface import FetcherInterface
 from src.fetcher.hierarchy_fetcher.GCCCommandExecutor import GCCCommandExecutor
 from src.fetcher.hierarchy_fetcher.CompileCommandGetter import CompileCommandGetter
-from src.model.Model import Model
 from src.model.core.Project import Project
 from src.model.core.SourceFile import SourceFile
 from src.model.core.CFile import CFile
@@ -29,11 +27,8 @@ class HierarchyFetcher(FetcherInterface):
     def update_project(self) -> bool:
         print("hierarchy update")
         """Updates the current project by adding a hierarchical structure of header objects to all source files"""
-        self.__model_lock.acquire()
-        project: Project = self.__model.current_project
-        self.__model_lock.release()
         try:
-            self.command_getter = CompileCommandGetter(project.working_dir, self.__model_lock)
+            self.command_getter = CompileCommandGetter(self.__project.working_dir, self.__model_lock)
             self.__open_timeout = 0
         except FileNotFoundError as e:
             time.sleep(5)
@@ -46,7 +41,7 @@ class HierarchyFetcher(FetcherInterface):
                 print(e.__str__() + "\n trying again...")
                 return True
 
-        self.__setup_hierarchy(project)
+        self.__setup_hierarchy(self.__project)
         self.is_done = True
         return False
 
