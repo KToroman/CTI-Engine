@@ -128,12 +128,15 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         caspars farbe: #444447
         """
         self.show()
-        QThread(target=self.__get_app_updates).start()
+        
+        # TODO set up appupdates worker on a new Thread 
 
     def __set_up_app_worker(self):
         self.__app_worker: AppUpdatesWorker = AppUpdatesWorker()
 
     def __get_app_updates(self):
+        pass
+
         
 
     def visualize(self, model: ModelReadViewInterface):
