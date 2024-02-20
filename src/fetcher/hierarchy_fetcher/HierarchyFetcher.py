@@ -14,10 +14,16 @@ from src.exceptions.CompileCommandError import CompileCommandError
 
 class HierarchyFetcher(FetcherInterface):
 
+<<<<<<< HEAD
     def __init__(self, model: Model, project_name: str, model_lock: threading.Lock) -> None:
         self.__model: Model = model
         self.__model_lock = model_lock
         self.project_name = project_name
+=======
+    def __init__(self, project: Project, model_lock: threading.Lock) -> None:
+        self.__project: Project = project
+        self.__model_lock = model_lock
+>>>>>>> bc3f4119b77827b763e5453b5f6f46592df96aef
         self.__gcc_command_executor: GCCCommandExecutor = GCCCommandExecutor()
         self.command_getter: CompileCommandGetter
         self.__open_timeout: int = 0
