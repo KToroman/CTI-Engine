@@ -3,13 +3,15 @@ import os
 import sys
 
 import random
-from threading import Thread
+from PyQt5.QtCore import QThread
 from typing import List
+from _multiprocessing import Queue, Event
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QWidget,
                              QStackedWidget, QApplication, QHBoxLayout, QSplitter, QCheckBox)
+from src.view.GUI.AppUpdatesWorker import AppUpdatesWorker
 from src.view.GUI.Graph.BarWidget import BarWidget
 from src.view.GUI.Graph.GraphWidget import GraphWidget
 from src.view.GUI.MainWindowMeta import MainWindowMeta
@@ -36,13 +38,21 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     RAM_Y_AXIS: str = "RAM (in mb)"
     CPU_Y_AXIS: str = "CPU (in %)"
 
-    def __init__(self, q_application: QApplication, app: AppRequestsInterface):
+    def __init__(self, q_application: QApplication, app: AppRequestsInterface, path_queue: Queue, active_mode_queue: Queue, error_queue: Queue):
+        # message-queues and events:
+        self.__path_queue = path_queue
+        self.__active_mode_queue = active_mode_queue
+        self.__error_queue = error_queue
+
+        # queue and event for visualize and status
+        self.model_queue = Queue()
+        self.status_queue = Queue()
+        self.error_queue = Queue()
+        self.visualize = Event()
+
         self.__q_application: QApplication = q_application
         super(MainWindow, self).__init__()
 
-        self.__ram: bool = False
-        self.__cpu: bool = False
-        self.__runtime: bool = False
         self.__visible_plots: List[Displayable] = []
         self.project_time: float = 0
 
@@ -117,9 +127,16 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         caspars farbe: #444447
         """
         self.show()
+        
+        # TODO set up appupdates worker on a new Thread 
 
-    def execute(self):
-        self.__q_application.exec()
+    def __set_up_app_worker(self):
+        self.__app_worker: AppUpdatesWorker = AppUpdatesWorker()
+
+    def __get_app_updates(self):
+        pass
+
+        
 
     def visualize(self, model: ModelReadViewInterface):
         """receives a Model, displays the data contained in that Model to the user."""
