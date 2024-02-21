@@ -38,17 +38,15 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     RAM_Y_AXIS: str = "RAM (in mb)"
     CPU_Y_AXIS: str = "CPU (in %)"
 
-    def __init__(self, q_application: QApplication, app: AppRequestsInterface, path_queue: Queue, active_mode_queue: Queue, error_queue: Queue):
+    def __init__(self, q_application: QApplication, app: AppRequestsInterface, visualize_event, status_queue, model_queue, error_queue: Queue):
         # message-queues and events:
-        self.__path_queue = path_queue
-        self.__active_mode_queue = active_mode_queue
-        self.__error_queue = error_queue
+        self.error_queue = error_queue
 
         # queue and event for visualize and status
-        self.model_queue = Queue()
-        self.status_queue = Queue()
-        self.error_queue = Queue()
-        self.visualize = Event()
+        self.model_queue = model_queue
+        self.status_queue = status_queue
+        self.error_queue = error_queue
+        self.visualize_event = visualize_event
 
         self.__q_application: QApplication = q_application
         super(MainWindow, self).__init__()
@@ -129,6 +127,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.show()
         
         # TODO set up appupdates worker on a new Thread 
+        sys.exit(self.__q_application.exec())
 
     def __set_up_app_worker(self):
         self.__app_worker: AppUpdatesWorker = AppUpdatesWorker()

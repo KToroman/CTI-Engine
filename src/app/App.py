@@ -34,13 +34,22 @@ class AppMeta(type(QApplication), type(AppRequestsInterface)):
 class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
     __DEFAULT_GUI: bool = True
 
-    def __init__(self, start_with_gui: bool = __DEFAULT_GUI) -> None:
+    def __init__(self, shutdown_event, active_mode_event, passive_mode_event, load_event, load_path_queue, active_mode_queue, model_queue, error_queue, visualize_event, status_queue, start_with_gui: bool = __DEFAULT_GUI) -> None:
+        self.shutdown_event = shutdown_event
+        self.active_mode_event = active_mode_event
+        self.passive_mode_event = passive_mode_event
+        self.load_event = load_event
+        self.load_path_queue = load_path_queue
+        self.active_mode_queue = active_mode_queue
+
+        
+        
+        
         self.__has_gui: bool = start_with_gui
         self.__model_lock: threading.Lock = threading.Lock()
         self.__model = Model()
         self.__cti_dir_path = self.__get_cti_folder_path()
         self.__passive_data_fetcher: PassiveDataFetcher = PassiveDataFetcher(self.__model, self.__model_lock)
-        self.__fetcher: FetcherInterface
         self.__curr_project_name: str = ""
         self.__last_found_processes: float = time.time()
         self.__hierarchy_fetcher_bool: bool = True
@@ -49,21 +58,10 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         self.__watching_processes: bool = False
         self.__found_processes: bool = False
 
-        # Events for GUI
-        self.shutdown_event = Event()
-        self.active_mode_event = Event()
-        self.passive_mode_event = Event()
-        self.passive_mode_event.set()
-        self.load_event = Event()
-
-        # Queues for GUI messages
-        self.load_path_queue: Queue = Queue(1)
-        self.active_mode_queue: Queue = Queue(1)
-        self.error_queue: Queue = Queue(5)
 
         # set up GUI
         if start_with_gui:
-            self.__UI: UIInterface = prepare_gui(self, self.load_path_queue, self.active_mode_queue, self.error_queue)
+            self.__UI: UIInterface = prepare_gui(self, error_queue=error_queue, visualize_event=visualize_event, status_queue=status_queue, model_queue=model_queue)
         super(App, self).__init__([])
 
     def run(self) -> None:
@@ -81,8 +79,8 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
 
     def __update_GUI(self) -> None:
         if self.__visualize:
-            self.__UI.visualize.set()
             self.__UI.model_queue.put(self.__model)
+            self.__UI.visualize.set()
             self.__visualize = False
 
     def __update_status(self) -> None:
