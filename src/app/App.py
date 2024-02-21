@@ -1,3 +1,4 @@
+import threading
 from multiprocessing import Process, Queue, Event
 import os
 import sys
@@ -35,18 +36,18 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
 
     def __init__(self, start_with_gui: bool = __DEFAULT_GUI) -> None:
         self.__has_gui: bool = start_with_gui
-
+        self.__model_lock: threading.Lock = threading.Lock()
         self.__model = Model()
         self.__cti_dir_path = self.__get_cti_folder_path()
-        self.__passive_data_fetcher: PassiveDataFetcher = PassiveDataFetcher(self.__model)
-        self.__hierarchy_fetcher: HierarchyFetcher
+        self.__passive_data_fetcher: PassiveDataFetcher = PassiveDataFetcher(self.__model, self.__model_lock)
         self.__fetcher: FetcherInterface
         self.__curr_project_name: str = ""
         self.__last_found_processes: float = time.time()
+        self.__hierarchy_fetcher_bool: bool = True
+        self.__visualize: bool = True
 
         self.__watching_processes: bool = False
         self.__found_processes: bool = False
-
 
         # Events for GUI
         self.shutdown_event = Event()
@@ -65,8 +66,6 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
             self.__UI: UIInterface = prepare_gui(self, self.load_path_queue, self.active_mode_queue, self.error_queue)
         super(App, self).__init__([])
 
-
-
     def run(self) -> None:
         self.__curr_project_name = self.__model.get_current_working_directory()
         while not self.shutdown_event.is_set():
@@ -84,13 +83,9 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         if self.__visualize:
             self.__UI.visualize.set()
             self.__UI.model_queue.put(self.__model)
-            self.__UI.status_queue.put(self.__status)
             self.__visualize = False
 
-    def update_status(self) -> None:
-        if not self.__hierarchy_fetcher.is_done:
-            self.__UI.status_queue.put(StatusSettings.MEASURING)
-            return
+    def __update_status(self) -> None:
         if self.active_mode_event.is_set():
             self.__UI.status_queue.put(StatusSettings.MEASURING)
             return
@@ -98,9 +93,12 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
             self.__UI.status_queue.put(StatusSettings.LOADING)
             return
         if self.passive_mode_event.is_set():
+            if not self.__hierarchy_fetcher_bool:
+                self.__UI.status_queue.put(StatusSettings.MEASURING)
+                return
             if time.time() < self.__last_found_processes + 10:
                 self.__UI.status_queue.put(StatusSettings.MEASURING)
-            else: 
+            else:
                 self.__UI.status_queue.put(StatusSettings.SEARCHING)
             return
         self.__UI.status_queue.put(StatusSettings.WAITING)
@@ -108,41 +106,49 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
     def __fetch_passive(self):
         if not self.__watching_processes:
             Thread(target=self.__watch_processes).start()
-        if self.__curr_project_name != self.__model.get_current_working_directory():
+        if self.__curr_project_name != self.__get_current_project_dir():
             # set up hierarchy fetching
-            hierarchy_fetcher = HierarchyFetcher(self.__model, self.__curr_project_name)
-            self.__curr_project_name = self.__model.get_current_working_directory()
-            #start hierarchy fetching and saving threads
+            with self.__model_lock:
+                hierarchy_fetcher = HierarchyFetcher(self.__model.current_project, self.__model_lock)
+                self.__curr_project_name = self.__model.get_current_working_directory()
+            # start hierarchy fetching and saving threads
             Thread(target=self.__hierarchy_fetch, args=[hierarchy_fetcher]).start()
             Thread(target=self.__save_project, args=[hierarchy_fetcher]).start()
             self.__last_found_processes = time.time()
 
+    def __get_current_project_dir(self) -> str:
+        with self.__model_lock:
+            return self.__model.get_current_working_directory()
+
     def __watch_processes(self):
         self.__watching_processes = True
         while self.passive_mode_event.is_set():
-            found_proc = self.__passive_data_fetcher.update_project()
-            if found_proc:
+            self.__found_processes = self.__passive_data_fetcher.update_project()
+            if self.__found_processes:
                 self.__last_found_processes = time.time()
+        self.__watching_processes = False
 
     def __hierarchy_fetch(self, hierarchy_fetcher: HierarchyFetcher) -> None:
+        self.__hierarchy_fetcher_bool = False
         __hierarchy_needed: bool = True
         while __hierarchy_needed:
             try:
                 __hierarchy_needed = hierarchy_fetcher.update_project()
             except FileNotFoundError:
                 self.__UI.error_queue.put(FileNotFoundError("could not find the compile-commands.json file"))
-                self.__hierarchy_fetcher.is_done = True
+                self.__hierarchy_fetcher_bool = True
                 return
         waiting_for_passive: bool = True
         while waiting_for_passive:
-            waiting_for_passive = self.__last_found_processes + 15 < time.time() and self.__curr_project_name == hierarchy_fetcher.project_name
+            waiting_for_passive = (self.__last_found_processes + 15 < time.time() and
+                                   self.__curr_project_name == hierarchy_fetcher.project.working_dir)
             if not waiting_for_passive:
                 self.__visualize = True
 
     def __fetch_load(self) -> None:
         if not self.load_path_queue.empty():
             path: str = self.load_path_queue.get(block=True, timeout=0.05)
-            self.__file_loader = FileLoader(path, self.__model)
+            self.__file_loader = FileLoader(path, self.__model, self.__model_lock)
             Thread(target=self.__load_project_from_file).start()
 
     def __load_project_from_file(self):
@@ -154,11 +160,12 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
             return
         self.load_event.clear()
         self.__visualize = True
-        
+
     def __fetch_active(self):
         if not self.active_mode_queue.empty():
             source_file_name: str = self.active_mode_queue.get(block=True, timeout=0.05)
-            self.__active_fetcher = ActiveDataFetcher(source_file_name, self.__model, self.__cti_dir_path)
+            self.__active_fetcher = ActiveDataFetcher(source_file_name, self.__model, self.__cti_dir_path,
+                                                      self.__model_lock)
             Thread(target=self.__start_active_mode).start()
             self.active_mode_event.clear()
 
@@ -174,23 +181,31 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         return path
 
     def __save_project(self, hierarchy_fetcher: HierarchyFetcher) -> None:
-        name: str = self.__model.get_current_working_directory()
+        with self.__model_lock:
+            name: str = self.__model.get_current_working_directory()
         saver: SaveInterface = SaveToJSON(self.__cti_dir_path)
-        while (self.__found_project and (
-                name == self.__model.get_current_working_directory())) or not hierarchy_fetcher.is_done:
+        while (self.__found_processes and self.__current_project_name_check(name)) or not hierarchy_fetcher.is_done:
             # if the current project is still being watched or the hierarchy is not yet completed
             project: Project = self.__get_project(name)
             saver.save_project(project)
             time.sleep(3)
-        saver.save_project(self.__model.get_project_by_name(name))
+
+        saver.save_project(self.__get_project(name))
         if self.__has_gui:
             self.__visualize = True
         print("saver exit")
 
+    def __current_project_name_check(self, name: str) -> bool:
+        with self.__model_lock:
+            if name == self.__model.get_current_working_directory():
+                return True
+            return False
+
     def __get_project(self, name: str) -> Project:
         project: Project = Project("", "")
         try:
-            project = self.__model.get_project_by_name(name)
+            with self.__model_lock:
+                project = self.__model.get_project_by_name(name)
         except ProjectNotFoundException:
             self.__get_project(name)
         return project

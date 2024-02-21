@@ -1,8 +1,6 @@
-<<<<<<< src/fetcher/process_fetcher/ActiveDataFetcher.py
+
 import os.path
-=======
 import threading
->>>>>>> src/fetcher/process_fetcher/ActiveDataFetcher.py
 from threading import Thread
 from time import time
 from typing import List

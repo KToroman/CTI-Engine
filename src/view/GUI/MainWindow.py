@@ -5,7 +5,7 @@ import sys
 import random
 from PyQt5.QtCore import QThread
 from typing import List
-from _multiprocessing import Queue, Event
+from multiprocessing import Queue, Event
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
