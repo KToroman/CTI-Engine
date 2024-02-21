@@ -1,6 +1,6 @@
 from typing import List
 from PyQt5.QtCore import pyqtSignal, pyqtSlot
-from matplotlib.backend_bases import PickEvent
+from matplotlib.backend_bases import PickEvent, KeyEvent
 from matplotlib.backends.backend_template import FigureCanvas
 from PyQt5.QtWidgets import QVBoxLayout, QWidget
 from matplotlib.figure import Figure
@@ -29,13 +29,16 @@ class BarWidget(QWidget):
         self.canvas = FigureCanvas(self.figure)
 
         layout = QVBoxLayout(self)
-        self.toolbar = CustomToolbar(self.canvas, self)
+        self.toolbar = CustomToolbar(self.canvas)
         layout.addWidget(self.toolbar)
         layout.addWidget(self.canvas)
         self.__plot_bar_chart()
+        self.original_xlim = self.ax.get_xlim()
+        self.original_ylim = self.ax.get_ylim()
 
         # Connect pick events for the bar chart
-        self.canvas.mpl_connect('pick_event', self.on_pick)
+        self.canvas.mpl_connect("pick_event", self.on_pick)
+        self.canvas.mpl_connect("button_press_event", self.reset_zoom)
 
     def add_bar(self, plot: Plot):
         """adds bar to bar chart"""
@@ -82,3 +85,10 @@ class BarWidget(QWidget):
         """reacts to click on bar"""
         self.bar_clicked = event.artist.get_label().__str__()
         self.click_signal.emit()
+
+    def reset_zoom(self, event):
+        """Resets zoom to original settings"""
+        if event.button == 2:
+            self.ax.set_xlim(self.original_xlim)
+            self.ax.set_ylim(self.original_ylim)
+            self.canvas.draw()
