@@ -19,9 +19,9 @@ class FileLoader(FetcherInterface):
     def update_project(self) -> bool:
         if self.__is_valid_file():
             project: Project = self.__create_project()
-            self.__model_lock.acquire()
+            #self.__model_lock.acquire()
             self.__model.add_project(project)
-            self.__model_lock.release()
+            #self.__model_lock.release()
             return False
 
         elif self.__is_valid_path() and self.__search_json():

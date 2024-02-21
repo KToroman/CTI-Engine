@@ -1,4 +1,4 @@
-from multiprocessing import Event, Queue
+from multiprocessing import Event, Queue, Manager
 import click
 
 from src.app.App import App
@@ -43,12 +43,13 @@ if __name__ == "__main__":
     passive_mode_event.set()
     load_event = Event()    
     # Queues for GUI messages
-    load_path_queue: Queue = Queue(1)
-    active_mode_queue: Queue = Queue(1)
-    error_queue: Queue = Queue(5)
+    manager = Manager()
+    load_path_queue = manager.Queue(1)
+    active_mode_queue= manager.Queue(1)
+    error_queue = manager.Queue(5)
     visualize_event = Event()
-    status_queue = Queue()
-    model_queue = Queue()
+    status_queue = manager.Queue()
+    model_queue = manager.Queue()
 
 
     mycommands()
