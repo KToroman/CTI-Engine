@@ -15,7 +15,7 @@ from src.exceptions.CompileCommandError import CompileCommandError
 class HierarchyFetcher(FetcherInterface):
 
     def __init__(self, project: Project, model_lock: threading.Lock) -> None:
-        self.__project: Project = project
+        self.project: Project = project
         self.__model_lock = model_lock
         self.__gcc_command_executor: GCCCommandExecutor = GCCCommandExecutor()
         self.command_getter: CompileCommandGetter
@@ -27,7 +27,7 @@ class HierarchyFetcher(FetcherInterface):
         print("hierarchy update")
         """Updates the current project by adding a hierarchical structure of header objects to all source files"""
         try:
-            self.command_getter = CompileCommandGetter(self.__project.working_dir, self.__model_lock)
+            self.command_getter = CompileCommandGetter(self.project.working_dir, self.__model_lock)
             self.__open_timeout = 0
         except FileNotFoundError as e:
             time.sleep(5)
@@ -40,7 +40,7 @@ class HierarchyFetcher(FetcherInterface):
                 print(e.__str__() + "\n trying again...")
                 return True
 
-        self.__setup_hierarchy(self.__project)
+        self.__setup_hierarchy(self.project)
         self.is_done = True
         return False
 
