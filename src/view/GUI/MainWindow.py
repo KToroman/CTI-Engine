@@ -3,6 +3,7 @@ import os
 import sys
 
 import random
+from threading import Thread
 from PyQt5.QtCore import QThread
 from typing import List
 from multiprocessing import Queue, Event
@@ -124,19 +125,19 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         himmelgrau: #CFD8DC
         caspars farbe: #444447
         """
+        self.__set_up_app_worker()
         self.show()
-        
+
         # TODO set up appupdates worker on a new Thread 
         sys.exit(self.__q_application.exec())
 
     def __set_up_app_worker(self):
-        self.__app_worker: AppUpdatesWorker = AppUpdatesWorker()
+        self.worker_thread = QThread()
+        self.__app_worker: AppUpdatesWorker = AppUpdatesWorker(self)
+        self.__app_worker.moveToThread(self.worker_thread)
+        self.worker_thread.start()
 
-    def __get_app_updates(self):
-        pass
-
-        
-
+    
     def visualize(self, model: ModelReadViewInterface):
         """receives a Model, displays the data contained in that Model to the user."""
         self.project_time = model.get_project_time()
