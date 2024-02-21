@@ -1,22 +1,22 @@
-from PyQt5.QtCore import QObject
+from PyQt5.QtCore import QThread
 
 from threading import Event as TEvent
 from src.model.Model import Model
 #from src.view.GUI.MainWindow import MainWindow
 
-class AppUpdatesWorker(QObject):
+class AppUpdatesThread(QThread):
     
     def __init__(self, main_window):
         super().__init__()
         self.__main_window = main_window
         self.shutdown_event = TEvent()
 
-    def start(self):
+    def run(self):
         while not self.shutdown_event.is_set():
-            if self.__main_window.visualize_event.is_set():
+            if self.__main_window.visualize_event.is_set():                
                 if self.__main_window.model_queue.empty():
-                    raise BaseException("no model to visualize")
-                model: Model = self.__main_window.model_queue.get(True, 1.0)
+                  raise BaseException("no model to visualize")
+                model: Model = self.__main_window.model_queue.get(True, 1.0)[0]
                 self.__main_window.visualize(model)
                 #TODO what happens if timeout runs out -> model = None
                 if self.__main_window.model_queue.empty():

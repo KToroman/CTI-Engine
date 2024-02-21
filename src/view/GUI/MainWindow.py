@@ -1,18 +1,22 @@
 import colorsys
+from time import sleep
+from src.fetcher.file_fetcher.FileLoader import FileLoader
 import os
 import sys
 
 import random
-from threading import Thread
+from threading import Thread, Lock
 from PyQt5.QtCore import QThread
 from typing import List
 from multiprocessing import Queue, Event
+from multiprocessing import Manager
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QWidget,
                              QStackedWidget, QApplication, QHBoxLayout, QSplitter, QCheckBox)
-from src.view.GUI.AppUpdatesWorker import AppUpdatesWorker
+from src.model.Model import Model
+from src.view.GUI.AppUpdatesThread import AppUpdatesThread
 from src.view.GUI.Graph.BarWidget import BarWidget
 from src.view.GUI.Graph.GraphWidget import GraphWidget
 from src.view.GUI.MainWindowMeta import MainWindowMeta
@@ -29,6 +33,7 @@ from src.model.core.StatusSettings import StatusSettings
 from src.view.UIInterface import UIInterface
 from src.view.GUI.Visuals.ErrorWindow import ErrorWindow
 from src.view.AppRequestsInterface import AppRequestsInterface
+
 
 
 class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
@@ -125,17 +130,25 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         himmelgrau: #CFD8DC
         caspars farbe: #444447
         """
-        self.__set_up_app_worker()
+
+
+        model = Model()
+        loader = FileLoader("/common/homes/students/upufw_toroman/PSE/simox 2024-02-09", model, Lock())
+        loader.update_project()
+        self.model_queue.put([model])
+        print(self.model_queue.empty())
         self.show()
+        self.visualize_event.set()
+        self.__set_up_app_worker()
 
         # TODO set up appupdates worker on a new Thread 
         sys.exit(self.__q_application.exec())
 
     def __set_up_app_worker(self):
-        self.worker_thread = QThread()
-        self.__app_worker: AppUpdatesWorker = AppUpdatesWorker(self)
-        self.__app_worker.moveToThread(self.worker_thread)
-        self.worker_thread.start()
+        self.__app_updates_thread: AppUpdatesThread = AppUpdatesThread(self)
+        self.__app_updates_thread.start()
+        self.__app_updates_thread.run()
+
 
     
     def visualize(self, model: ModelReadViewInterface):
