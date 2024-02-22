@@ -1,5 +1,5 @@
 import threading
-from multiprocessing import Process, Queue, Event
+from multiprocessing import Process
 import os
 import time
 from threading import Thread
@@ -40,9 +40,6 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         self.load_path_queue = load_path_queue
         self.active_mode_queue = active_mode_queue
 
-        
-        
-        
         self.__has_gui: bool = start_with_gui
         self.__model_lock: threading.Lock = threading.Lock()
         self.__model = Model()
@@ -59,11 +56,12 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
 
         # set up GUI
         if start_with_gui:
-            self.__UI: UIInterface = prepare_gui(self, error_queue=error_queue, visualize_event=visualize_event, status_queue=status_queue, model_queue=model_queue)
-            Process(target=self.__UI.execute, args=[visualize_event, status_queue, model_queue, error_queue])
+            pass
+            
         super(App, self).__init__([])
 
-    def run(self) -> None:
+    def run(self, UI) -> None:
+        self.__UI = UI
         self.__curr_project_name = self.__model.get_current_working_directory()
         while not self.shutdown_event.is_set():
             if self.__has_gui:
@@ -79,7 +77,7 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
     def __update_GUI(self) -> None:
         if self.__visualize:
             self.__UI.model_queue.put(self.__model)
-            self.__UI.visualize.set()
+            self.__UI.visualize_event.set()
             self.__visualize = False
 
     def __update_status(self) -> None:
