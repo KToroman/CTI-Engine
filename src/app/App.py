@@ -91,7 +91,7 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
             if not self.__hierarchy_fetcher_bool:
                 self.__UI.status_queue.put(StatusSettings.MEASURING)
                 return
-            if time.time() < self.__last_found_processes + 10:
+            if time.time() > self.__last_found_processes + 10:
                 self.__UI.status_queue.put(StatusSettings.MEASURING)
             else:
                 self.__UI.status_queue.put(StatusSettings.SEARCHING)
@@ -109,6 +109,7 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
             # start hierarchy fetching and saving threads
             Thread(target=self.__hierarchy_fetch, args=[hierarchy_fetcher]).start()
             Thread(target=self.__save_project, args=[hierarchy_fetcher]).start()
+            #TODO Thread als member
             self.__last_found_processes = time.time()
 
     def __get_current_project_dir(self) -> str:

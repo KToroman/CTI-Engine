@@ -1,5 +1,6 @@
 from ast import main
 from multiprocessing import Event, Process, Queue, Manager
+from threading import Thread
 from time import sleep
 import click
 
@@ -63,6 +64,9 @@ if __name__ == "__main__":
                    visualize_event=visualize_event, start_with_gui=True)
     main_window: MainWindow = prepare_gui(app=app, visualize_event=visualize_event, status_queue=status_queue, 
                                          model_queue=model_queue, error_queue=error_queue)
-    Process(target=main_window.execute).start()
+    Thread(target=app.run, args=[main_window]).start()
+    main_window.execute()
+
+    #Process(target=main_window.execute).start()
     print("process_started")
-    mycommands()
+    #mycommands()

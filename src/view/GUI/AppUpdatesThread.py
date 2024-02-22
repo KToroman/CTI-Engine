@@ -6,18 +6,23 @@ from src.model.Model import Model
 
 class AppUpdatesThread(QThread):
     
-    def __init__(self, main_window):
+    def __init__(self, main_window, visualize_signal, visualize_lock):
         super().__init__()
         self.__main_window = main_window
         self.shutdown_event = TEvent()
+        self.visualize_signal = visualize_signal
+        self.visualize_lock = visualize_lock
+
 
     def run(self):
         while not self.shutdown_event.is_set():
             if self.__main_window.visualize_event.is_set():                
                 if self.__main_window.model_queue.empty():
                   raise BaseException("no model to visualize")
-                model: Model = self.__main_window.model_queue.get(True, 1.0)[0]
-                self.__main_window.visualize(model)
+
+                self.visualize_lock.acquire()
+                #self.__main_window.visualize_signal.emit()
+                self.visualize_lock.release()
                 #TODO what happens if timeout runs out -> model = None
                 if self.__main_window.model_queue.empty():
                     self.__main_window.visualize_event.clear()

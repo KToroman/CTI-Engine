@@ -1,4 +1,5 @@
 import colorsys
+import threading
 from time import sleep
 from src.fetcher.file_fetcher.FileLoader import FileLoader
 import os
@@ -6,7 +7,7 @@ import sys
 
 import random
 from threading import Thread, Lock
-from PyQt5.QtCore import QThread
+from PyQt5.QtCore import QThread, pyqtSignal
 from typing import List
 from multiprocessing import Queue, Event
 from multiprocessing import Manager
@@ -131,26 +132,28 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         himmelgrau: #CFD8DC
         caspars farbe: #444447
         """
-
+        self.visualize_signal: pyqtSignal = pyqtSignal()
+        self.visualize_lock: threading.Lock = threading.Lock()
+        #self.visualize_signal.connect(lambda: self.visualize(self.__main_window.model_queue.get()[0]))
 
         
 
     def __set_up_app_worker(self):
         print("app worker on")
-        self.__app_updates_thread: AppUpdatesThread = AppUpdatesThread(self)
+        self.__app_updates_thread: AppUpdatesThread = AppUpdatesThread(self, self.visualize_signal, self.visualize_lock)
+        self.__app_updates_thread.started.connect(self.__app_updates_thread.run)
         self.__app_updates_thread.start()
-        self.__app_updates_thread.run()
 
     def execute(self):
         print("executing")
         self.show()
         print("showed")
         self.__set_up_app_worker()
-
+        print("should exec now")
         # TODO set up appupdates worker on a new Thread 
         sys.exit(self.__q_application.exec())
         
-    
+
     def visualize(self, model: ModelReadViewInterface):
         """receives a Model, displays the data contained in that Model to the user."""
         self.project_time = model.get_project_time()
