@@ -45,17 +45,11 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     CPU_Y_AXIS: str = "CPU (in %)"
 
     def __init__(self, q_application: QApplication, app: AppRequestsInterface):
-        # message-queues and events:
-        self.error_queue
-
-        # queue and event for visualize and status
-        self.model_queue
-        self.status_queue
-        self.error_queue
-        self.visualize_event
+        super(MainWindow, self).__init__()
+        
 
         self.__q_application: QApplication = q_application
-        super(MainWindow, self).__init__()
+
 
         self.__visible_plots: List[Displayable] = []
         self.project_time: float = 0
@@ -139,7 +133,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.__app_updates_thread.start()
         self.__app_updates_thread.run()
 
-    def execute(self, visualize_event, status_queue, model_queue, error_queue: Queue):
+    def execute(self, visualize_event, status_queue, model_queue, error_queue):
         # message-queues and events:
         self.error_queue = error_queue
 
