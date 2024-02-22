@@ -1,4 +1,5 @@
 from multiprocessing import Event, Queue, Manager
+from time import sleep
 import click
 
 from src.app.App import App
@@ -35,6 +36,8 @@ def run_app():
                    passive_mode_event=passive_mode_event, load_event=load_event, 
                    load_path_queue=load_path_queue, active_mode_queue=active_mode_queue, error_queue=error_queue, 
                    visualize_event=visualize_event, start_with_gui=True)
+    
+    sleep(10)
     app.run()
 
 mycommands.add_command(start_active_measurement_command, "actv")

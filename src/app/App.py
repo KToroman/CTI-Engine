@@ -60,7 +60,7 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         # set up GUI
         if start_with_gui:
             self.__UI: UIInterface = prepare_gui(self, error_queue=error_queue, visualize_event=visualize_event, status_queue=status_queue, model_queue=model_queue)
-            Process(target=self.__UI.execute(status_queue=status_queue, error_queue=error_queue, model_queue=model_queue, visualize_event=visualize_event))
+            Process(target=self.__UI.execute, args=[visualize_event, status_queue, model_queue, error_queue])
         super(App, self).__init__([])
 
     def run(self) -> None:
