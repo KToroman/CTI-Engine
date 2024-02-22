@@ -1,3 +1,4 @@
+import multiprocessing
 import threading
 import time
 from subprocess import CalledProcessError
@@ -14,7 +15,7 @@ from src.exceptions.CompileCommandError import CompileCommandError
 
 class HierarchyFetcher(FetcherInterface):
 
-    def __init__(self, project: Project, model_lock: threading.Lock) -> None:
+    def __init__(self, project: Project, model_lock: multiprocessing.Lock) -> None:
         self.project: Project = project
         self.__model_lock = model_lock
         self.__gcc_command_executor: GCCCommandExecutor = GCCCommandExecutor()

@@ -1,4 +1,6 @@
 import colorsys
+import multiprocessing
+from multiprocessing import Lock
 from time import sleep
 from src.fetcher.file_fetcher.FileLoader import FileLoader
 import os
@@ -35,7 +37,6 @@ from src.view.GUI.Visuals.ErrorWindow import ErrorWindow
 from src.view.AppRequestsInterface import AppRequestsInterface
 
 
-
 class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     WINDOWSIZE1: int = 800
     WINDOWSIZE2: int = 600
@@ -44,12 +45,11 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     RAM_Y_AXIS: str = "RAM (in mb)"
     CPU_Y_AXIS: str = "CPU (in %)"
 
-    def __init__(self, q_application: QApplication, app: AppRequestsInterface):
+    def __init__(self, q_application: QApplication, app: AppRequestsInterface, model_lock: Lock):
         super(MainWindow, self).__init__()
-        
 
+        self.__model_lock = model_lock
         self.__q_application: QApplication = q_application
-
 
         self.__visible_plots: List[Displayable] = []
         self.project_time: float = 0
@@ -125,9 +125,6 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         caspars farbe: #444447
         """
 
-
-        
-
     def __set_up_app_worker(self):
         self.__app_updates_thread: AppUpdatesThread = AppUpdatesThread(self)
         self.__app_updates_thread.start()
@@ -154,8 +151,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
         # TODO set up appupdates worker on a new Thread 
         sys.exit(self.__q_application.exec())
-        
-    
+
     def visualize(self, model: ModelReadViewInterface):
         """receives a Model, displays the data contained in that Model to the user."""
         self.project_time = model.get_project_time()
@@ -168,11 +164,13 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         """visualizes data from passive mode."""
         self.table_widget.clear_table()
 
+        self.__model_lock.acquire()
         # Select spot for Displayables to be inserted into
         self.table_widget.insertion_point = model.get_project_name()
 
         # Update TableWidget for each cfile
         cfile_list: List[CFileReadViewInterface] = model.get_cfiles()
+        self.__model_lock.release()
         for cfile in cfile_list:
             self.table_widget.insert_values(self.__create_displayable(cfile))
 
@@ -187,6 +185,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         # Find file used for active build
         active_row: str = self.table_widget.insertion_point
         active_file: CFileReadViewInterface
+        self.__model_lock.acquire()
         for cfile in model.get_cfiles():
             active_file = self.__get_hierarchy(cfile, active_row)
             if active_file.get_name() == active_row:
@@ -194,6 +193,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
         # Update TableWidget for header list for said file
         cfile_list: List[CFileReadViewInterface] = active_file.get_headers()
+        self.__model_lock.release()
         for cfile in cfile_list:
             # self.table_widget.add_subrow(self.__create_displayable(cfile))
             self.table_widget.fill_subrows(self.__create_displayable(cfile))

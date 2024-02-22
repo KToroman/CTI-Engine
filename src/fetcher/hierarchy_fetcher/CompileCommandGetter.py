@@ -1,4 +1,5 @@
 import json, shlex
+import multiprocessing
 import threading
 from io import FileIO
 from os.path import join
@@ -9,7 +10,7 @@ from src.exceptions.CompileCommandError import CompileCommandError
 
 class CompileCommandGetter:
 
-    def __init__(self, compile_commands_path: str, model_lock: threading.Lock) -> None:
+    def __init__(self, compile_commands_path: str, model_lock: multiprocessing.Lock) -> None:
         self.__model_lock = model_lock
         self.compile_commands_json: list[dict[str, str]] = self.__get_json(compile_commands_path)
         self.commands: dict[str, str] = {}

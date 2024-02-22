@@ -1,3 +1,4 @@
+import multiprocessing
 import os
 import subprocess
 import threading
@@ -18,7 +19,7 @@ from src.model.core.Project import Project
 class ProcessCollector:
     PROC_NAME_FILTER = "cc1plus"
 
-    def __init__(self, model: Model, check_for_project: bool, model_lock: threading.Lock):
+    def __init__(self, model: Model, check_for_project: bool, model_lock: multiprocessing.Lock):
         self.__check_for_project = check_for_project
 
         self.__process_list_lock: threading.Lock = threading.Lock()

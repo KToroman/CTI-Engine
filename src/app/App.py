@@ -1,5 +1,5 @@
-import threading
-from multiprocessing import Process, Queue, Event
+import multiprocessing
+from multiprocessing import Process, Queue, Event, Lock
 import os
 import time
 from threading import Thread
@@ -32,7 +32,9 @@ class AppMeta(type(QApplication), type(AppRequestsInterface)):
 class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
     __DEFAULT_GUI: bool = True
 
-    def __init__(self, shutdown_event, active_mode_event, passive_mode_event, load_event, load_path_queue, active_mode_queue, model_queue, error_queue, visualize_event, status_queue, start_with_gui: bool = __DEFAULT_GUI) -> None:
+    def __init__(self, shutdown_event, active_mode_event, passive_mode_event, load_event, load_path_queue,
+                 active_mode_queue, model_queue, error_queue, visualize_event,
+                 status_queue, start_with_gui: bool = __DEFAULT_GUI) -> None:
         self.shutdown_event = shutdown_event
         self.active_mode_event = active_mode_event
         self.passive_mode_event = passive_mode_event
@@ -40,11 +42,8 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         self.load_path_queue = load_path_queue
         self.active_mode_queue = active_mode_queue
 
-        
-        
-        
         self.__has_gui: bool = start_with_gui
-        self.__model_lock: threading.Lock = threading.Lock()
+        self.__model_lock: Lock = Lock()
         self.__model = Model()
         self.__cti_dir_path = self.__get_cti_folder_path()
         self.__passive_data_fetcher: PassiveDataFetcher = PassiveDataFetcher(self.__model, self.__model_lock)
@@ -56,10 +55,11 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         self.__watching_processes: bool = False
         self.__found_processes: bool = False
 
-
         # set up GUI
         if start_with_gui:
-            self.__UI: UIInterface = prepare_gui(self, error_queue=error_queue, visualize_event=visualize_event, status_queue=status_queue, model_queue=model_queue)
+            self.__UI: UIInterface = prepare_gui(self, error_queue=error_queue, visualize_event=visualize_event,
+                                                 status_queue=status_queue, model_queue=model_queue,
+                                                 model_lock=self.__model_lock)
             Process(target=self.__UI.execute, args=[visualize_event, status_queue, model_queue, error_queue])
         super(App, self).__init__([])
 

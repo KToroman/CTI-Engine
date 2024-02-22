@@ -1,4 +1,4 @@
-
+from multiprocessing import Lock
 import os.path
 import threading
 from threading import Thread
@@ -24,8 +24,7 @@ class ActiveDataFetcher(FetcherInterface):
     __seconds__to_move_on = 3
 
     def __init__(
-            self, source_file_name: str, model: Model, build_dir_path: str, model_lock: threading.Lock
-    ) -> None:
+            self, source_file_name: str, model: Model, build_dir_path: str, model_lock: Lock) -> None:
         self.__model = model
         self.__model_lock = model_lock
         self.__source_file: SourceFile = model.get_sourcefile_by_name(

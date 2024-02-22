@@ -1,3 +1,4 @@
+import multiprocessing
 import os
 import threading
 from os.path import isfile, join
@@ -11,7 +12,7 @@ from src.model.core.Project import Project
 
 class FileLoader(FetcherInterface):
 
-    def __init__(self, path: str, model: Model, model_lock: threading.Lock):
+    def __init__(self, path: str, model: Model, model_lock: multiprocessing.Lock):
         self.__model_lock = model_lock
         self.__path = path
         self.__model = model

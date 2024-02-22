@@ -1,4 +1,5 @@
 import os.path
+from multiprocessing import Lock
 import threading
 import time
 from os.path import join
@@ -20,9 +21,10 @@ from src.model.core.ProcessPoint import ProcessPoint
 
 class PassiveDataFetcher(DataFetcher):
 
-    def __init__(self, model: Model, model_lock: threading.Lock):
+    def __init__(self, model: Model, model_lock: Lock):
         self.__model = model
         self.__model_lock = model_lock
+
         self.__process_collector: ProcessCollector = ProcessCollector(model, True, model_lock)
         self.__data_observer: DataObserver = DataObserver()
         self.__time_to_wait: float = 15
