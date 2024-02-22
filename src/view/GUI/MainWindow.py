@@ -49,7 +49,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         
 
         self.__q_application: QApplication = q_application
-
+        self.__app = app
 
         self.__visible_plots: List[Displayable] = []
         self.project_time: float = 0
@@ -320,3 +320,4 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
     def closeEvent(self, a0: QCloseEvent):
         self.__app_updates_thread.shutdown_event.set()
+        self.__app.shutdown_event.set()
