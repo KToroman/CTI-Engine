@@ -12,26 +12,31 @@ def mycommands(ctx):
 
 
 @click.command()
-@click.argument('path')
-def load_from_directory_command(path: str):
-    app = App(start_with_gui=False)
-    app.load_from_directory(path)
-
-@click.command()
 @click.option('--source_file_name', prompt='Enter a filepath', help='filepath for active measurement')
 @click.argument('source_file_name')
 @click.argument('path')
 def start_active_measurement_command(self, source_file_name: str, path: str):
-    app = App(False)
-    app.load_from_directory(path)
-    app.start_active_measurement(source_file_name)
+    app: App = App(model_queue=model_queue,status_queue=status_queue, shutdown_event=shutdown_event, 
+                   active_mode_event=active_mode_event,passive_mode_event=passive_mode_event, load_event=load_event, 
+                   load_path_queue=load_path_queue, active_mode_queue=active_mode_queue, error_queue=error_queue, 
+                   visualize_event=visualize_event, start_with_gui=False)
+    app.load_path_queue.put([path])
+    app.load_event.set()
+    app.active_mode_queue.put([source_file_name])
+    app.active_mode_event.set()
+    #TODO wait or lock or something between load and active mode
     app.run()
+
+
 
 def run_app():
-    app: App = App(model_queue=model_queue,status_queue=status_queue, shutdown_event=shutdown_event, active_mode_event=active_mode_event,passive_mode_event=passive_mode_event, load_event=load_event, load_path_queue=load_path_queue, active_mode_queue=active_mode_queue, error_queue=error_queue, visualize_event=visualize_event, start_with_gui=True)
+    app: App = App(model_queue=model_queue,status_queue=status_queue, 
+                   shutdown_event=shutdown_event, active_mode_event=active_mode_event, 
+                   passive_mode_event=passive_mode_event, load_event=load_event, 
+                   load_path_queue=load_path_queue, active_mode_queue=active_mode_queue, error_queue=error_queue, 
+                   visualize_event=visualize_event, start_with_gui=True)
     app.run()
 
-mycommands.add_command(load_from_directory_command, "load")
 mycommands.add_command(start_active_measurement_command, "actv")
 
 
