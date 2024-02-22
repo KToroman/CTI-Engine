@@ -324,5 +324,6 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.ram_graph_widget.click_signal.connect(
             lambda: self.table_widget.highlight_row(self.ram_graph_widget.plot_clicked))
 
-    def close(self):
-        self.q_application.exec()
+    def closeEvent(self, a0, event):
+        self.app.shutdown_event.set()
+        event.accept
