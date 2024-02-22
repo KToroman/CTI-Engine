@@ -44,15 +44,15 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     RAM_Y_AXIS: str = "RAM (in mb)"
     CPU_Y_AXIS: str = "CPU (in %)"
 
-    def __init__(self, q_application: QApplication, app: AppRequestsInterface, visualize_event, status_queue, model_queue, error_queue: Queue):
+    def __init__(self, q_application: QApplication, app: AppRequestsInterface):
         # message-queues and events:
-        self.error_queue = error_queue
+        self.error_queue
 
         # queue and event for visualize and status
-        self.model_queue = model_queue
-        self.status_queue = status_queue
-        self.error_queue = error_queue
-        self.visualize_event = visualize_event
+        self.model_queue
+        self.status_queue
+        self.error_queue
+        self.visualize_event
 
         self.__q_application: QApplication = q_application
         super(MainWindow, self).__init__()
@@ -132,6 +132,23 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         """
 
 
+        
+
+    def __set_up_app_worker(self):
+        self.__app_updates_thread: AppUpdatesThread = AppUpdatesThread(self)
+        self.__app_updates_thread.start()
+        self.__app_updates_thread.run()
+
+    def execute(self, visualize_event, status_queue, model_queue, error_queue: Queue):
+        # message-queues and events:
+        self.error_queue = error_queue
+
+        # queue and event for visualize and status
+        self.model_queue = model_queue
+        self.status_queue = status_queue
+        self.error_queue = error_queue
+        self.visualize_event = visualize_event
+
         model = Model()
         loader = FileLoader("/common/homes/students/upufw_toroman/PSE/simox 2024-02-09", model, Lock())
         loader.update_project()
@@ -143,13 +160,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
         # TODO set up appupdates worker on a new Thread 
         sys.exit(self.__q_application.exec())
-
-    def __set_up_app_worker(self):
-        self.__app_updates_thread: AppUpdatesThread = AppUpdatesThread(self)
-        self.__app_updates_thread.start()
-        self.__app_updates_thread.run()
-
-
+        
     
     def visualize(self, model: ModelReadViewInterface):
         """receives a Model, displays the data contained in that Model to the user."""

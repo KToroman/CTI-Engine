@@ -1,20 +1,18 @@
 import threading
 from multiprocessing import Process, Queue, Event
 import os
-import sys
 import time
 from threading import Thread
 from os.path import join
 from typing import List
+from multiprocessing import Process
 
-import click
 from src.exceptions.ProjectNotFoundException import ProjectNotFoundException
 
 from src.fetcher.file_fetcher.FileLoader import FileLoader
 from src.fetcher.hierarchy_fetcher.HierarchyFetcher import HierarchyFetcher
 from src.fetcher.process_fetcher.ActiveDataFetcher import ActiveDataFetcher
 from src.model.Model import Model
-from src.fetcher.FetcherInterface import FetcherInterface
 from src.fetcher.process_fetcher.PassiveDataFetcher import PassiveDataFetcher
 from src.model.core.Project import Project
 from src.saving.SaveInterface import SaveInterface
@@ -62,6 +60,7 @@ class App(QApplication, AppRequestsInterface, metaclass=AppMeta):
         # set up GUI
         if start_with_gui:
             self.__UI: UIInterface = prepare_gui(self, error_queue=error_queue, visualize_event=visualize_event, status_queue=status_queue, model_queue=model_queue)
+            Process(target=self.__UI.execute(status_queue=status_queue, error_queue=error_queue, model_queue=model_queue, visualize_event=visualize_event))
         super(App, self).__init__([])
 
     def run(self) -> None:
