@@ -12,7 +12,7 @@ from multiprocessing import Queue, Event
 from multiprocessing import Manager
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QCloseEvent
 from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QWidget,
                              QStackedWidget, QApplication, QHBoxLayout, QSplitter, QCheckBox)
 from src.model.Model import Model
@@ -318,5 +318,5 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.ram_graph_widget.click_signal.connect(
             lambda: self.table_widget.highlight_row(self.ram_graph_widget.plot_clicked))
 
-    def close(self):
-        self.q_application.exec()
+    def closeEvent(self, a0: QCloseEvent):
+        self.__app_updates_thread.shutdown_event.set()
