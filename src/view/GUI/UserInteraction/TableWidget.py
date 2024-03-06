@@ -132,7 +132,8 @@ class TableWidget(QTableWidget):
 
     def start_active_measurement(self, name):
         self.insertion_point: str = name
-        self.app_request_interface.start_active_measurement(name)
+        self.app_request_interface.active_mode_queue.put(name)
+        self.app_request_interface.active_mode_event.set()
         # Test nur als Beispiel
 
     def show_input_dialog_active(self, name):

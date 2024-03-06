@@ -13,6 +13,6 @@ class GCCCommandExecutor:
         completed_process: subprocess.CompletedProcess = subprocess.run(
             args=args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         if completed_process.returncode != 0:
-            print(completed_process.stderr)
+            # print(completed_process.stderr)
             completed_process.check_returncode()
         return completed_process.stderr

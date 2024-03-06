@@ -67,7 +67,7 @@ class Model(ModelReadViewInterface):
         if not self.does_project_exist(project.working_dir) and os.getcwd().split("/")[-1] not in project.working_dir:
             self.projects.append(project)
             self.current_project = project
-            print("new project")
+            print("[Model]   new project")
 
     def get_sourcefile_by_name(self, name: str) -> SourceFile:
         return self.current_project.get_sourcefile(name)
