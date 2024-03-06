@@ -9,6 +9,7 @@ from colorama import Fore
 
 from src.app.App import App
 from src.app.SecondApp import SecondApp
+from src.model.core.Project import Project
 from src.view.GUI.MainWindow import MainWindow
 from src.view.GUI.prepare_gui import prepare_gui
 
@@ -92,6 +93,7 @@ if __name__ == "__main__":
         app.start()
         print(Fore.GREEN + "[main]   Ready" + Fore.RESET)
         print(Fore.CYAN + "[Main]   active threads: " + threading.active_count().__str__() + Fore.RESET)
+
         while is_running:
             time.sleep(10)
         app.stop()
