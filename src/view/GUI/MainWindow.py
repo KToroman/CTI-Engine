@@ -1,17 +1,23 @@
 import colorsys
+import threading
+from time import sleep
+from src.fetcher.file_fetcher.FileLoader import FileLoader
 import os
 import sys
 
 import random
-from PyQt5.QtCore import QThread
+from threading import Thread, Lock
+from PyQt5.QtCore import QThread, pyqtSignal
 from typing import List
 from multiprocessing import Queue, Event
+from multiprocessing import Manager
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QWidget,
                              QStackedWidget, QApplication, QHBoxLayout, QSplitter, QCheckBox)
-from src.view.GUI.AppUpdatesWorker import AppUpdatesWorker
+from src.model.Model import Model
+from src.view.GUI.AppUpdatesThread import AppUpdatesThread
 from src.view.GUI.Graph.BarWidget import BarWidget
 from src.view.GUI.Graph.GraphWidget import GraphWidget
 from src.view.GUI.MainWindowMeta import MainWindowMeta
@@ -30,6 +36,7 @@ from src.view.GUI.Visuals.ErrorWindow import ErrorWindow
 from src.view.AppRequestsInterface import AppRequestsInterface
 
 
+
 class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     WINDOWSIZE1: int = 800
     WINDOWSIZE2: int = 600
@@ -38,20 +45,19 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     RAM_Y_AXIS: str = "RAM (in mb)"
     CPU_Y_AXIS: str = "CPU (in %)"
 
-    def __init__(self, q_application: QApplication, app: AppRequestsInterface, path_queue: Queue, active_mode_queue: Queue, error_queue: Queue):
+    def __init__(self, q_application: QApplication, app: AppRequestsInterface, visualize_event, status_queue, model_queue, error_queue):
+        super(MainWindow, self).__init__()
         # message-queues and events:
-        self.__path_queue = path_queue
-        self.__active_mode_queue = active_mode_queue
-        self.__error_queue = error_queue
+        self.error_queue = error_queue
 
         # queue and event for visualize and status
-        self.model_queue = Queue()
-        self.status_queue = Queue()
-        self.error_queue = Queue()
-        self.visualize = Event()
+        self.model_queue = model_queue
+        self.status_queue = status_queue
+        self.error_queue = error_queue
+        self.visualize_event = visualize_event
 
         self.__q_application: QApplication = q_application
-        super(MainWindow, self).__init__()
+
 
         self.__visible_plots: List[Displayable] = []
         self.project_time: float = 0
@@ -126,16 +132,26 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         himmelgrau: #CFD8DC
         caspars farbe: #444447
         """
-        self.show()
+        self.visualize_signal: pyqtSignal = pyqtSignal()
+        self.visualize_lock: threading.Lock = threading.Lock()
+        #self.visualize_signal.connect(lambda: self.visualize(self.__main_window.model_queue.get()[0]))
+
         
-        # TODO set up appupdates worker on a new Thread 
 
     def __set_up_app_worker(self):
-        self.__app_worker: AppUpdatesWorker = AppUpdatesWorker()
+        print("app worker on")
+        self.__app_updates_thread: AppUpdatesThread = AppUpdatesThread(self, self.visualize_signal, self.visualize_lock)
+        self.__app_updates_thread.started.connect(self.__app_updates_thread.run)
+        self.__app_updates_thread.start()
 
-    def __get_app_updates(self):
-        pass
-
+    def execute(self):
+        print("executing")
+        self.show()
+        print("showed")
+        self.__set_up_app_worker()
+        print("should exec now")
+        # TODO set up appupdates worker on a new Thread 
+        sys.exit(self.__q_application.exec())
         
 
     def visualize(self, model: ModelReadViewInterface):
@@ -300,5 +316,6 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.ram_graph_widget.click_signal.connect(
             lambda: self.table_widget.highlight_row(self.ram_graph_widget.plot_clicked))
 
-    def close(self):
-        self.q_application.exec()
+    def closeEvent(self, a0, event):
+        self.app.shutdown_event.set()
+        event.accept

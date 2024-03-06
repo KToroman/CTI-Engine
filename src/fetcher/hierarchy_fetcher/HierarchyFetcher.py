@@ -5,6 +5,7 @@ from subprocess import CalledProcessError
 from src.fetcher.FetcherInterface import FetcherInterface
 from src.fetcher.hierarchy_fetcher.GCCCommandExecutor import GCCCommandExecutor
 from src.fetcher.hierarchy_fetcher.CompileCommandGetter import CompileCommandGetter
+from src.model.Model import Model
 from src.model.core.Project import Project
 from src.model.core.SourceFile import SourceFile
 from src.model.core.CFile import CFile
@@ -14,8 +15,9 @@ from src.exceptions.CompileCommandError import CompileCommandError
 
 class HierarchyFetcher(FetcherInterface):
 
-    def __init__(self, project: Project, model_lock: threading.Lock) -> None:
-        self.project: Project = project
+    def __init__(self, model: Model, model_lock: threading.Lock) -> None:
+        self.project_name: str = None
+        self.__model = model
         self.__model_lock = model_lock
         self.__gcc_command_executor: GCCCommandExecutor = GCCCommandExecutor()
         self.command_getter: CompileCommandGetter
@@ -24,50 +26,57 @@ class HierarchyFetcher(FetcherInterface):
 
 
     def update_project(self) -> bool:
-        print("hierarchy update")
+        #print("hierarchy update")
         """Updates the current project by adding a hierarchical structure of header objects to all source files"""
+        self.__model_lock.acquire()
+        project: Project = self.__model.get_project_by_name(self.project_name)
+        self.__model_lock.release()
         try:
-            self.command_getter = CompileCommandGetter(self.project.working_dir, self.__model_lock)
+            self.command_getter = CompileCommandGetter(project.working_dir, self.__model_lock)
             self.__open_timeout = 0
         except FileNotFoundError as e:
-            time.sleep(5)
+            time.sleep(8)
             if self.__open_timeout > 2:
                 self.__open_timeout = 0
                 self.is_done = True
                 raise e
             else:
                 self.__open_timeout += 1
-                print(e.__str__() + "\n trying again...")
+                #print(e.__str__() + "\n trying again...")
                 return True
 
-        self.__setup_hierarchy(self.project)
+        self.__setup_hierarchy(project)
         self.is_done = True
         return False
 
     def __setup_hierarchy(self, project: Project) -> None:
         """the main Method of the Hierarchy Fetcher class, to be called in a separate thread"""
         source_files: list[SourceFile] = self.__setup_source_files(project)
-        print(f"\033[96m {len(source_files)} Sourcefiles added to Project\033[0m")
+        print(f"\033[96m [HierarchyFethcer]     {len(source_files)} Sourcefiles added to Project\033[0m")
         source_files_retry: list[SourceFile] = []
         for source_file in source_files:
             try:
                 self.__set_compile_command(source_file)
                 self.__update_headers(source_file)
             except CompileCommandError as e:
-                print(f"\033[93m{e.__str__()}\033[0m")
+                # print(f"\033[93m{e.__str__()}\033[0m")
                 source_file.error = True
             except CalledProcessError as e:
-                print(f"\033[93m{e.__str__()}\033[0m")
+                # print(f"\033[93m{e.__str__()}\033[0m")
                 source_files_retry.append(source_file)
-        print(f"\033[96mRetry making Hierarchy for {len(source_files_retry)} Sourcefiles\033[0m")
+        print(f"\033[96m [HierarchyFethcer]     Retry making Hierarchy for {len(source_files_retry)} Sourcefiles\033[0m")
         for source_file in source_files_retry:
             try:
                 self.__set_compile_command(source_file)
                 self.__update_headers(source_file)
-            except (CompileCommandError, CalledProcessError) as e:
-                print(f"\033[93m{e.__str__()}\033[0m")
+            except CompileCommandError as e:
+                # print(f"\033[93m{e.__str__()}\033[0m")
                 source_file.error = True
-        print(f"\033[96mHierarchy Fetching completed\033[0m")
+                continue
+            except CalledProcessError as e:
+                source_file.error = True
+                continue
+        print(f"\033[96m [HierarchyFethcer]     Hierarchy Fetching completed\033[0m")
 
     def __setup_source_files(self, project: Project) -> list[SourceFile]:
         created_source_files: list[SourceFile] = []

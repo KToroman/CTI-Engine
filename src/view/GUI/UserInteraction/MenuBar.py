@@ -24,4 +24,6 @@ class MenuBar:
 
     def show_input_dialog(self):
         text, ok = QInputDialog.getText(None, "File input", 'Enter file name:')
-        if ok: self.app.load_from_directory(text)
+        if ok:
+            self.app.load_path_queue.put(text)
+            self.app.load_event.set()
