@@ -16,28 +16,28 @@ from src.model.core.Project import Project
 class ProcessCollectorThread:
     def __init__(self, process_list: List[psutil.Process], process_list_lock: Lock, model: Model, model_lock: Lock,
                  check_for_project: bool, fetcher_list: List[FetcherThread]):
-        self.thread: Thread = None
-        self.shutdown: Event = Event()
-        self.shutdown.clear()
-        self.work_queue_lock = Lock()
-        self.work_queue: List[str] = list()
+        self.__thread: Thread = None
+        self.__shutdown: Event = Event()
+        self.__shutdown.clear()
+        self.__work_queue_lock = Lock()
+        self.__work_queue: List[str] = list()
         self.__process_list = process_list
         self.__process_list_lock = process_list_lock
         self.__model = model
         self.__model_lock = model_lock
         self.__check_for_project = check_for_project
-        self.fetcher = fetcher_list
+        self.__fetcher = fetcher_list
         self.__not_fetched: List[psutil.Process] = list()
+        self.__counter = 0
         self.time_till_false: float = 0
-        self.counter = 0
 
-    def collect_data(self):
-        while not self.shutdown.is_set():
+    def __run(self):
+        while not self.__shutdown.is_set():
             time.sleep(0.001)
             line = ""
-            with self.work_queue_lock:
-                if self.work_queue.__len__() != 0:
-                    line = self.work_queue.pop()
+            with self.__work_queue_lock:
+                if self.__work_queue.__len__() != 0:
+                    line = self.__work_queue.pop()
             try:
                 if line != "":
                     self.__make_process(line)
@@ -50,25 +50,25 @@ class ProcessCollectorThread:
 
     def start(self):
         print("[ProcessCollectorThread]    started")
-        self.thread = Thread(target=self.collect_data)
-        self.thread.start()
+        self.__thread = Thread(target=self.__run)
+        self.__thread.start()
 
     def stop(self):
         print("[ProcessCollectorThread]    stopped now")
-        self.shutdown.set()
-        self.thread.join()
+        self.__shutdown.set()
+        self.__thread.join()
 
     def add_work(self, line: str):
         time.sleep(0.001)
-        with self.work_queue_lock:
+        with self.__work_queue_lock:
             proc_id = ""
             proc_info = split(" ", line, 10)
             for i in range(proc_info.__len__() - 1):
                 if proc_info[i]:
                     proc_id = proc_info[i]
                     break
-            if not any(proc_id in l for l in self.work_queue):
-                self.work_queue.append(line)
+            if not any(proc_id in l for l in self.__work_queue):
+                self.__work_queue.append(line)
 
     def __make_process(self, line: str):
         process = self.__create_processes(line)
@@ -81,10 +81,10 @@ class ProcessCollectorThread:
                 self.__project_checker(project_name)
             with self.__process_list_lock:
                 self.__process_list.append(process)
-            if not self.fetcher[self.counter % len(self.fetcher)].has_work():
-                self.fetcher[self.counter % len(self.fetcher)].add_work(process)
+            if not self.__fetcher[self.__counter % len(self.__fetcher)].has_work():
+                self.__fetcher[self.__counter % len(self.__fetcher)].add_work(process)
             else:
-                for f in self.fetcher:
+                for f in self.__fetcher:
                     if not f.has_work():
                         f.add_work(process)
                         break

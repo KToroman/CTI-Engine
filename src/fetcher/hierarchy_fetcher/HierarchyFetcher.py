@@ -2,6 +2,8 @@ import threading
 import time
 from subprocess import CalledProcessError
 
+from colorama import Fore
+
 from src.fetcher.FetcherInterface import FetcherInterface
 from src.fetcher.hierarchy_fetcher.GCCCommandExecutor import GCCCommandExecutor
 from src.fetcher.hierarchy_fetcher.CompileCommandGetter import CompileCommandGetter
@@ -24,10 +26,11 @@ class HierarchyFetcher(FetcherInterface):
         self.__open_timeout: int = 0
         self.is_done: bool = False
 
-
     def update_project(self) -> bool:
-        #print("hierarchy update")
+        # print("hierarchy update")
         """Updates the current project by adding a hierarchical structure of header objects to all source files"""
+        self.is_done = False
+
         self.__model_lock.acquire()
         project: Project = self.__model.get_project_by_name(self.project_name)
         self.__model_lock.release()
@@ -35,14 +38,14 @@ class HierarchyFetcher(FetcherInterface):
             self.command_getter = CompileCommandGetter(project.working_dir, self.__model_lock)
             self.__open_timeout = 0
         except FileNotFoundError as e:
-            time.sleep(8)
+            time.sleep(5)
             if self.__open_timeout > 2:
                 self.__open_timeout = 0
                 self.is_done = True
                 raise e
             else:
                 self.__open_timeout += 1
-                #print(e.__str__() + "\n trying again...")
+                print("[HierarchyFetcher]   " + Fore.YELLOW + e.__str__() + "\n trying again..." + Fore.RESET)
                 return True
 
         self.__setup_hierarchy(project)
@@ -64,7 +67,8 @@ class HierarchyFetcher(FetcherInterface):
             except CalledProcessError as e:
                 # print(f"\033[93m{e.__str__()}\033[0m")
                 source_files_retry.append(source_file)
-        print(f"\033[96m [HierarchyFethcer]     Retry making Hierarchy for {len(source_files_retry)} Sourcefiles\033[0m")
+        print(
+            f"\033[96m [HierarchyFethcer]     Retry making Hierarchy for {len(source_files_retry)} Sourcefiles\033[0m")
         for source_file in source_files_retry:
             try:
                 self.__set_compile_command(source_file)
@@ -106,11 +110,12 @@ class HierarchyFetcher(FetcherInterface):
         for line in lines_to_append:
             self.__append_header_recursive(line, hierarchy, source_file)
 
-    def __append_header_recursive(self, line: str, hierarchy: list[tuple[Header, int]], source_file: SourceFile) -> None:
+    def __append_header_recursive(self, line: str, hierarchy: list[tuple[Header, int]],
+                                  source_file: SourceFile) -> None:
         line_depth: int = self.__get_depth(line)
         path: str = self.__get_path_from_line(line)
         if not hierarchy:
-            new_header:  Header = self.__append_header_to_file(
+            new_header: Header = self.__append_header_to_file(
                 source_file, path)
             hierarchy.append((new_header, line_depth))
         elif line_depth > hierarchy[-1][1]:

@@ -58,7 +58,8 @@ class SecondApp(QApplication, AppRequestsInterface, metaclass=AppMeta):
 
         self.hierarchy_thread: HierarchyThread = HierarchyThread(self.hierarchy_fetcher, self.error_queue)
 
-        self.file_saver_thread: FileSaverThread = FileSaverThread(self.__model, self.saver, self.__model_lock, self.fetching_passive_data)
+        self.file_saver_thread: FileSaverThread = FileSaverThread(self.__model, self.saver, self.__model_lock,
+                                                                  self.fetching_passive_data)
 
         self.app_thread = Thread(target=self.run)
         self.is_running = True
@@ -84,17 +85,17 @@ class SecondApp(QApplication, AppRequestsInterface, metaclass=AppMeta):
     def run(self):
         while self.is_running:
             self.passive_updates()
-            self.file_saver_thread.delete_work(self.hierarchy_thread.is_done_str())
+            self.file_saver_thread.delete_work(self.hierarchy_thread.get_finished_project())
             self.is_finished()
             if self.hast_gui:
                 self.__update_status()
 
     def passive_updates(self):
-        # if self.fetching_passive_data.is_set():
-        if self.curr_working_dir != self.__get_current_project_dir():
-            self.curr_working_dir = self.__get_current_project_dir()
-            self.hierarchy_thread.add_work(self.curr_working_dir)
-            self.file_saver_thread.add_work(self.curr_working_dir)
+        if self.fetching_passive_data.is_set():
+            if self.curr_working_dir != self.__get_current_project_dir():
+                self.curr_working_dir = self.__get_current_project_dir()
+                self.hierarchy_thread.add_work(self.curr_working_dir)
+                self.file_saver_thread.add_work(self.curr_working_dir)
 
     def is_finished(self):
         tmep = self.file_saver_thread.finished_project()
