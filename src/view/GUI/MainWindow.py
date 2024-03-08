@@ -45,7 +45,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     RAM_Y_AXIS: str = "RAM (in mb)"
     CPU_Y_AXIS: str = "CPU (in %)"
 
-    def __init__(self, q_application: QApplication, visualize_signal, status_queue, status_signal, model_queue,
+    def __init__(self, q_application: QApplication, visualize_signal: pyqtSignal, status_queue, status_signal, model_queue,
                  error_queue, error_signal, load_path_queue, active_mode_queue, cancel_event, restart_event):
         super(MainWindow, self).__init__()
 
