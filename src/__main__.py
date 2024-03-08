@@ -1,24 +1,14 @@
-import threading
-import time
-
-from multiprocessing import Event, Process, Queue, Manager
-
+from multiprocessing import Queue
+import sys
+from threading import Event
 import click
-
-from colorama import Fore
+from PyQt5.QtCore import pyqtSignal
 
 from src.app.App import App
-from src.app.SecondApp import SecondApp
+from src.view.UIInterface import UIInterface
 from src.view.GUI.MainWindow import MainWindow
 from src.view.GUI.prepare_gui import prepare_gui
 
-
-@click.group(invoke_without_command=True)
-@click.pass_context
-def mycommands(ctx):
-    if ctx.invoked_subcommand is None:
-        run_app()
-        pass
 
 
 @click.command()
@@ -26,77 +16,59 @@ def mycommands(ctx):
 @click.argument('source_file_name')
 @click.argument('path')
 def start_active_measurement_command(self, source_file_name: str, path: str):
-    app: App = App(model_queue=model_queue, status_queue=status_queue, shutdown_event=shutdown_event,
-                   active_mode_event=active_mode_event, passive_mode_event=passive_mode_event, load_event=load_event,
-                   load_path_queue=load_path_queue, active_mode_queue=active_mode_queue, error_queue=error_queue,
-                   visualize_event=visualize_event, start_with_gui=False)
-    app.load_path_queue.put([path])
-    app.load_event.set()
-    app.active_mode_queue.put([source_file_name])
-    app.active_mode_event.set()
-    # TODO wait or lock or something between load and active mode
-    app.run()
+    initialize_app()
+    active_mode_event.set()
 
 
-def run_app():
-    # Events for GUI
-    shutdown_event = Event()
-    active_mode_event = Event()
-    passive_mode_event = Event()
-    passive_mode_event.set()
-    load_event = Event()
-    # Queues for GUI messages
-    manager = Manager()
-    load_path_queue = manager.Queue(1)
-    active_mode_queue = manager.Queue(1)
-    error_queue = manager.Queue(5)
-    visualize_event = Event()
-    status_queue = manager.Queue()
-    model_queue = manager.Queue()
 
-    app: App = App(model_queue=model_queue, status_queue=status_queue,
-                   shutdown_event=shutdown_event, active_mode_event=active_mode_event,
-                   passive_mode_event=passive_mode_event, load_event=load_event,
-                   load_path_queue=load_path_queue, active_mode_queue=active_mode_queue, error_queue=error_queue,
-                   visualize_event=visualize_event, start_with_gui=True)
-    main_window: MainWindow = prepare_gui(app=app, visualize_event=visualize_event, status_queue=status_queue,
-                                          model_queue=model_queue, error_queue=error_queue)
+def run_without_gui():
+    initialize_app()
 
-    app.set_ui(main_window)
-
+@click.group(invoke_without_command=True)
+@click.pass_context
+def mycommands(ctx):
+    if ctx.invoked_subcommand is None:
+        run_without_gui()
+        pass
 
 mycommands.add_command(start_active_measurement_command, "actv")
 
-if __name__ == "__main__":
-    # print("process_started")
-    # mycommands()
+def initialize_app() -> App:
+
+
+    app = App(shutdown_event=shutdown_event, active_mode_event=active_mode_event, passive_mode_event=passive_mode_event,
+              load_event=load_event, load_path_queue=load_path_queue, active_mode_queue=active_mode_queue,
+              visualize_signal=visualize_signal, error_queue=error_queue, status_queue=status_queue,
+              model_queue=model_queue, cancel_event=cancel_event, restart_event=restart_event)
+    return app
+
+def initialize_gui() -> UIInterface:
+    gui: UIInterface = prepare_gui(shutdown_event=shutdown_event, status_queue=status_queue, model_queue=model_queue,
+                                   error_queue=error_queue, load_path_queue=load_path_queue, cancel_event=cancel_event,
+                                   active_mode_queue=active_mode_queue, restart_event=restart_event)
+    return gui
+
+if __name__=="__main__":
     shutdown_event = Event()
     active_mode_event = Event()
     passive_mode_event = Event()
     passive_mode_event.set()
     load_event = Event()
     # Queues for GUI messages
-    manager = Manager()
-    load_path_queue = manager.Queue(1)
-    active_mode_queue = manager.Queue(1)
-    error_queue = manager.Queue(5)
-    visualize_event = Event()
-    status_queue = manager.Queue()
-    model_queue = manager.Queue()
-
-    app = SecondApp([], None, False, active_mode_event, passive_mode_event,
-                    load_event, load_path_queue, active_mode_queue, visualize_event, error_queue)
-    is_running = True
-    try:
-        print(Fore.CYAN + "[Main]   started, active threads: " + threading.active_count().__str__() + Fore.RESET)
-        app.start()
-        print(Fore.GREEN + "[main]   Ready" + Fore.RESET)
-        print(Fore.CYAN + "[Main]   active threads: " + threading.active_count().__str__() + Fore.RESET)
-        while is_running:
-            time.sleep(10)
-        app.stop()
-    except KeyboardInterrupt as a:
-        is_running = False
-        print(Fore.GREEN + "[main]   stop sig sent" + Fore.RESET)
-        app.stop()
-        print(Fore.CYAN + "[Main]   stopped, active threads:" + threading.active_count().__str__() + Fore.RESET)
+    load_path_queue = Queue(1)
+    active_mode_queue = Queue(1)
+    error_queue = Queue(5)
+    status_queue = Queue()
+    model_queue = Queue()
+    cancel_event = Event()
+    restart_event = Event()
+    gui = initialize_gui()
+    visualize_signal = gui.visualize_signal
+    status_signal = gui.status_signal
+    error_signal = gui.error_signal
+    app: App = initialize_app()
+    app.prepare_threads()
+    passive_mode_event.set()
+    gui.execute()
+    shutdown_event.set()
+    sys.exit()

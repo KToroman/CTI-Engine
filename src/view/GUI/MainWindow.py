@@ -7,17 +7,16 @@ import sys
 
 import random
 from threading import Thread, Lock
-from PyQt5.QtCore import QThread, pyqtSignal
+from PyQt5.QtCore import pyqtSignal
 from typing import List
-from multiprocessing import Queue, Event
-from multiprocessing import Manager
+from multiprocessing import Queue
+from threading import Event
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QWidget,
                              QStackedWidget, QApplication, QHBoxLayout, QSplitter, QCheckBox)
 from src.model.Model import Model
-from src.view.GUI.AppUpdatesThread import AppUpdatesThread
 from src.view.GUI.Graph.BarWidget import BarWidget
 from src.view.GUI.Graph.GraphWidget import GraphWidget
 from src.view.GUI.MainWindowMeta import MainWindowMeta
@@ -45,20 +44,25 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     RAM_Y_AXIS: str = "RAM (in mb)"
     CPU_Y_AXIS: str = "CPU (in %)"
 
-    def __init__(self, q_application: QApplication, app: AppRequestsInterface, visualize_event, status_queue, model_queue, error_queue):
-        super(MainWindow, self).__init__()
-        # message-queues and events:
-        self.error_queue = error_queue
+    status_signal: pyqtSignal = pyqtSignal()
+    error_signal: pyqtSignal = pyqtSignal()
+    visualize_signal: pyqtSignal = pyqtSignal()
 
-        # queue and event for visualize and status
-        self.model_queue = model_queue
-        self.status_queue = status_queue
-        self.error_queue = error_queue
-        self.visualize_event = visualize_event
+    def __init__(self, shutdown_event: Event, q_application: QApplication, status_queue: Queue, model_queue: Queue,
+                 error_queue: Queue, load_path_queue: Queue, active_mode_queue: Queue, cancel_event: Event,
+                 restart_event: Event):
+        super(MainWindow, self).__init__()
+
+        # Queues and events for communication between app and gui
+        self.model_queue: Queue = model_queue
+        self.visualize_signal.connect(lambda: self.visualize())
+        self.status_queue: Queue = status_queue
+        self.status_signal.connect(lambda: self.update_statusbar())
+        self.error_queue: Queue = error_queue
+        self.error_signal.connect(lambda: self.deploy_error())
+        self.shutdown_event: Event = shutdown_event
 
         self.__q_application: QApplication = q_application
-
-
         self.__visible_plots: List[Displayable] = []
         self.project_time: float = 0
 
@@ -110,10 +114,10 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.stacked_widget.addWidget(self.bar_chart_widget)
         self.splitter1.addWidget(self.stacked_widget)
 
-        self.table_widget: TableWidget = TableWidget(app)
+        self.table_widget: TableWidget = TableWidget(active_mode_queue)
         self.splitter1.addWidget(self.table_widget)
 
-        self.menu_bar: MenuBar = MenuBar(self.menu_bar_frame_layout, app)
+        self.menu_bar: MenuBar = MenuBar(self.menu_bar_frame_layout, load_path_queue, cancel_event, restart_event)
         self.metric_bar: MetricBar = MetricBar(self.metric_bar_frame_layout)
 
         self.setup_resource_connections()
@@ -132,30 +136,15 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         himmelgrau: #CFD8DC
         caspars farbe: #444447
         """
-        self.visualize_signal: pyqtSignal = pyqtSignal()
-        self.visualize_lock: threading.Lock = threading.Lock()
-        #self.visualize_signal.connect(lambda: self.visualize(self.__main_window.model_queue.get()[0]))
 
-        
-
-    def __set_up_app_worker(self):
-        print("app worker on")
-        self.__app_updates_thread: AppUpdatesThread = AppUpdatesThread(self, self.visualize_signal, self.visualize_lock)
-        self.__app_updates_thread.started.connect(self.__app_updates_thread.run)
-        self.__app_updates_thread.start()
 
     def execute(self):
-        print("executing")
         self.show()
-        print("showed")
-        self.__set_up_app_worker()
-        print("should exec now")
-        # TODO set up appupdates worker on a new Thread 
-        sys.exit(self.__q_application.exec())
-        
+        self.__q_application.exec()
 
-    def visualize(self, model: ModelReadViewInterface):
-        """receives a Model, displays the data contained in that Model to the user."""
+    def visualize(self):
+        """displays the data contained in that Model to the user."""
+        model = self.model_queue.get()
         self.project_time = model.get_project_time()
         if self.table_widget.active_started:
             self.__visualize_active(model)
@@ -200,13 +189,15 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.setup_connections()
         self.status_bar.update_status(StatusSettings.FINISHED)
 
-    def deploy_error(self, error: BaseException):
+    def deploy_error(self):
         """receives an Exception, displays information regarding that exception to the user."""
+        error = self.error_queue.get()
         error_window = ErrorWindow(error)
         error_window.show()
 
-    def update_statusbar(self, status: StatusSettings):
+    def update_statusbar(self):
         """receives a status string, changes the ui's status string accordingly."""
+        status = self.status_queue.get()
         self.status_bar.update_status(status)
 
     def __get_hierarchy(self, cfile: CFileReadViewInterface, active_row: str) -> CFileReadViewInterface:
@@ -316,6 +307,6 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.ram_graph_widget.click_signal.connect(
             lambda: self.table_widget.highlight_row(self.ram_graph_widget.plot_clicked))
 
-    def closeEvent(self, a0, event):
-        self.app.shutdown_event.set()
-        event.accept
+    def closeEvent(self, event):
+        self.shutdown_event.set()
+        event.accept()

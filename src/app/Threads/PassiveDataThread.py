@@ -4,12 +4,11 @@ from src.fetcher.process_fetcher.PassiveDataFetcher import PassiveDataFetcher
 
 
 class PassiveDataThread:
-    def __init__(self, data_fetcher: PassiveDataFetcher, collect_data_passive: Event, found_project: Event):
-        self.thread: Thread = None
+    def __init__(self,shutdown_event: Event, data_fetcher: PassiveDataFetcher, collect_data_passive: Event, found_project: Event):
+        self.thread: Thread
         self.collect_data_passive = collect_data_passive
         self.found_project = found_project
-        self.shutdown: Event = Event()
-        self.shutdown.clear()
+        self.shutdown = shutdown_event
         self.data_fetcher = data_fetcher
 
     def collect_data(self):
@@ -26,10 +25,8 @@ class PassiveDataThread:
         self.data_fetcher.start()
         self.thread.start()
 
-    def stop(self):
+    def join(self):
         print("[PassiveDataThread]  stop signal sent")
-        self.shutdown.set()
-        self.data_fetcher.stop()
-        if self.thread.is_alive():
+        if self.thread.is_alive(): #TODO why would this ever be needed?
             self.thread.join()
         print("[PassiveDataThread]  stopped")

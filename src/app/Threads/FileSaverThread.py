@@ -9,12 +9,11 @@ from src.saving.SaveInterface import SaveInterface
 
 class FileSaverThread:
     """Manages the thread which saves projects from model"""
-    def __init__(self, model: Model, data_fetcher: SaveInterface, model_lock: Lock):
-        self.thread: Thread = None
-        self.shutdown: Event = Event()
-        self.shutdown.clear()
+    def __init__(self, shutdown_event: Event, model: Model, data_fetcher: SaveInterface, model_lock: Lock):
+        self.thread: Thread
+        self.shutdown = shutdown_event
         self.data_fetcher = data_fetcher
-        self.work_queue: List[str] = list()
+        self.work_queue: List[str] = list() # TODO endless capacity not very clean for work queues
         self.__model = model
         self.__model_lock = model_lock
 
@@ -44,8 +43,5 @@ class FileSaverThread:
         self.thread = Thread(target=self.collect_data)
         self.thread.start()
 
-    def stop(self):
-        """this methode stops the save thread"""
-        self.shutdown.set()
+    def join(self):
         self.thread.join()
-        print("[FileSaverThread]  stopped")
