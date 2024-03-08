@@ -8,10 +8,9 @@ from src.fetcher.hierarchy_fetcher.HierarchyFetcher import HierarchyFetcher
 
 
 class HierarchyThread:
-    def __init__(self, data_fetcher: HierarchyFetcher, error_queue: Queue):
-        self.thread: Thread = None
-        self.shutdown: Event = Event()
-        self.shutdown.clear()
+    def __init__(self, shutdown_event: Event, data_fetcher: HierarchyFetcher, error_queue: Queue):
+        self.thread: Thread
+        self.shutdown = shutdown_event
         self.data_fetcher = data_fetcher
         self.work_queue: List[str] = list()
         self.error_queue = error_queue
@@ -52,7 +51,6 @@ class HierarchyThread:
         self.thread = Thread(target=self.collect_data)
         self.thread.start()
 
-    def stop(self):
-        self.shutdown.set()
+    def join(self):
         self.thread.join()
         print("[HierarchyThread]  stopped")
