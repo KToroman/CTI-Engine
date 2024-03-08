@@ -49,6 +49,7 @@ class SecondApp(QApplication, AppRequestsInterface, metaclass=AppMeta):
         self.hast_gui = start_with_gui
 
         self.__model = Model()
+        self.model = self.__model
 
         self.__passive_data_fetcher: PassiveDataFetcher = PassiveDataFetcher(self.__model, self.__model_lock)
         self.hierarchy_fetcher = HierarchyFetcher(self.__model, self.__model_lock)
@@ -59,7 +60,8 @@ class SecondApp(QApplication, AppRequestsInterface, metaclass=AppMeta):
 
         self.hierarchy_thread: HierarchyThread = HierarchyThread(self.hierarchy_fetcher, self.error_queue)
 
-        self.file_saver_thread: FileSaverThread = FileSaverThread(self.__model, self.saver, self.__model_lock)
+        self.file_saver_thread: FileSaverThread = FileSaverThread(self.__model, self.saver, self.__model_lock,
+                                                                  self.fetching_passive_data)
 
         self.app_thread = Thread(target=self.run)
         self.is_running = True
@@ -83,49 +85,24 @@ class SecondApp(QApplication, AppRequestsInterface, metaclass=AppMeta):
         print("[app]    stopped")
 
     def run(self):
-        waiting_for_hierarchy = False
-        waiting_for_hierarchy_project = ""
         while self.is_running:
-            if self.fetching_passive_data.is_set():
-                if self.curr_working_dir != self.__get_current_project_dir():
-                    if self.curr_working_dir != "":
-                        if self.hierarchy_thread.is_done_bool():
-                            if waiting_for_hierarchy_project == "":
-                                waiting_for_hierarchy_project = self.curr_working_dir
-                            self.file_saver_thread.delete_work(waiting_for_hierarchy_project)
-                            self.visualize_event.is_set()
-                            print(Fore.LIGHTGREEN_EX + "[App]    project finished" + Fore.RESET)
-                            waiting_for_hierarchy = False
-                            waiting_for_hierarchy_project = ""
-                        else:
-                            waiting_for_hierarchy = True
-                            waiting_for_hierarchy_project = self.curr_working_dir
-                    if self.curr_working_dir != self.__get_current_project_dir():
-                        self.curr_working_dir = self.__get_current_project_dir()
-                        self.file_saver_thread.add_work(self.curr_working_dir)
-                        self.hierarchy_thread.add_work(self.curr_working_dir)
-            else:
-                if self.hierarchy_thread.is_done_bool():
-                    if waiting_for_hierarchy_project == "":
-                        waiting_for_hierarchy_project = self.curr_working_dir
-                    self.file_saver_thread.delete_work(waiting_for_hierarchy_project)
-                    self.visualize_event.is_set()
-                    print(Fore.LIGHTGREEN_EX + "[App]    project finished" + Fore.RESET)
-                    waiting_for_hierarchy = False
-                    waiting_for_hierarchy_project = ""
-            if waiting_for_hierarchy:
-                print("[App]    waiting for hierarchy")
-                if self.hierarchy_thread.is_done_bool():
-                    if waiting_for_hierarchy_project == "":
-                        waiting_for_hierarchy_project = self.curr_working_dir
-                    self.file_saver_thread.delete_work(waiting_for_hierarchy_project)
-                    self.visualize_event.is_set()
-                    print(Fore.LIGHTGREEN_EX + "[App]    project finished" + Fore.RESET)
-                    waiting_for_hierarchy = False
-                    waiting_for_hierarchy_project = ""
-
+            self.passive_updates()
+            self.file_saver_thread.delete_work(self.hierarchy_thread.get_finished_project())
+            self.is_finished()
             if self.hast_gui:
                 self.__update_status()
+
+    def passive_updates(self):
+        if self.fetching_passive_data.is_set():
+            if self.curr_working_dir != self.__get_current_project_dir():
+                self.curr_working_dir = self.__get_current_project_dir()
+                self.hierarchy_thread.add_work(self.curr_working_dir)
+                self.file_saver_thread.add_work(self.curr_working_dir)
+
+    def is_finished(self):
+        tmep = self.file_saver_thread.finished_project()
+        if tmep != "none":
+            print(Fore.GREEN + "[App]    project finished: " + tmep + Fore.RESET)
 
     def __get_current_project_dir(self) -> str:
         with self.__model_lock:
