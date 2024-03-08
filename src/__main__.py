@@ -4,6 +4,7 @@ import time
 from multiprocessing import Event, Process, Queue, Manager
 
 import click
+from PyQt5.QtCore import pyqtSignal
 
 from colorama import Fore
 
@@ -81,11 +82,14 @@ if __name__ == "__main__":
     active_mode_queue = manager.Queue(1)
     error_queue = manager.Queue(5)
     visualize_event = Event()
+    cancel_event = Event()
+    restart_event = Event()
     status_queue = manager.Queue()
     model_queue = manager.Queue()
+    visualize_signal = pyqtSignal()
 
-    app = SecondApp([], None, False, active_mode_event, passive_mode_event,
-                    load_event, load_path_queue, active_mode_queue, visualize_event, error_queue)
+    app = SecondApp([], None, False, active_mode_event, passive_mode_event, load_event,
+                    load_path_queue, active_mode_queue, visualize_signal, error_queue, cancel_event, restart_event)
     is_running = True
     try:
         print(Fore.CYAN + "[Main]   started, active threads: " + threading.active_count().__str__() + Fore.RESET)

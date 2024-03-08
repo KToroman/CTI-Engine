@@ -45,16 +45,20 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     RAM_Y_AXIS: str = "RAM (in mb)"
     CPU_Y_AXIS: str = "CPU (in %)"
 
-    def __init__(self, q_application: QApplication, app: AppRequestsInterface, visualize_event, status_queue, model_queue, error_queue):
+    def __init__(self, q_application: QApplication, visualize_signal, status_queue, status_signal, model_queue,
+                 error_queue, error_signal, load_path_queue, active_mode_queue, cancel_event, restart_event):
         super(MainWindow, self).__init__()
-        # message-queues and events:
-        self.error_queue = error_queue
 
         # queue and event for visualize and status
         self.model_queue = model_queue
         self.status_queue = status_queue
+        self.status_signal = status_signal
+        self.status_signal.connect(lambda: self.update_statusbar())
+        self.error_signal = error_signal
+        self.error_signal.connect(lambda: self.deploy_error())
         self.error_queue = error_queue
-        self.visualize_event = visualize_event
+        self.visualize_signal = visualize_signal
+        self.visualize_signal.connect(lambda: self.visualize())
 
         self.__q_application: QApplication = q_application
 
@@ -110,10 +114,10 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.stacked_widget.addWidget(self.bar_chart_widget)
         self.splitter1.addWidget(self.stacked_widget)
 
-        self.table_widget: TableWidget = TableWidget(app)
+        self.table_widget: TableWidget = TableWidget(active_mode_queue)
         self.splitter1.addWidget(self.table_widget)
 
-        self.menu_bar: MenuBar = MenuBar(self.menu_bar_frame_layout, app)
+        self.menu_bar: MenuBar = MenuBar(self.menu_bar_frame_layout, load_path_queue, cancel_event, restart_event)
         self.metric_bar: MetricBar = MetricBar(self.metric_bar_frame_layout)
 
         self.setup_resource_connections()
@@ -154,8 +158,9 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         sys.exit(self.__q_application.exec())
         
 
-    def visualize(self, model: ModelReadViewInterface):
-        """receives a Model, displays the data contained in that Model to the user."""
+    def visualize(self):
+        """displays the data contained in that Model to the user."""
+        model = self.model_queue.get()
         self.project_time = model.get_project_time()
         if self.table_widget.active_started:
             self.__visualize_active(model)
@@ -200,13 +205,15 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.setup_connections()
         self.status_bar.update_status(StatusSettings.FINISHED)
 
-    def deploy_error(self, error: BaseException):
+    def deploy_error(self):
         """receives an Exception, displays information regarding that exception to the user."""
+        error = self.error_queue.get()
         error_window = ErrorWindow(error)
         error_window.show()
 
-    def update_statusbar(self, status: StatusSettings):
+    def update_statusbar(self):
         """receives a status string, changes the ui's status string accordingly."""
+        status = self.status_queue.get()
         self.status_bar.update_status(status)
 
     def __get_hierarchy(self, cfile: CFileReadViewInterface, active_row: str) -> CFileReadViewInterface:

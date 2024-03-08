@@ -16,9 +16,10 @@ class TableWidget(QTableWidget):
     COLUMN_3_LABEL = "Peak CPU (%)"
     COLUMN_4_LABEL = "Runtime"
 
-    def __init__(self, app: AppRequestsInterface):
+    def __init__(self, active_mode_queue):
         super().__init__()
-        self.app_request_interface = app
+
+        self.active_mode_queue = active_mode_queue
         self.setColumnCount(self.NUMBER_OF_COLUMNS)
         self.rows: List[TableRow] = []
         self.setHorizontalHeaderLabels([self.COLUMN_1_LABEL, self.COLUMN_2_LABEL,
@@ -132,8 +133,8 @@ class TableWidget(QTableWidget):
 
     def start_active_measurement(self, name):
         self.insertion_point: str = name
-        self.app_request_interface.active_mode_queue.put(name)
-        self.app_request_interface.active_mode_event.set()
+
+        self.active_mode_queue.put(name)
         # Test nur als Beispiel
 
     def show_input_dialog_active(self, name):

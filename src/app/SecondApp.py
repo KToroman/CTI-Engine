@@ -4,6 +4,7 @@ from os.path import join
 from threading import Event, Lock, Thread
 from typing import List
 
+from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QApplication
 from colorama import Fore
 
@@ -24,7 +25,8 @@ from src.view.UIInterface import UIInterface
 class SecondApp(QApplication, AppRequestsInterface, metaclass=AppMeta):
 
     def __init__(self, argv: List[str], ui: UIInterface, start_with_gui: bool, active_mode_event, passive_mode_event,
-                 load_event, load_path_queue, active_mode_queue, visualize_event: Event, error_queue):
+                 load_event, load_path_queue, active_mode_queue, visualize_signal: pyqtSignal, error_queue,
+                 cancel_event, restart_event):
         super().__init__(argv)
         self.__model_lock: Lock = Lock()
 
@@ -36,7 +38,7 @@ class SecondApp(QApplication, AppRequestsInterface, metaclass=AppMeta):
         self.load_path_queue = load_path_queue
         self.active_mode_queue = active_mode_queue
         self.error_queue = error_queue
-        self.visualize_event = visualize_event
+        self.visualize_signal = visualize_signal
 
         self.__cti_dir_path = self.__get_cti_folder_path()
 
