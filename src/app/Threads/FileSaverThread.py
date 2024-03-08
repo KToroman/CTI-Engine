@@ -35,6 +35,8 @@ class FileSaverThread:
         index_counter = 0
         while not self.__shutdown.is_set():
             work = self.__get_work(index_counter)
+            if work == "none":
+                continue
             index_counter += 1
             self.__remove_work(work)
             with self.__model_lock:
@@ -76,7 +78,9 @@ class FileSaverThread:
 
     def __get_work(self, index: int):
         with self.__work_queue_lock:
-            return self.__work_queue[index % len(self.__work_queue)]
+            if self.__work_queue:
+                return self.__work_queue[index % len(self.__work_queue)]
+            return "none"
 
     def start(self):
         """this method start the saver thread"""

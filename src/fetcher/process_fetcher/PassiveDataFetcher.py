@@ -31,12 +31,12 @@ class PassiveDataFetcher(DataFetcher):
         self.__time_till_false_lock = threading.Lock()
 
         self.__process_finder: List[ProcessFindingThread] = list()
-        self.__process_finder_count = 2
+        self.__process_finder_count = 1
 
         self.__process_collector_list: List[ProcessCollectorThread] = list()
-        self.__process_collector_count = 2
+        self.__process_collector_count = 1
 
-        self.__fetcher_count: int = 2
+        self.__fetcher_count: int = 1
         self.__process_count = 15
         self.__fetcher: List[FetcherThread] = list()
 
