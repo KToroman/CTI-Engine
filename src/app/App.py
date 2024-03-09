@@ -6,11 +6,13 @@ from threading import Event, Lock, Thread
 from typing import List
 
 from PyQt5.QtCore import pyqtSignal
+from src.app.Threads.ActiveFetcherThread import ActiveFetcherThread
 
 from src.app.Threads.FileSaverThread import FileSaverThread
 from src.app.Threads.HierarchyThread import HierarchyThread
 from src.app.Threads.PassiveDataThread import PassiveDataThread
 from src.fetcher.hierarchy_fetcher.HierarchyFetcher import HierarchyFetcher
+from src.fetcher.process_fetcher.ActiveDataFetcher import ActiveDataFetcher
 from src.fetcher.process_fetcher.PassiveDataFetcher import PassiveDataFetcher
 from src.model.Model import Model
 from src.saving.SaveInterface import SaveInterface
@@ -20,18 +22,18 @@ from src.view.AppRequestsInterface import AppRequestsInterface
 
 
 class App(AppRequestsInterface):
-    def __init__(self, shutdown_event: Event, active_mode_event: Event, passive_mode_event: Event, load_event: Event,
-                 load_path_queue: Queue, active_mode_queue: Queue, visualize_signal: pyqtSignal, error_queue: Queue,
+    def __init__(self, shutdown_event: Event, passive_mode_event: Event, load_event: Event,
+                 load_path_queue: Queue, source_file_name_queue: Queue, visualize_signal: pyqtSignal, error_queue: Queue, error_signal: pyqtSignal,
                  status_queue: Queue, model_queue: Queue, cancel_event: Event, restart_event: Event):
         self.__model_lock: Lock = Lock()
 
-        self.active_mode_event = active_mode_event
         self.passive_mode_event = passive_mode_event
 
         self.load_event = load_event
         self.load_path_queue = load_path_queue
-        self.active_mode_queue = active_mode_queue
-        self.error_queue = error_queue
+        self.__source_file_name_queue = source_file_name_queue
+        self.__error_queue = error_queue
+        self.__error_signal = error_signal
         self.visualize_signal = visualize_signal
         self.status_queue = status_queue
         self.model_queue = model_queue
@@ -67,7 +69,7 @@ class App(AppRequestsInterface):
         self.curr_working_dir: str = ""
 
     def prepare_threads(self):
-        pass
+        self.__active_mode_fetcher_thread: ActiveFetcherThread = ActiveFetcherThread(self.shutdown_event, self.__model, self.__model_lock, self.__source_file_name_queue, self.__error_queue, self.__cti_dir_path)
 
     def start(self):
         print("[app]    started")

@@ -36,16 +36,16 @@ mycommands.add_command(start_active_measurement_command, "actv")
 def initialize_app() -> App:
 
 
-    app = App(shutdown_event=shutdown_event, active_mode_event=active_mode_event, passive_mode_event=passive_mode_event,
-              load_event=load_event, load_path_queue=load_path_queue, active_mode_queue=active_mode_queue,
-              visualize_signal=visualize_signal, error_queue=error_queue, status_queue=status_queue,
+    app = App(shutdown_event=shutdown_event, passive_mode_event=passive_mode_event,
+              load_event=load_event, load_path_queue=load_path_queue, source_file_name_queue=source_file_name_queue,
+              visualize_signal=visualize_signal, error_queue=error_queue, error_signal=error_signal, status_queue=status_queue,
               model_queue=model_queue, cancel_event=cancel_event, restart_event=restart_event)
     return app
 
 def initialize_gui() -> UIInterface:
     gui: UIInterface = prepare_gui(shutdown_event=shutdown_event, status_queue=status_queue, model_queue=model_queue,
                                    error_queue=error_queue, load_path_queue=load_path_queue, cancel_event=cancel_event,
-                                   active_mode_queue=active_mode_queue, restart_event=restart_event)
+                                   active_mode_queue=source_file_name_queue, restart_event=restart_event)
     return gui
 
 if __name__=="__main__":
@@ -56,7 +56,7 @@ if __name__=="__main__":
     load_event = Event()
     # Queues for GUI messages
     load_path_queue = Queue(1)
-    active_mode_queue = Queue(1)
+    source_file_name_queue = Queue(1)
     error_queue = Queue(5)
     status_queue = Queue()
     model_queue = Queue()
@@ -69,6 +69,6 @@ if __name__=="__main__":
     app: App = initialize_app()
     app.prepare_threads()
     passive_mode_event.set()
+    app.stop()
     gui.execute()
-    shutdown_event.set()
     sys.exit()
