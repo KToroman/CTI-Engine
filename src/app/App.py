@@ -1,3 +1,4 @@
+import multiprocessing
 from multiprocessing import Queue
 import os
 from os.path import join
@@ -22,7 +23,6 @@ class App(AppRequestsInterface):
     def __init__(self, shutdown_event: Event, active_mode_event: Event, passive_mode_event: Event, load_event: Event,
                  load_path_queue: Queue, active_mode_queue: Queue, visualize_signal: pyqtSignal, error_queue: Queue,
                  status_queue: Queue, model_queue: Queue, cancel_event: Event, restart_event: Event):
-        
         self.__model_lock: Lock = Lock()
 
         self.active_mode_event = active_mode_event
@@ -48,14 +48,23 @@ class App(AppRequestsInterface):
         self.hierarchy_fetcher = HierarchyFetcher(self.__model, self.__model_lock)
         self.saver: SaveInterface = SaveToJSON(self.__cti_dir_path)
 
+        self.__hierarchy_fetcher_work_queue: multiprocessing.Queue = multiprocessing.Queue()
+        self.__file_saver_work_queue: multiprocessing.Queue = multiprocessing.Queue()
+
         self.passive_thread: PassiveDataThread = PassiveDataThread(shutdown_event, self.__passive_data_fetcher,
-                                                                   self.passive_mode_event, self.fetching_passive_data)
+                                                                   self.passive_mode_event, self.fetching_passive_data,
+                                                                   self.__file_saver_work_queue,
+                                                                   self.__hierarchy_fetcher_work_queue)
 
-        self.hierarchy_thread: HierarchyThread = HierarchyThread(shutdown_event, self.hierarchy_fetcher, self.error_queue)
+        self.hierarchy_thread: HierarchyThread = HierarchyThread(shutdown_event, self.hierarchy_fetcher,
+                                                                 self.error_queue, self.__hierarchy_fetcher_work_queue)
 
-        self.file_saver_thread: FileSaverThread = FileSaverThread(shutdown_event, self.__model, self.saver, self.__model_lock)
+        self.__finished_project_event: Event = Event()
+
+        self.file_saver_thread: FileSaverThread = FileSaverThread(shutdown_event, self.__model, self.saver,
+                                                                  self.__model_lock, self.__finished_project_event,
+                                                                  self.__file_saver_work_queue)
         self.curr_working_dir: str = ""
-
 
     def prepare_threads(self):
         pass
@@ -68,12 +77,11 @@ class App(AppRequestsInterface):
 
     def stop(self):
         self.shutdown_event.set()
-        self.passive_thread.join()
-        self.hierarchy_thread.join()
-        self.file_saver_thread.join()
+        self.passive_thread.stop()
+        self.hierarchy_thread.stop()
+        self.file_saver_thread.stop()
 
     def __get_cti_folder_path(self) -> str:
         path: str = ""
         path += join(os.getcwd().split("cti-engine-prototype")[0])
         return path
-
