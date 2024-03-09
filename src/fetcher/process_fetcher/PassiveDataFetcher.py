@@ -1,6 +1,7 @@
 import os.path
 import threading
 import time
+from multiprocessing import Queue
 from os.path import join
 from threading import Thread
 from typing import List
@@ -23,12 +24,15 @@ from src.model.core.ProcessPoint import ProcessPoint
 
 class PassiveDataFetcher(DataFetcher):
 
-    def __init__(self, model: Model, model_lock: threading.Lock):
+    def __init__(self, model: Model, model_lock: threading.Lock, saver_queue: Queue, hierarchy_queue: Queue):
         self.__model = model
         self.__model_lock = model_lock
 
         self.__time_to_wait: float = 15
         self.__time_till_false_lock = threading.Lock()
+
+        self.__saver_queue = saver_queue
+        self.__hierarchy_queue = hierarchy_queue
 
         self.__process_finder: List[ProcessFindingThread] = list()
         self.__process_finder_count = 1
@@ -62,7 +66,7 @@ class PassiveDataFetcher(DataFetcher):
             fetcher.start()
         for i in range(self.__process_collector_count):
             p = ProcessCollectorThread(process_list, process_list_lock, self.__model, self.__model_lock,
-                                       True, self.__fetcher)
+                                       True, self.__fetcher, self.__saver_queue, self.__hierarchy_queue)
             self.__process_collector_list.append(p)
             p.start()
         for i in range(self.__process_finder_count):

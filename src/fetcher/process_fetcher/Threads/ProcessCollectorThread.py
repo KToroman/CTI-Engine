@@ -1,5 +1,6 @@
 import os
 import time
+from multiprocessing import Queue
 from os.path import join
 from re import split
 from threading import Event, Thread, Lock
@@ -15,7 +16,8 @@ from src.model.core.Project import Project
 
 class ProcessCollectorThread:
     def __init__(self, process_list: List[psutil.Process], process_list_lock: Lock, model: Model, model_lock: Lock,
-                 check_for_project: bool, fetcher_list: List[FetcherThread]):
+                 check_for_project: bool, fetcher_list: List[FetcherThread], saver_queue: Queue,
+                 hierarchy_queue: Queue):
         self.__thread: Thread = None
         self.__shutdown: Event = Event()
         self.__shutdown.clear()
@@ -27,8 +29,10 @@ class ProcessCollectorThread:
         self.__model_lock = model_lock
         self.__check_for_project = check_for_project
         self.__fetcher = fetcher_list
-        self.__not_fetched: List[psutil.Process] = list()
+        self.__saver_queue = saver_queue
+        self.__hierarchy_queue = hierarchy_queue
         self.__counter = 0
+
         self.time_till_false: float = 0
 
     def __run(self):
@@ -119,6 +123,8 @@ class ProcessCollectorThread:
             with self.__model_lock:
                 if project_name != self.__model.get_current_working_directory():
                     self.__model.add_project(Project(project_name))
+                    self.__hierarchy_queue.put(project_name)
+                    self.__saver_queue.put(project_name)
         except NoSuchProcess:
             return
 
