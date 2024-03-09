@@ -2,12 +2,12 @@ import multiprocessing
 from multiprocessing import Queue
 import os
 from os.path import join
-from threading import Event, Lock, Thread
-from typing import List
+from threading import Event, Lock
 
 from PyQt5.QtCore import pyqtSignal
 from src.app.Threads.ActiveFetcherThread import ActiveFetcherThread
 
+from src.app.Threads.FileFetcherThread import FileFetcherThread
 from src.app.Threads.FileSaverThread import FileSaverThread
 from src.app.Threads.HierarchyThread import HierarchyThread
 from src.app.Threads.PassiveDataThread import PassiveDataThread
@@ -45,18 +45,18 @@ class App(AppRequestsInterface):
         self.fetching_passive_data = Event()
 
         self.__model = Model()
-
-        self.__passive_data_fetcher: PassiveDataFetcher = PassiveDataFetcher(self.__model, self.__model_lock)
-        self.hierarchy_fetcher = HierarchyFetcher(self.__model, self.__model_lock)
-        self.saver: SaveInterface = SaveToJSON(self.__cti_dir_path)
-
         self.__hierarchy_fetcher_work_queue: multiprocessing.Queue = multiprocessing.Queue()
         self.__file_saver_work_queue: multiprocessing.Queue = multiprocessing.Queue()
 
+        self.__passive_data_fetcher: PassiveDataFetcher = PassiveDataFetcher(self.__model, self.__model_lock,
+                                                                             self.__file_saver_work_queue,
+                                                                             self.__hierarchy_fetcher_work_queue,
+                                                                             self.shutdown_event, self.__cti_dir_path)
+        self.hierarchy_fetcher = HierarchyFetcher(self.__model, self.__model_lock)
+        self.saver: SaveInterface = SaveToJSON(self.__cti_dir_path)
+
         self.passive_thread: PassiveDataThread = PassiveDataThread(shutdown_event, self.__passive_data_fetcher,
-                                                                   self.passive_mode_event, self.fetching_passive_data,
-                                                                   self.__file_saver_work_queue,
-                                                                   self.__hierarchy_fetcher_work_queue)
+                                                                   self.passive_mode_event, self.fetching_passive_data)
 
         self.hierarchy_thread: HierarchyThread = HierarchyThread(shutdown_event, self.hierarchy_fetcher,
                                                                  self.error_queue, self.__hierarchy_fetcher_work_queue)
@@ -66,7 +66,8 @@ class App(AppRequestsInterface):
         self.file_saver_thread: FileSaverThread = FileSaverThread(shutdown_event, self.__model, self.saver,
                                                                   self.__model_lock, self.__finished_project_event,
                                                                   self.__file_saver_work_queue)
-        self.curr_working_dir: str = ""
+        self.file_fetch_thread: FileFetcherThread = FileFetcherThread(self.error_queue, self.__model, self.__model_lock,
+                                                                      self.shutdown_event, self.load_path_queue)
 
     def prepare_threads(self):
         self.__active_mode_fetcher_thread: ActiveFetcherThread = ActiveFetcherThread(self.shutdown_event, self.__model, self.__model_lock, self.__source_file_name_queue, self.__error_queue, self.__cti_dir_path)
