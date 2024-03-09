@@ -1,5 +1,5 @@
-from multiprocessing import Event, Queue
-from threading import Thread, Lock
+from multiprocessing import Queue
+from threading import Event, Thread, Lock
 from typing import List
 
 from colorama import Fore

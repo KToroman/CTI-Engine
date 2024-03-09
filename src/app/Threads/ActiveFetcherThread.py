@@ -6,7 +6,7 @@ from src.model.Model import Model
 
 
 class ActiveFetcherThread:
-    def __init__(self, shutdown_event: Event, model: Model, model_lock: Lock, source_file_name_queue: Queue, error_queue: Queue, build_dir_path: str) -> None:
+    def __init__(self, shutdown_event: Event, model: Model, model_lock: Lock, source_file_name_queue: Queue, error_queue: Queue, build_dir_path: str, active_measurement_active: Event) -> None:
         self.__thread: Thread
         self.__model: Model = model
         self.__model_lock: Lock = model_lock
@@ -14,6 +14,7 @@ class ActiveFetcherThread:
         self.__source_file_name_queue: Queue = source_file_name_queue
         self.__error_queue: Queue = error_queue
         self.__build_dir_path: str = build_dir_path
+        self.__active_measurement_active: Event = active_measurement_active
 
     def start(self):
         print("[ActiveFetcherThread]    started")
@@ -23,6 +24,7 @@ class ActiveFetcherThread:
     def __run(self):
         while not self.__shutdown_event.is_set():
             if not self.__source_file_name_queue.empty():
+                self.__active_measurement_active.set()
                 self.__start_new_measurement()
 
     def __start_new_measurement(self):
