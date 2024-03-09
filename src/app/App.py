@@ -1,7 +1,8 @@
+import time
 from multiprocessing import Queue
 import os
 from os.path import join
-from threading import Event, Lock
+from threading import Event, Lock, Thread
 
 from PyQt5.QtCore import pyqtSignal
 from src.app.Threads.ActiveFetcherThread import ActiveFetcherThread
@@ -28,7 +29,7 @@ class App(AppRequestsInterface):
         self.__model_lock: Lock = Lock()
 
         self.passive_mode_event = passive_mode_event
-        self.shutdown_event: Event = shutdown_event
+        self.shutdown_event = shutdown_event
         self.load_event = load_event
         self.load_path_queue = load_path_queue
         self.__source_file_name_queue = source_file_name_queue
@@ -76,8 +77,9 @@ class App(AppRequestsInterface):
         self.file_fetch_thread: FileFetcherThread = FileFetcherThread(self.error_queue, self.__model, self.__model_lock,
                                                                       self.shutdown_event, self.load_path_queue)
         self.__status_and_error_thread: StatusAndErrorThread = StatusAndErrorThread(shutdown_event=self.shutdown_event, error_queue=self.__error_queue, error_signal=self.__error_signal, passive_mode_event=self.passive_mode_event,
-                                                                                    status_queue=self.status_queue, status_signal=self.__status_signal, fetching_passive_data=self.fetching_passive_data, active_measurement_active=self.active_measurement_active,
+                                                                                    status_queue=self.status_queue, status_signal=self.__status_signal, fetching_passive_data=self.fetching_passive_data, active_measurement_active=self.__active_measurement_active,
                                                                                     finished_project_event=self.__finished_project_event, load_event=self.load_event)
+
 
     def prepare_threads(self):
         self.__active_mode_fetcher_thread: ActiveFetcherThread = ActiveFetcherThread(self.shutdown_event, self.__model, self.__model_lock, self.__source_file_name_queue, self.__error_queue, self.__cti_dir_path, self.__active_measurement_active)
@@ -87,12 +89,24 @@ class App(AppRequestsInterface):
         self.passive_thread.start()
         self.file_saver_thread.start()
         self.hierarchy_thread.start()
+        print("starting app run")
+        self.__run()
 
     def stop(self):
         self.shutdown_event.set()
         self.passive_thread.stop()
         self.hierarchy_thread.stop()
         self.file_saver_thread.stop()
+        print("[App]    stopped")
+
+    def __run(self):
+        print("in run")
+        try:
+            while not self.shutdown_event.is_set():
+                time.sleep(0.1)
+            self.stop()
+        except KeyboardInterrupt:
+            self.stop()
 
     def __get_cti_folder_path(self) -> str:
         path: str = ""

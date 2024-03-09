@@ -8,7 +8,6 @@ from typing import List
 
 import psutil
 
-
 from src.fetcher.process_fetcher.DataFetcher import DataFetcher
 from src.fetcher.process_fetcher.Threads.FetcherThread import FetcherThread
 from src.fetcher.process_fetcher.Threads.ProcessCollectorThread import ProcessCollectorThread
@@ -66,10 +65,12 @@ class PassiveDataFetcher(DataFetcher):
             self.__fetcher.append(fetcher)
             fetcher.start()
         for i in range(self.__process_collector_count):
-            process_collector_thread = ProcessCollectorThread(process_list, process_list_lock, self.__model, self.__model_lock,
-                                       True, self.__fetcher, self.__saver_queue, self.__hierarchy_queue,
-                                       self.__save_path, self.__shutdown, self.__found_project_event)
-            self.__process_collector_list.append(p)
+            process_collector_thread = ProcessCollectorThread(process_list, process_list_lock, self.__model,
+                                                              self.__model_lock,
+                                                              True, self.__fetcher, self.__saver_queue,
+                                                              self.__hierarchy_queue,
+                                                              self.__save_path, self.__shutdown)
+            self.__process_collector_list.append(process_collector_thread)
             process_collector_thread.start()
         for i in range(self.__process_finder_count):
             finder = ProcessFindingThread(self.__process_collector_list, self.__shutdown)

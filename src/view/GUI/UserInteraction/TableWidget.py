@@ -149,14 +149,42 @@ class TableWidget(QTableWidget):
             row_id = row_id + 1
 
     def toggle_all_rows(self):
+        """Selects or deselects checkboxes of all rows."""
         for row in self.rows:
-            if not self.all_selected:
-                row.checkbox.setChecked(True)
-            else:
-                row.checkbox.setChecked(False)
+            if row.displayable.ram_plot.name != "":
+                if not self.all_selected:
+                    try:
+                        row.checkbox.setChecked(True)
+                    except RuntimeError as e:
+                        pass
+                else:
+                    try:
+                        row.checkbox.setChecked(False)
+                    except RuntimeError as r:
+                        pass
         self.all_selected = not self.all_selected
 
+    def toggle_custom_amount(self, lower_limit: int, upper_limit: int):
+        """Receives two limits and selects checkboxes of rows inbetween them."""
+        real_lower_limit = min(lower_limit, upper_limit)
+        real_upper_limit = max(lower_limit, upper_limit)
+        row_index = 1
+        for row in self.rows:
+            if row.displayable.ram_plot.name != "":
+                if real_lower_limit <= row_index <= real_upper_limit:
+                    try:
+                        row.checkbox.setChecked(True)
+                    except RuntimeError as e:
+                        pass
+                else:
+                    try:
+                        row.checkbox.setChecked(False)
+                    except RuntimeError as r:
+                        pass
+                row_index += 1
+
     def sort_table(self, column: int):
+        """Sorts table according to a given parameter."""
         out_list = []
         key_list = [lambda obj: obj.displayable.ram_peak, lambda obj: obj.displayable.cpu_peak, lambda obj:
         obj.displayable.runtime_plot.y_values[0]]
