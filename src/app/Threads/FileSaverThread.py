@@ -26,12 +26,6 @@ class FileSaverThread:
         self.__model = model
         self.__model_lock = model_lock
 
-        self.__delete_list: List[str] = list()
-        self.__delete_list_lock: Lock = Lock()
-
-        self.__finished: str = ""
-        self.__finished_lock: Lock = Lock()
-
     def __run(self):
         """is the methode which runs the saving thread"""
         index_counter = 0
@@ -47,11 +41,6 @@ class FileSaverThread:
             with self.__model_lock:
                 project = deepcopy(self.__model.get_project_by_name(work))
             self.__data_fetcher.save_project(project=project)
-
-    def delete_work(self, work: str):
-        if work != "none":
-            with self.__delete_list_lock:
-                self.__delete_list.append(work)
 
     def add_work(self, project_name: str):
         """this methode adds a project to the worklist for the saver thread"""
@@ -84,4 +73,4 @@ class FileSaverThread:
         self.__thread.start()
 
     def stop(self):
-        self.thread.join()
+        self.__thread.join()

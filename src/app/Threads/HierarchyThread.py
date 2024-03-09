@@ -45,5 +45,5 @@ class HierarchyThread:
         self.__thread.start()
 
     def stop(self):
-        self.thread.join()
+        self.__thread.join()
         print("[HierarchyThread]  stopped")

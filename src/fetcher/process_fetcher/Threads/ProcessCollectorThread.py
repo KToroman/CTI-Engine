@@ -1,5 +1,6 @@
 import os
 import time
+from datetime import date
 from multiprocessing import Queue
 from os.path import join
 from re import split
@@ -17,10 +18,9 @@ from src.model.core.Project import Project
 class ProcessCollectorThread:
     def __init__(self, process_list: List[psutil.Process], process_list_lock: Lock, model: Model, model_lock: Lock,
                  check_for_project: bool, fetcher_list: List[FetcherThread], saver_queue: Queue,
-                 hierarchy_queue: Queue):
-        self.__thread: Thread = None
-        self.__shutdown: Event = Event()
-        self.__shutdown.clear()
+                 hierarchy_queue: Queue, save_path: str, shutdown: Event):
+        self.__thread: Thread
+        self.__shutdown = shutdown
         self.__work_queue_lock = Lock()
         self.__work_queue: List[str] = list()
         self.__process_list = process_list
@@ -29,10 +29,11 @@ class ProcessCollectorThread:
         self.__model_lock = model_lock
         self.__check_for_project = check_for_project
         self.__fetcher = fetcher_list
+        self.__save_path = save_path
+        self.__not_fetched: List[psutil.Process] = list()
         self.__saver_queue = saver_queue
         self.__hierarchy_queue = hierarchy_queue
         self.__counter = 0
-
         self.time_till_false: float = 0
 
     def __run(self):
@@ -58,9 +59,8 @@ class ProcessCollectorThread:
         self.__thread.start()
 
     def stop(self):
-        print("[ProcessCollectorThread]    stopped now")
-        self.__shutdown.set()
         self.__thread.join()
+        print("[ProcessCollectorThread]    stopped now")
 
     def add_work(self, line: str):
         time.sleep(0.001)
@@ -122,7 +122,7 @@ class ProcessCollectorThread:
         try:
             with self.__model_lock:
                 if project_name != self.__model.get_current_working_directory():
-                    self.__model.add_project(Project(project_name))
+                    self.__model.add_project(Project(project_name, self.__create_project_name(project_name)))
                     self.__hierarchy_queue.put(project_name)
                     self.__saver_queue.put(project_name)
         except NoSuchProcess:
@@ -137,3 +137,21 @@ class ProcessCollectorThread:
                 except NoSuchProcess:
                     continue
             return False
+
+    def __create_project_name(self, project_name: str) -> str:
+        time_date = date.today()
+        project_name_split = project_name.split("/")
+        name = project_name_split[- 1]
+        if name is None or name == "":
+            name = project_name_split[- 2]
+
+        name = (name + " " + time_date.__str__())
+        if os.path.exists(join(self.__save_path, name)):
+            for i in range(1, 10):
+                name = f"{name} {i}"
+                if os.path.exists(join(self.__save_path, name)):
+                    return name
+
+            name = f"{name} {time.time()}"
+            return name
+

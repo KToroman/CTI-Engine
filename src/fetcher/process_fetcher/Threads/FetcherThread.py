@@ -15,10 +15,9 @@ from src.model.core.ProcessPoint import ProcessPoint
 
 class FetcherThread:
     def __init__(self, process_list: List[psutil.Process], process_list_lock: Lock, model: Model, model_lock: Lock,
-                 data_observer: DataObserver, process_count):
-        self.__thread: Thread = None
-        self.__shutdown: Event = Event()
-        self.__shutdown.clear()
+                 data_observer: DataObserver, process_count, shutdown: Event):
+        self.__thread: Thread
+        self.__shutdown = shutdown
         self.__process_list = process_list
         self.__process_list_lock = process_list_lock
         self.__model = model
@@ -61,7 +60,6 @@ class FetcherThread:
         self.__thread.start()
 
     def stop(self):
-        self.__shutdown.set()
         self.__thread.join()
         print("[FetcherThread]  stopped")
 

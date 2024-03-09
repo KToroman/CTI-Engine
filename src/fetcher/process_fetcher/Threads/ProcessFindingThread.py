@@ -7,10 +7,9 @@ from src.fetcher.process_fetcher.Threads.ProcessCollectorThread import ProcessCo
 
 
 class ProcessFindingThread:
-    def __init__(self, process_collector_list: List[ProcessCollectorThread]):
-        self.__thread: Thread = None
-        self.__shutdown: Event = Event()
-        self.__shutdown.clear()
+    def __init__(self, process_collector_list: List[ProcessCollectorThread], shutdown: Event):
+        self.__thread: Thread
+        self.__shutdown = shutdown
         self.__work_lock = Lock()
         self.__work: bool = False
         self.__process_collector_list = process_collector_list
@@ -30,9 +29,8 @@ class ProcessFindingThread:
         self.__thread.start()
 
     def stop(self):
-        print("[ProcessFindingThread]    stopped")
-        self.__shutdown.set()
         self.__thread.join()
+        print("[ProcessFindingThread]    stopped")
 
     def has_work(self) -> bool:
         with self.__work_lock:

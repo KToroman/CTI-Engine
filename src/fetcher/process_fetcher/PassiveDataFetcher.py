@@ -1,33 +1,32 @@
 import os.path
 import threading
 import time
-from multiprocessing import Queue
+from multiprocessing import Queue, Event
 from os.path import join
 from threading import Thread
 from typing import List
 
 import psutil
-from psutil import NoSuchProcess
 
-from src.fetcher.hierarchy_fetcher.HierarchyFetcher import HierarchyFetcher
 
 from src.fetcher.process_fetcher.DataFetcher import DataFetcher
 from src.fetcher.process_fetcher.Threads.FetcherThread import FetcherThread
 from src.fetcher.process_fetcher.Threads.ProcessCollectorThread import ProcessCollectorThread
 from src.fetcher.process_fetcher.Threads.ProcessFindingThread import ProcessFindingThread
-from src.fetcher.process_fetcher.process_observer.ProcessCollector import ProcessCollector
+
 from src.fetcher.process_fetcher.process_observer.metrics_observer.DataObserver import DataObserver
 from src.model.Model import Model
-from src.model.core.DataEntry import DataEntry
-from src.model.core.ProcessPoint import ProcessPoint
 
 
 class PassiveDataFetcher(DataFetcher):
 
-    def __init__(self, model: Model, model_lock: threading.Lock, saver_queue: Queue, hierarchy_queue: Queue):
+    def __init__(self, model: Model, model_lock: threading.Lock, saver_queue: Queue, hierarchy_queue: Queue,
+                 shutdown: Event, save_path: str):
         self.__model = model
         self.__model_lock = model_lock
+        self.__shutdown = shutdown
 
+        self.__save_path = save_path
         self.__time_to_wait: float = 15
         self.__time_till_false_lock = threading.Lock()
 
@@ -61,16 +60,17 @@ class PassiveDataFetcher(DataFetcher):
         # self.__data_fetching_thread.start()
         for i in range(self.__fetcher_count):
             fetcher = FetcherThread(process_list, process_list_lock, self.__model, self.__model_lock,
-                                    DataObserver(), self.__process_count)
+                                    DataObserver(), self.__process_count, self.__shutdown)
             self.__fetcher.append(fetcher)
             fetcher.start()
         for i in range(self.__process_collector_count):
             p = ProcessCollectorThread(process_list, process_list_lock, self.__model, self.__model_lock,
-                                       True, self.__fetcher, self.__saver_queue, self.__hierarchy_queue)
+                                       True, self.__fetcher, self.__saver_queue, self.__hierarchy_queue,
+                                       self.__save_path, self.__shutdown)
             self.__process_collector_list.append(p)
             p.start()
         for i in range(self.__process_finder_count):
-            finder = ProcessFindingThread(self.__process_collector_list)
+            finder = ProcessFindingThread(self.__process_collector_list, self.__shutdown)
             self.__process_finder.append(finder)
             finder.start()
             time.sleep(0.5)

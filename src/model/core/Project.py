@@ -10,9 +10,10 @@ class Project:
 
     __DEFAULT_PATH_TO_SAVE = ""
 
-    def __init__(self, working_dir: str, path_to_save: str = __DEFAULT_PATH_TO_SAVE):
+    def __init__(self, working_dir: str, name: str, path_to_save: str = __DEFAULT_PATH_TO_SAVE):
         self.source_files: List[SourceFile] = list()
         self.working_dir = working_dir
+        self.name = name
         self.file_dict = FileDictionary()
         self.project_time = time.time() - 0.5
         self.path_to_save = f"{path_to_save}/{self.working_dir}/{self.project_time}"
