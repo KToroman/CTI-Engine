@@ -20,7 +20,7 @@ class Model(ModelReadViewInterface):
     A model consists of an arbitrary number of projects."""
 
     def __init__(self) -> None:
-        self.current_project: Project = Project("")
+        self.current_project: Project = Project("", "")
         self.projects: List[Project] = list()
 
     def get_project_name(self) -> str:

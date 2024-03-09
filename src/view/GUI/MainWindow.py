@@ -13,9 +13,10 @@ from multiprocessing import Queue
 from threading import Event
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QIntValidator
 from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QWidget,
-                             QStackedWidget, QApplication, QHBoxLayout, QSplitter, QCheckBox)
+                             QStackedWidget, QApplication, QHBoxLayout, QSplitter, QCheckBox, QComboBox, QLineEdit,
+                             QSpinBox, QLabel)
 from src.model.Model import Model
 from src.view.GUI.Graph.BarWidget import BarWidget
 from src.view.GUI.Graph.GraphWidget import GraphWidget
@@ -85,9 +86,25 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.status_bar.setMaximumHeight(100)
         self.status_bar_frame_layout.addWidget(self.status_bar)
         self.top_frame_layout.addLayout(self.status_bar_frame_layout)
+
+        label: QLabel = QLabel("Select only:")
+        self.upper_limit: QSpinBox = QSpinBox()
+        self.lower_limit: QSpinBox = QSpinBox()
+        self.upper_limit.setFixedWidth(100)
+        self.lower_limit.setFixedWidth(100)
+        self.upper_limit.editingFinished.connect(
+            lambda: self.table_widget.toggle_custom_amount(self.lower_limit.value(), self.upper_limit.value()))
+        self.lower_limit.editingFinished.connect(
+            lambda: self.table_widget.toggle_custom_amount(self.lower_limit.value(), self.upper_limit.value()))
         self.all: QCheckBox = QCheckBox(self.SELECT_ALL)
         self.all.stateChanged.connect(lambda: self.table_widget.toggle_all_rows())
-        self.top_frame_layout.addWidget(self.all)
+
+        self.select_layout: QHBoxLayout = QHBoxLayout()
+        self.select_layout.addWidget(self.all)
+        self.select_layout.addWidget(label)
+        self.select_layout.addWidget(self.lower_limit)
+        self.select_layout.addWidget(self.upper_limit)
+        self.top_frame_layout.addLayout(self.select_layout)
 
         self.widget_frame_layout: QVBoxLayout = QVBoxLayout()
         self.main_layout.addLayout(self.widget_frame_layout)
@@ -141,6 +158,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     def execute(self):
         self.show()
         self.__q_application.exec()
+
 
     def visualize(self):
         """displays the data contained in that Model to the user."""
@@ -240,7 +258,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
             secondary_headers.append(subheaders)
         return Displayable(name, ram_plot, cpu_plot, runtime_plot, ram_peak, cpu_peak, headers, secondary_headers)
 
-    def __generate_random_color(self):
+    def __generate_random_color(self) -> str:
         """Generates random saturated color between light blue and pink."""
         light_blue_rgb = (173, 216, 230)  # Light Blue
         pink_rgb = (255, 182, 193)  # Pink
@@ -289,14 +307,14 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
     def __add_to_graph(self, displayable: Displayable):
         """adds plots of given displayable to graph and bar chart widgets"""
-        Thread(target=self.ram_graph_widget.add_plot, args=[displayable.ram_plot]).start()
-        Thread(target=self.cpu_graph_widget.add_plot, args=[displayable.cpu_plot]).start()
+        self.ram_graph_widget.add_plot(displayable.ram_plot)
+        self.cpu_graph_widget.add_plot(displayable.cpu_plot)
         self.bar_chart_widget.add_bar(displayable.runtime_plot)
 
     def __remove_from_graph(self, displayable: Displayable):
         """removes plots of given displayable from graph and bar chart widgets"""
-        Thread(target=self.ram_graph_widget.remove_plot, args=[displayable.ram_plot]).start()
-        Thread(target=self.cpu_graph_widget.remove_plot, args=[displayable.cpu_plot]).start()
+        self.ram_graph_widget.remove_plot(displayable.ram_plot)
+        self.cpu_graph_widget.remove_plot(displayable.cpu_plot)
         self.bar_chart_widget.remove_bar(displayable.runtime_plot)
 
     def setup_click_connections(self):
