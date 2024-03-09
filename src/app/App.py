@@ -51,7 +51,12 @@ class App(AppRequestsInterface):
         self.__passive_data_fetcher: PassiveDataFetcher = PassiveDataFetcher(self.__model, self.__model_lock,
                                                                              self.__file_saver_work_queue,
                                                                              self.__hierarchy_fetcher_work_queue,
-                                                                             self.shutdown_event, self.__cti_dir_path)
+                                                                             self.shutdown_event, self.__cti_dir_path,
+                                                                             process_finder_count=1,
+                                                                             process_collector_count=1,
+                                                                             fetcher_count=1,
+                                                                             fetcher_process_count=15)
+
         self.hierarchy_fetcher = HierarchyFetcher(self.__model, self.__model_lock)
         self.saver: SaveInterface = SaveToJSON(self.__cti_dir_path)
 

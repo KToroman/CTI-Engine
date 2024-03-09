@@ -21,7 +21,8 @@ from src.model.Model import Model
 class PassiveDataFetcher(DataFetcher):
 
     def __init__(self, model: Model, model_lock: threading.Lock, saver_queue: Queue, hierarchy_queue: Queue,
-                 shutdown: Event, save_path: str):
+                 shutdown: Event, save_path: str, process_finder_count=1, process_collector_count=1, fetcher_count=1,
+                 fetcher_process_count=15):
         self.__model = model
         self.__model_lock = model_lock
         self.__shutdown = shutdown
@@ -34,13 +35,13 @@ class PassiveDataFetcher(DataFetcher):
         self.__hierarchy_queue = hierarchy_queue
 
         self.__process_finder: List[ProcessFindingThread] = list()
-        self.__process_finder_count = 1
+        self.__process_finder_count = process_finder_count
 
         self.__process_collector_list: List[ProcessCollectorThread] = list()
-        self.__process_collector_count = 1
+        self.__process_collector_count = process_collector_count
 
-        self.__fetcher_count: int = 1
-        self.__process_count = 15
+        self.__fetcher_count: int = fetcher_count
+        self.__fetcher_process_count = fetcher_process_count
         self.__fetcher: List[FetcherThread] = list()
 
     def update_project(self) -> bool:
@@ -60,7 +61,7 @@ class PassiveDataFetcher(DataFetcher):
         # self.__data_fetching_thread.start()
         for i in range(self.__fetcher_count):
             fetcher = FetcherThread(process_list, process_list_lock, self.__model, self.__model_lock,
-                                    DataObserver(), self.__process_count, self.__shutdown)
+                                    DataObserver(), self.__fetcher_process_count, self.__shutdown)
             self.__fetcher.append(fetcher)
             fetcher.start()
         for i in range(self.__process_collector_count):
