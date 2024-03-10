@@ -2,8 +2,6 @@ from multiprocessing import Queue
 from threading import Event, Thread, Lock
 from typing import List, Optional
 
-from colorama import Fore
-
 from src.fetcher.hierarchy_fetcher.HierarchyFetcher import HierarchyFetcher
 
 
@@ -31,8 +29,8 @@ class HierarchyThread:
                         continue
                 except FileNotFoundError:
                     # self.error_queue.put(FileNotFoundError("could not find the compile-commands.json file"))
-                    print(Fore.RED + "[HierarchyThread]   could not find the compile-commands.json file for project: " +
-                          Fore.BLUE + self.__current_work + Fore.RESET)
+                    print("[HierarchyThread]   could not find the compile-commands.json file for project: " +
+                          self.__current_work)
                     repeat = False
 
                 print("[HierarchyThread]    work deleted: " + self.__current_work)

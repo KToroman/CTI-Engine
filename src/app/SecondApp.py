@@ -6,7 +6,6 @@ from typing import List
 
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QApplication
-from colorama import Fore
 
 from src.app.AppOld import AppMeta
 from src.app.Threads.FileSaverThread import FileSaverThread

@@ -2,8 +2,6 @@ from multiprocessing import Queue
 from threading import Event, Thread, Lock
 from typing import List
 
-from colorama import Fore
-
 from src.fetcher.file_fetcher.FileLoader import FileLoader
 from src.model.Model import Model
 
@@ -28,7 +26,7 @@ class FileFetcherThread:
                 file_loader = FileLoader(work, self.__model, self.__model_lock)
                 file_loader.update_project()
             except FileNotFoundError:
-                print(Fore.RED + "No file found for path: " + Fore.BLUE + work + Fore.RESET)
+                print("No file found for path: " + work)
 
     def start(self):
         print("[FileFetcherThread]    started")
