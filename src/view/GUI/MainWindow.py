@@ -281,6 +281,9 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.ram_graph_widget.click_signal.connect(
             lambda: self.table_widget.highlight_row(self.ram_graph_widget.plot_clicked))
 
+    def __update_project_list(self):
+        self.menu_bar.update_scrollbar(self.model.get_all_project_names)
+
     def closeEvent(self, event):
         self.shutdown_event.set()
         event.accept()

@@ -1,3 +1,5 @@
+from typing import List
+
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QPushButton, QInputDialog, QTextEdit, QScrollArea, QWidget, QVBoxLayout
 import qtawesome as qta
@@ -66,12 +68,25 @@ class MenuBar:
         if ok:
             self.load_path_queue.put(text)
 
+    def show_project_name_input(self, name: str):
+        text, ok = QInputDialog.getText(None, "Load Project", "Load the following project?", text= name)
     def toggle_scrollbar(self):
         # Überprüfen, ob die Scrollbar angezeigt wird oder nicht, und umschalten
         if self.scroll_bar.isHidden():
             self.scroll_bar.setHidden(False)
         else:
             self.scroll_bar.setHidden(True)
-
         # Das Widget neu zeichnen, um die Änderungen anzuzeigen
         self.scroll_bar.update()
+
+    def update_scrollbar(self, project_names: List[str]):
+        if self.scroll_layout.count() > 0:
+            while self.scroll_layout.count() > 0:
+                item = self.scroll_layout.takeAt(0)
+                widget = item.widget()
+                if widget is not None:
+                    widget.deleteLater()
+        for name in project_names:
+            new_button: QPushButton = QPushButton(name)
+            self.scroll_layout.addWidget(new_button)
+            new_button.clicked.connect(lambda: self.show_project_name_input(name))
