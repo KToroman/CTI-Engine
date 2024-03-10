@@ -36,8 +36,8 @@ def mycommands(ctx):
 mycommands.add_command(start_active_measurement_command, "actv")
 
 
-def initialize_app(shutdown_event_param: Event) -> App:
-    app = App(shutdown_event=shutdown_event_param, passive_mode_event=passive_mode_event,
+def initialize_app() -> App:
+    app = App(shutdown_event=shutdown_event, passive_mode_event=passive_mode_event,
               load_event=load_event, load_path_queue=load_path_queue, source_file_name_queue=source_file_name_queue,
               visualize_signal=visualize_signal, error_queue=error_queue, error_signal=error_signal,
               status_queue=status_queue,
@@ -46,8 +46,8 @@ def initialize_app(shutdown_event_param: Event) -> App:
     return app
 
 
-def initialize_gui(shutdown_event_param: Event) -> UIInterface:
-    gui: UIInterface = prepare_gui(shutdown_event=shutdown_event_param, status_queue=status_queue,
+def initialize_gui() -> UIInterface:
+    gui: UIInterface = prepare_gui(shutdown_event=shutdown_event, status_queue=status_queue,
                                    model_queue=model_queue,
                                    error_queue=error_queue, load_path_queue=load_path_queue, cancel_event=cancel_event,
                                    active_mode_queue=source_file_name_queue, restart_event=restart_event)
@@ -67,21 +67,19 @@ if __name__ == "__main__":
     error_queue = Queue(5)
     status_queue = Queue()
     model_queue = Queue()
-    cancel_event = Event()
-    restart_event = Event()
-    gui = initialize_gui(shutdown_event)
+    cancel_event = multiprocessing.Event()
+    restart_event = multiprocessing.Event()
+    gui = initialize_gui()
     visualize_signal = gui.visualize_signal
     status_signal = gui.status_signal
     error_signal = gui.error_signal
-    app: App = initialize_app(shutdown_event)
+    app: App = initialize_app()
     app.prepare_threads()
     passive_mode_event.set()
-    app_process = Process(target=app.start)
     try:
-        app_process.start()
+        app.start()
         gui.execute()
-        app_process.join()
+        app.stop()
     except KeyboardInterrupt:
         shutdown_event.set()
-
-        app_process.join()
+        app.stop()
