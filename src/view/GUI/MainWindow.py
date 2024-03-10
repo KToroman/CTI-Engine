@@ -45,9 +45,9 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     RAM_Y_AXIS: str = "RAM (in mb)"
     CPU_Y_AXIS: str = "CPU (in %)"
 
-    status_signal: pyqtSignal = pyqtSignal()
     error_signal: pyqtSignal = pyqtSignal()
     visualize_signal: pyqtSignal = pyqtSignal()
+    status_signal: pyqtSignal = pyqtSignal()
 
     def __init__(self, shutdown_event: Event, q_application: QApplication, status_queue: Queue, model_queue: Queue,
                  error_queue: Queue, load_path_queue: Queue, active_mode_queue: Queue, cancel_event: Event,
@@ -57,8 +57,10 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         # Queues and events for communication between app and gui
         self.model_queue: Queue = model_queue
         self.visualize_signal.connect(lambda: self.visualize())
+
         self.status_queue: Queue = status_queue
         self.status_signal.connect(lambda: self.update_statusbar())
+
         self.error_queue: Queue = error_queue
         self.error_signal.connect(lambda: self.deploy_error())
         self.shutdown_event: Event = shutdown_event
