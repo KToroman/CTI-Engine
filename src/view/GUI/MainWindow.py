@@ -15,8 +15,7 @@ from threading import Event
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QIntValidator
 from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QWidget,
-                             QStackedWidget, QApplication, QHBoxLayout, QSplitter, QCheckBox, QComboBox, QLineEdit,
-                             QSpinBox, QLabel)
+                             QStackedWidget, QApplication, QHBoxLayout, QSplitter, QCheckBox, QSpinBox)
 from src.model.Model import Model
 from src.view.GUI.Graph.BarWidget import BarWidget
 from src.view.GUI.Graph.GraphWidget import GraphWidget
@@ -34,7 +33,7 @@ from src.model.core.StatusSettings import StatusSettings
 from src.view.UIInterface import UIInterface
 from src.view.GUI.Visuals.ErrorWindow import ErrorWindow
 from src.view.AppRequestsInterface import AppRequestsInterface
-
+import src.view.GUI.Visuals.GuiDesign as gd
 
 
 class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
@@ -72,72 +71,17 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.setWindowTitle(self.WINDOWTITLE)
         self.resize(self.WINDOWSIZE1, self.WINDOWSIZE2)
 
-        # Setting up the Layout
-        self.central_widget: QWidget = QWidget(self)
-        self.setCentralWidget(self.central_widget)
-        self.main_layout: QVBoxLayout = QVBoxLayout(self.central_widget)
+        self.select_all_checkbox = QCheckBox("select all")
+        self.upper_limit = QSpinBox()
+        self.lower_limit = QSpinBox()
 
-        self.top_frame_layout: QHBoxLayout = QHBoxLayout()
-        self.main_layout.addLayout(self.top_frame_layout)
-
-        self.user_interaction_frame_layout: QVBoxLayout = QVBoxLayout()
-        self.top_frame_layout.addLayout(self.user_interaction_frame_layout)
-
-        self.status_bar_frame_layout: QVBoxLayout = QVBoxLayout()
-        self.status_bar: StatusBar = StatusBar()
-        self.status_bar.setMaximumHeight(100)
-        self.status_bar_frame_layout.addWidget(self.status_bar)
-        self.top_frame_layout.addLayout(self.status_bar_frame_layout)
-
-        label: QLabel = QLabel("Select only:")
-        self.upper_limit: QSpinBox = QSpinBox()
-        self.lower_limit: QSpinBox = QSpinBox()
-        self.upper_limit.setFixedWidth(100)
-        self.lower_limit.setFixedWidth(100)
         self.upper_limit.editingFinished.connect(
             lambda: self.table_widget.toggle_custom_amount(self.lower_limit.value(), self.upper_limit.value()))
         self.lower_limit.editingFinished.connect(
             lambda: self.table_widget.toggle_custom_amount(self.lower_limit.value(), self.upper_limit.value()))
-        self.all: QCheckBox = QCheckBox(self.SELECT_ALL)
-        self.all.stateChanged.connect(lambda: self.table_widget.toggle_all_rows())
 
-        self.select_layout: QHBoxLayout = QHBoxLayout()
-        self.select_layout.addWidget(self.all)
-        self.select_layout.addWidget(label)
-        self.select_layout.addWidget(self.lower_limit)
-        self.select_layout.addWidget(self.upper_limit)
-        self.top_frame_layout.addLayout(self.select_layout)
-
-        self.widget_frame_layout: QVBoxLayout = QVBoxLayout()
-        self.main_layout.addLayout(self.widget_frame_layout)
-
-        self.splitter1: QSplitter = QSplitter(Qt.Horizontal)
-        self.widget_frame_layout.addWidget(self.splitter1)
-
-        self.metric_bar_frame_layout: QHBoxLayout = QHBoxLayout()
-
-        self.menu_bar_frame_layout: QHBoxLayout = QHBoxLayout()
-
-        self.user_interaction_frame_layout.addLayout(
-            self.menu_bar_frame_layout)
-        self.user_interaction_frame_layout.addLayout(
-            self.metric_bar_frame_layout)
-
-        # Initialize the components
-        self.stacked_widget: QStackedWidget = QStackedWidget()
-        self.ram_graph_widget: GraphWidget = GraphWidget(self.RAM_Y_AXIS)
-        self.cpu_graph_widget: GraphWidget = GraphWidget(self.CPU_Y_AXIS)
-        self.bar_chart_widget: BarWidget = BarWidget()
-        self.stacked_widget.addWidget(self.ram_graph_widget)
-        self.stacked_widget.addWidget(self.cpu_graph_widget)
-        self.stacked_widget.addWidget(self.bar_chart_widget)
-        self.splitter1.addWidget(self.stacked_widget)
-
-        self.table_widget: TableWidget = TableWidget(active_mode_queue)
-        self.splitter1.addWidget(self.table_widget)
-
-        self.menu_bar: MenuBar = MenuBar(self.menu_bar_frame_layout, load_path_queue, cancel_event, restart_event)
-        self.metric_bar: MetricBar = MetricBar(self.metric_bar_frame_layout)
+        self.menu_bar: MenuBar = MenuBar(load_path_queue, cancel_event, restart_event)
+        self.metric_bar: MetricBar = MetricBar()
 
         self.setup_resource_connections()
 
@@ -146,16 +90,26 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         icon: QIcon = QIcon(logo_path)
         self.setWindowIcon(icon)
         self.setStyleSheet("background-color: #ECEFF1;")
-        """
-        colors from cti engine logo:
+        
+        """colors from cti engine logo:
         #237277
         #4095a1
         #61b3bf
         chatgpt: #ECEFF1
         himmelgrau: #CFD8DC
-        caspars farbe: #444447
-        """
+        caspars farbe: #444447"""
 
+        self.ram_graph_widget: GraphWidget = GraphWidget(self.RAM_Y_AXIS)
+        self.cpu_graph_widget: GraphWidget = GraphWidget(self.CPU_Y_AXIS)
+        self.bar_chart_widget: BarWidget = BarWidget()
+
+        self.stacked_widget = QStackedWidget()
+
+        self.status_bar: StatusBar = StatusBar()
+
+        gd.setupUI(self, active_mode_queue)
+
+        self.setup_resource_connections()
 
     def execute(self):
         self.show()
