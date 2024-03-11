@@ -26,6 +26,7 @@ class FetcherThread:
         self.__current_processes: List[psutil.Process] = list()
         self.__data_observer = data_observer
         self.__process_count = process_count
+        self.time_till_false: float = 0
 
     def __run(self):
         while not self.__shutdown.is_set():
@@ -69,6 +70,7 @@ class FetcherThread:
     def __add_data_entry(self, data_entry: DataEntry):
         with self.__model_lock:
             self.__model.insert_datapoint(data_entry)
+        self.time_till_false = time.time() + 15
 
     def __make_entry(self, process_point: ProcessPoint) -> None:
         try:
