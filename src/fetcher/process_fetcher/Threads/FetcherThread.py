@@ -3,6 +3,7 @@ import time
 from os.path import join
 from threading import Event, Thread, Lock
 from typing import List
+from multiprocessing.synchronize import Event as SyncEvent
 
 import psutil
 from psutil import NoSuchProcess
@@ -15,7 +16,7 @@ from src.model.core.ProcessPoint import ProcessPoint
 
 class FetcherThread:
     def __init__(self, process_list: List[psutil.Process], process_list_lock: Lock, model: Model, model_lock: Lock,
-                 data_observer: DataObserver, process_count, shutdown: Event):
+                 data_observer: DataObserver, process_count, shutdown: Event, passive_mode_event: SyncEvent):
         self.__thread: Thread
         self.__shutdown = shutdown
         self.__process_list = process_list
@@ -26,10 +27,17 @@ class FetcherThread:
         self.__current_processes: List[psutil.Process] = list()
         self.__data_observer = data_observer
         self.__process_count = process_count
+        self.time_till_false: float = 0
+        self.__passive_mode_event = passive_mode_event
 
     def __run(self):
         while not self.__shutdown.is_set():
             for process in self.__current_processes:
+                if not self.__passive_mode_event.is_set():
+                    self.__current_processes.clear()
+                    with self.__process_list_lock:
+                        self.__process_list.clear()
+                    continue
                 try:
                     if process.is_running():
                         self.__make_entry(self.__data_observer.observe(process))
@@ -69,6 +77,7 @@ class FetcherThread:
     def __add_data_entry(self, data_entry: DataEntry):
         with self.__model_lock:
             self.__model.insert_datapoint(data_entry)
+        self.time_till_false = time.time() + 15
 
     def __make_entry(self, process_point: ProcessPoint) -> None:
         try:

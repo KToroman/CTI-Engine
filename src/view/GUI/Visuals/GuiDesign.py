@@ -169,8 +169,8 @@ def setupUI(mainWindow, active_mode_queue):
     mainWindow.page_3 = QWidget()
     mainWindow.stacked_widget.addWidget(mainWindow.bar_chart_widget)
     mainWindow.splitter.addWidget(mainWindow.stacked_widget)
-    mainWindow.tableWidget = TableWidget(active_mode_queue)
-    mainWindow.splitter.addWidget(mainWindow.tableWidget)
+
+    mainWindow.splitter.addWidget(mainWindow.table_widget)
 
     mainWindow.verticalLayout_6.addWidget(mainWindow.splitter)
 
@@ -186,7 +186,7 @@ def setupUI(mainWindow, active_mode_queue):
     QWidget.setTabOrder(mainWindow.menu_button, mainWindow.ram_button)
     QWidget.setTabOrder(mainWindow.ram_button, mainWindow.cpu_button)
     QWidget.setTabOrder(mainWindow.cpu_button, mainWindow.runtime_button)
-    QWidget.setTabOrder(mainWindow.runtime_button, mainWindow.tableWidget)
+    QWidget.setTabOrder(mainWindow.runtime_button, mainWindow.table_widget)
 
     mainWindow.sidebar.setHidden(True)
     mainWindow.menu_button.toggled.connect(mainWindow.sidebar.setVisible)

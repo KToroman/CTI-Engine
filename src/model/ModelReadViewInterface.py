@@ -2,16 +2,13 @@
 from typing import List, Protocol
 
 from src.model.core.CFileReadViewInterface import CFileReadViewInterface
+from src.model.core.Project import Project
 
 
 class ModelReadViewInterface(Protocol):
-    def get_project_name(self) -> str:
+    def get_project_by_name(self, name: str) -> Project:
         """getter for project's name"""
         raise NotImplementedError
 
-    def get_cfiles(self) -> List[CFileReadViewInterface]:
-        """getter for a view on all cFiles contained in the current project"""
-        raise NotImplementedError
-
-    def get_project_time(self) -> float:
+    def get_all_project_names(self) -> List[str]:
         raise NotImplementedError

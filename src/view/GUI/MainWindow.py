@@ -17,6 +17,7 @@ from PyQt5.QtGui import QIcon, QIntValidator
 from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QWidget,
                              QStackedWidget, QApplication, QHBoxLayout, QSplitter, QCheckBox, QSpinBox)
 from src.model.Model import Model
+from src.model.core.ProjectReadViewInterface import ProjectReadViewInterface
 from src.view.GUI.Graph.BarWidget import BarWidget
 from src.view.GUI.Graph.GraphWidget import GraphWidget
 from src.view.GUI.MainWindowMeta import MainWindowMeta
@@ -48,15 +49,17 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     visualize_signal: pyqtSignal = pyqtSignal()
     status_signal: pyqtSignal = pyqtSignal()
 
-    def __init__(self, shutdown_event: Event, q_application: QApplication, status_queue: Queue, model_queue: Queue,
+    def __init__(self, shutdown_event: Event, q_application: QApplication, status_queue: Queue, project_queue: Queue,
                  error_queue: Queue, load_path_queue: Queue, active_mode_queue: Queue, cancel_event: Event,
-                 restart_event: Event):
+                 restart_event: Event, model: ModelReadViewInterface):
         super(MainWindow, self).__init__()
 
         # Queues and events for communication between app and gui
-        self.model_queue: Queue = model_queue
+        self.project_queue: Queue = project_queue
         self.visualize_signal.connect(lambda: self.visualize())
 
+        self.__model = model
+        self.table_widget: TableWidget = TableWidget(active_mode_queue=active_mode_queue)
         self.status_queue: Queue = status_queue
         self.status_signal.connect(lambda: self.update_statusbar())
 
@@ -80,7 +83,8 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.lower_limit.editingFinished.connect(
             lambda: self.table_widget.toggle_custom_amount(self.lower_limit.value(), self.upper_limit.value()))
 
-        self.menu_bar: MenuBar = MenuBar(load_path_queue, cancel_event, restart_event)
+        self.menu_bar: MenuBar = MenuBar(load_path_queue, cancel_event, restart_event, self.project_queue,
+                                         self.visualize_signal)
         self.metric_bar: MetricBar = MetricBar()
 
         self.setup_resource_connections()
@@ -90,7 +94,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         icon: QIcon = QIcon(logo_path)
         self.setWindowIcon(icon)
         self.setStyleSheet("background-color: #ECEFF1;")
-        
+
         """colors from cti engine logo:
         #237277
         #4095a1
@@ -118,22 +122,26 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
     def visualize(self):
         """displays the data contained in that Model to the user."""
-        model = self.model_queue.get()
-        self.project_time = model.get_project_time()
-        if self.table_widget.active_started:
-            self.__visualize_active(model)
-        else:
-            self.__visualize_passive(model)
+        project_name: str = ""
+        project_name = self.project_queue.get()
+        project = self.__model.get_project_by_name(project_name)
+        self.project_time = project.get_project_time()
+        self.__update_project_list()
 
-    def __visualize_passive(self, model: ModelReadViewInterface):
+        if self.table_widget.active_started:
+            self.__visualize_active(project)
+        else:
+            self.__visualize_passive(project)
+
+    def __visualize_passive(self, project: ProjectReadViewInterface):
         """visualizes data from passive mode."""
         self.table_widget.clear_table()
 
         # Select spot for Displayables to be inserted into
-        self.table_widget.insertion_point = model.get_project_name()
+        self.table_widget.insertion_point = project.get_project_name()
 
         # Update TableWidget for each cfile
-        cfile_list: List[CFileReadViewInterface] = model.get_cfiles()
+        cfile_list: List[CFileReadViewInterface] = project.get_cfiles()
         for cfile in cfile_list:
             self.table_widget.insert_values(self.__create_displayable(cfile))
 
@@ -142,13 +150,13 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.status_bar.update_status(StatusSettings.FINISHED)
         self.table_widget.rebuild_table(self.table_widget.rows)
 
-    def __visualize_active(self, model: ModelReadViewInterface):
+    def __visualize_active(self, project: ProjectReadViewInterface):
         """visualizes data from active mode"""
 
         # Find file used for active build
         active_row: str = self.table_widget.insertion_point
         active_file: CFileReadViewInterface
-        for cfile in model.get_cfiles():
+        for cfile in project.get_cfiles():
             active_file = self.__get_hierarchy(cfile, active_row)
             if active_file.get_name() == active_row:
                 break
@@ -282,7 +290,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
             lambda: self.table_widget.highlight_row(self.ram_graph_widget.plot_clicked))
 
     def __update_project_list(self):
-        self.menu_bar.update_scrollbar(self.model.get_all_project_names)
+        self.menu_bar.update_scrollbar(self.__model.get_all_project_names())
 
     def closeEvent(self, event):
         self.shutdown_event.set()

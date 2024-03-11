@@ -14,12 +14,12 @@ from src.view.UIInterface import UIInterface
 
 
 def prepare_gui(shutdown_event: Event, status_queue: Queue,
-                model_queue: Queue, error_queue: Queue, load_path_queue: Queue,
-                active_mode_queue: Queue, cancel_event: Event, restart_event: Event) -> UIInterface:
+                project_queue: Queue, error_queue: Queue, load_path_queue: Queue,
+                active_mode_queue: Queue, cancel_event: Event, restart_event: Event, model: Model) -> UIInterface:
     q_application = QApplication(sys.argv)
-    main_window = MainWindow(q_application=q_application, model_queue=model_queue,
+    main_window = MainWindow(q_application=q_application, project_queue=project_queue,
                              status_queue=status_queue, restart_event=restart_event,
                              error_queue=error_queue, load_path_queue=load_path_queue,
                              active_mode_queue=active_mode_queue, cancel_event=cancel_event,
-                             shutdown_event=shutdown_event)
+                             shutdown_event=shutdown_event, model=model)
     return main_window
