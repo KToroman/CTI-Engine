@@ -1,16 +1,12 @@
 import colorsys
-import threading
-from time import sleep
-from src.fetcher.file_fetcher.FileLoader import FileLoader
+
 import os
-import sys
 
 import random
-from threading import Thread, Lock
+
 from PyQt5.QtCore import pyqtSignal
 from typing import List
-from multiprocessing import Queue
-from threading import Event
+from multiprocessing import Queue, Event
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QIntValidator
@@ -172,9 +168,11 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
     def deploy_error(self):
         """receives an Exception, displays information regarding that exception to the user."""
+        if self.error_queue.empty():
+            return
         error = self.error_queue.get()
         error_window = ErrorWindow(error)
-        error_window.show()
+        error_window.show() #TODO error_window not working
 
     def update_statusbar(self):
         """receives a status string, changes the ui's status string accordingly."""
