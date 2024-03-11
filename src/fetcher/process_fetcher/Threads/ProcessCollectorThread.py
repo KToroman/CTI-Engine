@@ -21,7 +21,7 @@ class ProcessCollectorThread:
     def __init__(self, process_list: List[psutil.Process], process_list_lock: Lock, model: Model, model_lock: Lock,
                  check_for_project: bool, fetcher_list: List[FetcherThread], saver_queue: Queue,
                  hierarchy_queue: Queue, save_path: str, shutdown: Event, project_queue: Queue,
-                 finished_event: pyqtSignal, project_finished_event: SyncEvent):
+                 finished_event: pyqtSignal, project_finished_event: SyncEvent, passive_mode_event: SyncEvent):
         self.__thread: Thread
         self.__shutdown = shutdown
         self.__work_queue_lock = Lock()
@@ -38,6 +38,7 @@ class ProcessCollectorThread:
         self.__hierarchy_queue = hierarchy_queue
         self.__counter = 0
         self.time_till_false: float = 0
+        self.__passive_mode_event = passive_mode_event
 
         self.__project_queue = project_queue
         self.__finished_event = finished_event
@@ -45,6 +46,10 @@ class ProcessCollectorThread:
 
     def __run(self):
         while not self.__shutdown.is_set():
+            if not self.__passive_mode_event.is_set():
+                with self.__work_queue_lock:
+                    self.__work_queue.clear()
+                continue
             time.sleep(0.001)
             line = ""
             with self.__work_queue_lock:
@@ -120,7 +125,7 @@ class ProcessCollectorThread:
             working_dir_split: List[str] = working_dir.split("build/")
             dir_path: str = working_dir_split[0]
             for i in range(working_dir_split.__len__() - 2):
-                dir_path = join(dir_path, "build", working_dir_split[i+1])
+                dir_path = join(dir_path, "build", working_dir_split[i + 1])
             return dir_path
 
         return working_dir.split("build")[0]
@@ -128,17 +133,23 @@ class ProcessCollectorThread:
     def __project_checker(self, project_name: str):
         try:
             with self.__model_lock:
-                if project_name != self.__model.get_current_working_directory():
-                    if self.__model.current_project is not None:
+                if (project_name != self.__model.get_current_working_directory() or
+                        not self.__model.project_in_semaphore_list(project_name)):
+                    if self.__model.current_project is not None and self.__model.project_in_semaphore_list(
+                            self.__model.get_current_working_directory()):
                         with self.__model.get_semaphore_by_name(self.__model.get_current_working_directory()).set_lock:
-                            self.__model.get_semaphore_by_name(self.__model.get_current_working_directory()).new_project_set()
+                            self.__model.get_semaphore_by_name(
+                                self.__model.get_current_working_directory()).new_project_set()
 
-                    semaphore: ProjectFinishedSemaphore = ProjectFinishedSemaphore(project_name, self.__project_queue,
+                    name = self.__create_project_name(project_name)
+                    semaphore: ProjectFinishedSemaphore = ProjectFinishedSemaphore(project_name, name,
+                                                                                   self.__project_queue,
                                                                                    self.__finished_event,
-                                                                                   self.__project_finished_event)
-                    self.__model.add_project(Project(project_name, self.__create_project_name(project_name)), semaphore)
-                    self.__hierarchy_queue.put(project_name)
-                    self.__saver_queue.put(project_name)
+                                                                                   self.__project_finished_event,
+                                                                                   self.__model.semaphore_list)
+                    self.__model.add_project(Project(project_name, name), semaphore)
+                    self.__hierarchy_queue.put(name)
+                    self.__saver_queue.put(name)
         except NoSuchProcess:
             return
 
@@ -170,4 +181,3 @@ class ProcessCollectorThread:
             return name
 
         return name
-

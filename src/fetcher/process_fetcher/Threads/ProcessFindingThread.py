@@ -4,10 +4,11 @@ from re import split
 from threading import Event, Thread, Lock
 from typing import List
 from src.fetcher.process_fetcher.Threads.ProcessCollectorThread import ProcessCollectorThread
+from multiprocessing.synchronize import Event as SyncEvent
 
 
 class ProcessFindingThread:
-    def __init__(self, process_collector_list: List[ProcessCollectorThread], shutdown: Event):
+    def __init__(self, process_collector_list: List[ProcessCollectorThread], shutdown: Event, passive_mode_event: SyncEvent):
         self.__thread: Thread
         self.__shutdown = shutdown
         self.__work_lock = Lock()
@@ -15,9 +16,13 @@ class ProcessFindingThread:
         self.__process_collector_list = process_collector_list
         self.__counter = 0
         self.__finding_list: List[str] = list()
+        self.__passive_mode_event = passive_mode_event
 
     def __run(self):
         while not self.__shutdown.is_set():
+            if not self.__passive_mode_event.is_set():
+                self.__finding_list.clear()
+                continue
             if self.has_work():
                 self.__fetch_process()
                 with self.__work_lock:
