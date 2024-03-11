@@ -56,8 +56,6 @@ class PassiveDataFetcher(DataFetcher):
         for finder in self.__process_finder:
             finder.set_work()
         time_keeper_bool: bool = self.__time_keeper()
-        if time_keeper_bool and self.__done_fetching:
-            self.__model.get_semaphore_by_name(self.__model.get_current_working_directory()).restore_fetcher_set()
         if time_keeper_bool:
             self.__done_fetching = False
         elif not self.__done_fetching:
@@ -75,7 +73,7 @@ class PassiveDataFetcher(DataFetcher):
                 self.__model.get_semaphore_by_name(self.__model.get_current_working_directory()).stop_fetcher_set()
 
     def __time_keeper(self) -> bool:
-        if max(p.time_till_false for p in self.__process_collector_list) <= time.time():
+        if max(f.time_till_false for f in self.__fetcher) <= time.time():
             return False
         return True
 
