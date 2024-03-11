@@ -21,6 +21,9 @@ class PassiveDataThread:
                     self.__found_project.set()
                 else:
                     self.__found_project.clear()
+            else:
+                self.__data_fetcher.finish_fetching()
+                self.__found_project.clear()
 
     def start(self):
         print("[PassiveDataThread]    started")

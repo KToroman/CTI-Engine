@@ -124,7 +124,7 @@ def setupUI(mainWindow, active_mode_queue):
     mainWindow.horizontalLayout_3.setSpacing(10)
 
     mainWindow.menu_button = QPushButton(mainWindow.upper_bar)
-    mainWindow.menu_button.setMaximumHeight(30)
+    mainWindow.menu_button.setMaximumSize(30, 30)
     mainWindow.menu_button.setCheckable(True)
 
     mainWindow.horizontalLayout_3.addWidget(mainWindow.menu_button)
@@ -145,11 +145,14 @@ def setupUI(mainWindow, active_mode_queue):
 
     mainWindow.horizontalLayout_5 = QHBoxLayout()
 
-    mainWindow.select_box = QCheckBox("select all")
-    mainWindow.horizontalLayout_5.addWidget(mainWindow.select_box)
+    mainWindow.select_all_checkbox = QCheckBox("select all")
+    mainWindow.select_all_checkbox.setMaximumWidth(80)
+    mainWindow.horizontalLayout_5.addWidget(mainWindow.select_all_checkbox)
 
     mainWindow.horizontalLayout_5.addWidget(mainWindow.upper_limit)
     mainWindow.horizontalLayout_5.addWidget(mainWindow.lower_limit)
+    mainWindow.upper_limit.setMaximumWidth(70)
+    mainWindow.lower_limit.setMaximumWidth(70)
 
     mainWindow.horizontalLayout_3.addLayout(mainWindow.horizontalLayout_5, Qt.AlignRight)
 
@@ -166,8 +169,8 @@ def setupUI(mainWindow, active_mode_queue):
     mainWindow.page_3 = QWidget()
     mainWindow.stacked_widget.addWidget(mainWindow.bar_chart_widget)
     mainWindow.splitter.addWidget(mainWindow.stacked_widget)
-    mainWindow.tableWidget = TableWidget(active_mode_queue)
-    mainWindow.splitter.addWidget(mainWindow.tableWidget)
+
+    mainWindow.splitter.addWidget(mainWindow.table_widget)
 
     mainWindow.verticalLayout_6.addWidget(mainWindow.splitter)
 
@@ -183,7 +186,7 @@ def setupUI(mainWindow, active_mode_queue):
     QWidget.setTabOrder(mainWindow.menu_button, mainWindow.ram_button)
     QWidget.setTabOrder(mainWindow.ram_button, mainWindow.cpu_button)
     QWidget.setTabOrder(mainWindow.cpu_button, mainWindow.runtime_button)
-    QWidget.setTabOrder(mainWindow.runtime_button, mainWindow.tableWidget)
+    QWidget.setTabOrder(mainWindow.runtime_button, mainWindow.table_widget)
 
     mainWindow.sidebar.setHidden(True)
     mainWindow.menu_button.toggled.connect(mainWindow.sidebar.setVisible)

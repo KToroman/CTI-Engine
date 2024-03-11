@@ -1,11 +1,14 @@
 import time
 from typing import List
 from src.model.core.CFile import CFile
+from src.model.core.CFileReadViewInterface import CFileReadViewInterface
 from src.model.core.FileDictionary import FileDictionary
+from src.model.core.ProjectFinishedSemaphore import ProjectFinishedSemaphore
+from src.model.core.ProjectReadViewInterface import ProjectReadViewInterface
 from src.model.core.SourceFile import SourceFile
 
 
-class Project:
+class Project(ProjectReadViewInterface):
     """Project models a CMake-Project and represents a tracked project with its tracked CFiles."""
 
     __DEFAULT_PATH_TO_SAVE = ""
@@ -24,3 +27,14 @@ class Project:
         if not file_exists:
             self.source_files.append(source_file)
         return source_file
+
+    def get_project_time(self) -> float:
+        return self.project_time
+
+    def get_project_name(self) -> str:
+        return self.working_dir
+
+    def get_cfiles(self) -> List[CFileReadViewInterface]:
+        cfiles_view: List[CFileReadViewInterface] = list()
+        cfiles_view.extend(self.source_files)
+        return cfiles_view

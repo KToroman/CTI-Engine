@@ -1,5 +1,6 @@
 import copy
 import os.path
+from multiprocessing import Event, Queue
 from optparse import Option
 import time
 from typing import List, Optional, cast
@@ -11,6 +12,7 @@ from src.model.core.CFileReadViewInterface import CFileReadViewInterface
 from src.model.core.DataEntry import DataEntry
 from src.model.core.Header import Header
 from src.model.core.Project import Project
+from src.model.core.ProjectFinishedSemaphore import ProjectFinishedSemaphore
 from src.model.core.SourceFile import SourceFile
 
 
@@ -20,19 +22,9 @@ class Model(ModelReadViewInterface):
     A model consists of an arbitrary number of projects."""
 
     def __init__(self) -> None:
-        self.current_project: Project = Project("", "")
+        self.current_project: Project = None
         self.projects: List[Project] = list()
-
-    def get_project_name(self) -> str:
-        """returns the name of the current project"""
-        name: str = self.current_project.path_to_save
-        return name
-
-    def get_cfiles(self) -> List[CFileReadViewInterface]:
-        """returns view only on all cfiles in current project"""
-        cfiles_view: List[CFileReadViewInterface] = list()
-        cfiles_view.extend(self.current_project.source_files)
-        return cfiles_view
+        self.semaphore_list: List[ProjectFinishedSemaphore] = list()
 
     def insert_datapoint(self, data_point: DataEntry):
         """inserts datapoint to sourcefile according to their paths to the current project"""
@@ -61,25 +53,34 @@ class Model(ModelReadViewInterface):
                 return True
         return False
 
-    def add_project(self, project: Project) -> None:
+    def get_semaphore_by_name(self, name) -> ProjectFinishedSemaphore:
+        for semaphore in self.semaphore_list:
+            if name == semaphore.project_name:
+                return semaphore
+        raise Exception
+
+    def add_project(self, project: Project, semaphore: ProjectFinishedSemaphore) -> None:
         """adds new project to model"""
 
         if not self.does_project_exist(project.working_dir) and os.getcwd().split("/")[-1] not in project.working_dir:
             self.projects.append(project)
+            self.semaphore_list.append(semaphore)
             self.current_project = project
             print("[Model]   new project")
 
     def get_sourcefile_by_name(self, name: str) -> SourceFile:
         return self.current_project.get_sourcefile(name)
 
-    def get_current_project(self) -> Optional[Project]:
-        try:
-            return copy.deepcopy(self.current_project)
-        except:
-            return None
-
     def get_project_time(self) -> float:
         return self.current_project.project_time
-    
+
     def get_current_working_directory(self) -> str:
+        if self.current_project is None:
+            return ""
         return self.current_project.working_dir
+
+    def get_all_project_names(self) -> List[str]:
+        return_list: List[str] = list()
+        for project in self.projects:
+            return_list.append(project.working_dir)
+        return return_list

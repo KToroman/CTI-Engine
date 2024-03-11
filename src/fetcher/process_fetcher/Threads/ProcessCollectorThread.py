@@ -6,19 +6,22 @@ from os.path import join
 from re import split
 from threading import Event, Thread, Lock
 from typing import List, Optional, IO
-
+from multiprocessing.synchronize import Event as SyncEvent
 import psutil
+from PyQt5.QtCore import pyqtSignal
 from psutil import NoSuchProcess, AccessDenied
 
 from src.fetcher.process_fetcher.Threads.FetcherThread import FetcherThread
 from src.model.Model import Model
 from src.model.core.Project import Project
+from src.model.core.ProjectFinishedSemaphore import ProjectFinishedSemaphore
 
 
 class ProcessCollectorThread:
     def __init__(self, process_list: List[psutil.Process], process_list_lock: Lock, model: Model, model_lock: Lock,
                  check_for_project: bool, fetcher_list: List[FetcherThread], saver_queue: Queue,
-                 hierarchy_queue: Queue, save_path: str, shutdown: Event):
+                 hierarchy_queue: Queue, save_path: str, shutdown: Event, project_queue: Queue,
+                 finished_event: pyqtSignal, project_finished_event: SyncEvent):
         self.__thread: Thread
         self.__shutdown = shutdown
         self.__work_queue_lock = Lock()
@@ -35,6 +38,10 @@ class ProcessCollectorThread:
         self.__hierarchy_queue = hierarchy_queue
         self.__counter = 0
         self.time_till_false: float = 0
+
+        self.__project_queue = project_queue
+        self.__finished_event = finished_event
+        self.__project_finished_event = project_finished_event
 
     def __run(self):
         while not self.__shutdown.is_set():
@@ -92,7 +99,7 @@ class ProcessCollectorThread:
                     if not f.has_work():
                         f.add_work(process)
                         break
-            self.time_till_false = time.time() + 15
+            self.time_till_false = time.time() + 20
 
     def __create_processes(self, line: str) -> Optional[psutil.Process]:
         proc_id = ""
@@ -122,7 +129,14 @@ class ProcessCollectorThread:
         try:
             with self.__model_lock:
                 if project_name != self.__model.get_current_working_directory():
-                    self.__model.add_project(Project(project_name, self.__create_project_name(project_name)))
+                    if self.__model.current_project is not None:
+                        with self.__model.get_semaphore_by_name(self.__model.get_current_working_directory()).set_lock:
+                            self.__model.get_semaphore_by_name(self.__model.get_current_working_directory()).new_project_set()
+
+                    semaphore: ProjectFinishedSemaphore = ProjectFinishedSemaphore(project_name, self.__project_queue,
+                                                                                   self.__finished_event,
+                                                                                   self.__project_finished_event)
+                    self.__model.add_project(Project(project_name, self.__create_project_name(project_name)), semaphore)
                     self.__hierarchy_queue.put(project_name)
                     self.__saver_queue.put(project_name)
         except NoSuchProcess:
@@ -148,10 +162,12 @@ class ProcessCollectorThread:
         name = (name + " " + time_date.__str__())
         if os.path.exists(join(self.__save_path, name)):
             for i in range(1, 10):
-                name = f"{name} {i}"
-                if os.path.exists(join(self.__save_path, name)):
-                    return name
+                name_temp = f"{name} {i}"
+                if not os.path.exists(join(self.__save_path, name_temp)):
+                    return name_temp
 
             name = f"{name} {time.time()}"
             return name
+
+        return name
 

@@ -40,7 +40,7 @@ class FileSaverThread:
             self.__remove_work()
             with self.__model_lock:
                 project = deepcopy(self.__model.get_project_by_name(work))
-            self.__data_fetcher.save_project(project=project)
+                self.__data_fetcher.save_project(project=project)
 
     def add_work(self, project_name: str):
         """this methode adds a project to the worklist for the saver thread"""

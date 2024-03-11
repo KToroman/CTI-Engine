@@ -11,7 +11,7 @@ from src.model.core.StatusSettings import StatusSettings
 class UIInterface(Protocol):
     """provides an Interface for Implemetations of a User Interface. All contained Methods must be implemented by subclasses."""
 
-    model_queue: Queue
+    project_queue: Queue
     status_queue: Queue
     error_queue: Queue
     visualize_signal: pyqtSignal
