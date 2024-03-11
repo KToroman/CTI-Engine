@@ -93,9 +93,11 @@ class MenuBar:
                 if widget is not None:
                     widget.deleteLater()
         for name in project_names:
-            show_name = name.split("/")[-1]
-            if show_name == "" or show_name is None:
-                show_name = name.split("/")[-2]
+
+            if name.split(" ").__len__() > 2:
+                show_name = name.split(" ")[0] + " " + name.split(" ")[-1]
+            else:
+                show_name = name.split(" ")[0]
             new_button: QPushButton = QPushButton(show_name)
             self.scroll_layout.addWidget(new_button)
             new_button.clicked.connect(lambda: self.show_project_name_input(name))

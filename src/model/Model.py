@@ -41,9 +41,15 @@ class Model(ModelReadViewInterface):
             for header in cast(list[Header], current_cfile.headers):
                 self.insert_datapoint_header(data_point, header)
 
+    def project_in_semaphore_list(self, project_dir: str):
+        for semaphore in self.semaphore_list:
+            if project_dir == semaphore.project_dir:
+                return True
+        return False
+
     def get_project_by_name(self, name: str) -> Project:
         for project in self.projects:
-            if name == project.working_dir:
+            if name == project.name:
                 return project
         raise ProjectNotFoundException
 
@@ -55,14 +61,15 @@ class Model(ModelReadViewInterface):
 
     def get_semaphore_by_name(self, name) -> ProjectFinishedSemaphore:
         for semaphore in self.semaphore_list:
-            if name == semaphore.project_name:
+            if name == semaphore.project_dir:
                 return semaphore
         raise Exception
 
     def add_project(self, project: Project, semaphore: ProjectFinishedSemaphore) -> None:
         """adds new project to model"""
 
-        if not self.does_project_exist(project.working_dir) and os.getcwd().split("/")[-1] not in project.working_dir:
+        print(self.semaphore_list.__len__())
+        if os.getcwd().split("/")[-1] not in project.working_dir:
             self.projects.append(project)
             self.semaphore_list.append(semaphore)
             self.current_project = project
@@ -70,9 +77,6 @@ class Model(ModelReadViewInterface):
 
     def get_sourcefile_by_name(self, name: str) -> SourceFile:
         return self.current_project.get_sourcefile(name)
-
-    def get_project_time(self) -> float:
-        return self.current_project.project_time
 
     def get_current_working_directory(self) -> str:
         if self.current_project is None:
@@ -82,5 +86,5 @@ class Model(ModelReadViewInterface):
     def get_all_project_names(self) -> List[str]:
         return_list: List[str] = list()
         for project in self.projects:
-            return_list.append(project.working_dir)
+            return_list.append(project.name)
         return return_list
