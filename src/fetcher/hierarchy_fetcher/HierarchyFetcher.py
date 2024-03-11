@@ -3,6 +3,7 @@ import threading
 import time
 from subprocess import CalledProcessError
 from concurrent.futures import ThreadPoolExecutor, Future
+from multiprocessing.synchronize import Event as SyncEvent
 
 from colorama import Fore
 
@@ -19,15 +20,16 @@ from src.exceptions.CompileCommandError import CompileCommandError
 
 class HierarchyFetcher(FetcherInterface):
 
-    def __init__(self, model: Model, model_lock: threading.Lock, max_workers=16) -> None:
+    def __init__(self, model: Model, model_lock: threading.Lock, hierarchy_fetching_event: SyncEvent,
+                 shutdown_event: SyncEvent, max_workers=16) -> None:
         self.project_name: str = None
         self.__model = model
         self.__model_lock = model_lock
         self.__gcc_command_executor: GCCCommandExecutor = GCCCommandExecutor()
         self.command_getter: CompileCommandGetter
         self.__open_timeout: int = 0
-        self.is_done: bool = False
-
+        self.__hierarchy_fetching_event = hierarchy_fetching_event
+        self.__shutdown_event = shutdown_event
         self.worker_thread_pool: ThreadPoolExecutor = ThreadPoolExecutor(max_workers=max_workers)
 
     def update_project(self) -> bool:
@@ -45,7 +47,7 @@ class HierarchyFetcher(FetcherInterface):
             time.sleep(5)
             if self.__open_timeout > 2:
                 self.__open_timeout = 0
-                self.is_done = True
+                self.set_semaphore(self.project_name)
                 raise e
             else:
                 self.__open_timeout += 1
@@ -53,8 +55,14 @@ class HierarchyFetcher(FetcherInterface):
                 return True
 
         self.__setup_hierarchy(project)
-        self.is_done = True
+        self.set_semaphore(self.project_name)
         return False
+
+    def set_semaphore(self, project_name: str):
+        with self.__model_lock:
+            project = self.__model.get_project_by_name(project_name)
+        with self.__model.get_semaphore_by_name(project.working_dir).set_lock:
+            self.__model.get_semaphore_by_name(project.working_dir).hierarchy_fetcher_set()
 
     def __setup_hierarchy(self, project: Project) -> None:
         """the main Method of the Hierarchy Fetcher class"""
@@ -64,6 +72,8 @@ class HierarchyFetcher(FetcherInterface):
         futures: dict[Future, SourceFile] = {}
         failed_source_files: int = 0
         for source_file in source_files:
+            if (not self.__hierarchy_fetching_event.is_set()) or self.__shutdown_event.is_set():
+                return
             try:
                 self.__set_compile_command(source_file)
                 futures[self.worker_thread_pool.submit(self.__generate_header_result, source_file)] = source_file
@@ -72,7 +82,10 @@ class HierarchyFetcher(FetcherInterface):
                 failed_source_files += 1
             except CalledProcessError as e:
                 source_files_retry.append(source_file)
+
         for future in concurrent.futures.as_completed(futures):
+            if (not self.__hierarchy_fetching_event.is_set()) or self.__shutdown_event.is_set():
+                return
             try:
                 self.__update_headers(futures[future], future.result())
             except CompileCommandError as e:
@@ -85,6 +98,8 @@ class HierarchyFetcher(FetcherInterface):
             f"\033[96m [HierarchyFetcher]     Retry making Hierarchy for {len(source_files_retry)} Sourcefiles\033[0m")
         futures = {}
         for source_file in source_files_retry:
+            if (not self.__hierarchy_fetching_event.is_set()) or self.__shutdown_event.is_set():
+                return
             try:
                 self.__set_compile_command(source_file)
                 futures[self.worker_thread_pool.submit(self.__generate_header_result, source_file)] = source_file
@@ -97,6 +112,8 @@ class HierarchyFetcher(FetcherInterface):
                 failed_source_files += 1
                 continue
         for future in concurrent.futures.as_completed(futures):
+            if (not self.__hierarchy_fetching_event.is_set()) or self.__shutdown_event.is_set():
+                return
             try:
                 self.__update_headers(futures[future], future.result())
             except CompileCommandError as e:

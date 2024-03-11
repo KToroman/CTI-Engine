@@ -5,8 +5,10 @@ from multiprocessing import Queue
 from os.path import join
 from threading import Lock, Thread, Event
 from typing import List
+from multiprocessing.synchronize import Event as SyncEvent
 
 import psutil
+from PyQt5.QtCore import pyqtSignal
 
 from src.fetcher.process_fetcher.DataFetcher import DataFetcher
 from src.fetcher.process_fetcher.Threads.FetcherThread import FetcherThread
@@ -20,12 +22,17 @@ from src.model.Model import Model
 class PassiveDataFetcher(DataFetcher):
 
     def __init__(self, model: Model, model_lock: Lock, saver_queue: Queue, hierarchy_queue: Queue,
-                 shutdown: Event, save_path: str, process_finder_count=1, process_collector_count=1, fetcher_count=1,
+                 shutdown: Event, save_path: str, project_queue: Queue, finished_event: pyqtSignal,
+                 project_finished_event: SyncEvent, process_finder_count=1, process_collector_count=1, fetcher_count=1,
                  fetcher_process_count=15):
 
         self.__model = model
         self.__model_lock = model_lock
         self.__shutdown = shutdown
+
+        self.__project_queue = project_queue
+        self.__finished_event = finished_event
+        self.__project_finished_event = project_finished_event
 
         self.__save_path = save_path
         self.__time_to_wait: float = 15
@@ -43,11 +50,29 @@ class PassiveDataFetcher(DataFetcher):
         self.__fetcher_count: int = fetcher_count
         self.__fetcher_process_count = fetcher_process_count
         self.__fetcher: List[FetcherThread] = list()
+        self.__done_fetching: bool = True
 
     def update_project(self) -> bool:
         for finder in self.__process_finder:
             finder.set_work()
-        return self.__time_keeper()
+        time_keeper_bool: bool = self.__time_keeper()
+        if time_keeper_bool and self.__done_fetching:
+            self.__model.get_semaphore_by_name(self.__model.get_current_working_directory()).restore_fetcher_set()
+        if time_keeper_bool:
+            self.__done_fetching = False
+        elif not self.__done_fetching:
+            self.finish_fetching()
+        return time_keeper_bool
+
+    def finish_fetching(self):
+        if not self.__done_fetching:
+            self.__done_fetching = True
+            self.__semaphore()
+
+    def __semaphore(self):
+        with self.__model_lock:
+            with self.__model.get_semaphore_by_name(self.__model.get_current_working_directory()).set_lock:
+                self.__model.get_semaphore_by_name(self.__model.get_current_working_directory()).stop_fetcher_set()
 
     def __time_keeper(self) -> bool:
         if max(p.time_till_false for p in self.__process_collector_list) <= time.time():
@@ -69,7 +94,8 @@ class PassiveDataFetcher(DataFetcher):
                                                               self.__model_lock,
                                                               True, self.__fetcher, self.__saver_queue,
                                                               self.__hierarchy_queue,
-                                                              self.__save_path, self.__shutdown)
+                                                              self.__save_path, self.__shutdown, self.__project_queue,
+                                                              self.__finished_event, self.__project_finished_event)
             self.__process_collector_list.append(process_collector_thread)
             process_collector_thread.start()
         for i in range(self.__process_finder_count):

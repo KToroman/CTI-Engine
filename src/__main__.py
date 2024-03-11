@@ -7,6 +7,7 @@ import click
 from PyQt5.QtCore import pyqtSignal
 
 from src.app.App import App
+from src.model.Model import Model
 from src.view.UIInterface import UIInterface
 from src.view.GUI.MainWindow import MainWindow
 from src.view.GUI.prepare_gui import prepare_gui
@@ -41,21 +42,22 @@ def initialize_app() -> App:
               load_event=load_event, load_path_queue=load_path_queue, source_file_name_queue=source_file_name_queue,
               visualize_signal=visualize_signal, error_queue=error_queue, error_signal=error_signal,
               status_queue=status_queue,
-              model_queue=model_queue, cancel_event=cancel_event, restart_event=restart_event,
-              status_signal=status_signal)
+              project_queue=project_queue, cancel_event=cancel_event, restart_event=restart_event,
+              status_signal=status_signal, model=model)
     return app
 
 
 def initialize_gui() -> UIInterface:
     gui: UIInterface = prepare_gui(shutdown_event=shutdown_event, status_queue=status_queue,
-                                   model_queue=model_queue,
+                                   project_queue=project_queue,
                                    error_queue=error_queue, load_path_queue=load_path_queue, cancel_event=cancel_event,
-                                   active_mode_queue=source_file_name_queue, restart_event=restart_event)
+                                   active_mode_queue=source_file_name_queue, restart_event=restart_event, model=model)
 
     return gui
 
 
 if __name__ == "__main__":
+    model: Model = Model()
     shutdown_event = multiprocessing.Event()
     active_mode_event = multiprocessing.Event()
     passive_mode_event = multiprocessing.Event()
@@ -66,7 +68,7 @@ if __name__ == "__main__":
     source_file_name_queue = Queue(1)
     error_queue = Queue(5)
     status_queue = Queue()
-    model_queue = Queue()
+    project_queue = Queue()
     cancel_event = multiprocessing.Event()
     restart_event = multiprocessing.Event()
     gui = initialize_gui()
