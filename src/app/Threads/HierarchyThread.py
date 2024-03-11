@@ -39,6 +39,7 @@ class HierarchyThread:
                     if repeat:
                         continue
                 except FileNotFoundError as e:
+
                     self.__error_queue.put(FileNotFoundError("could not find the compile-commands.json file"))
                     print(Fore.RED + "[HierarchyThread]   could not find the compile-commands.json file for project: " +
                           Fore.BLUE + self.__current_work + Fore.RESET)

@@ -14,8 +14,8 @@ class GUICommunicationManager:
                  status_queue: Queue, status_signal: pyqtSignal, fetching_passive_data: Event,
                  active_measurement_active: Event, finished_project_event: Event,
                  load_event: Event, cancel_event: Event, restart_event: Event, hierarchy_fetching_event: SyncEvent):
-        self.__error_queue: Queue = error_queue
-        self.__error_signal: pyqtSignal = error_signal
+        self.__error_queue = error_queue
+        self.__error_signal = error_signal
         self.__status_signal: pyqtSignal = status_signal
         self.__status_queue: Queue = status_queue
         self.__shutdown_event: Event = shutdown_event
@@ -52,6 +52,14 @@ class GUICommunicationManager:
                 self.__hierarchy_fetching_event.clear()
                 self.__active_measurement_active.clear()
 
+            if self.__load_event.is_set():
+                self.__cancel_event.set()
+                self.__status = StatusSettings.LOADING
+                self.__time_of_last_status_change = time.time() + 1.5
+                self.__deploy_status()
+                self.__passive_mode_event.clear()
+                self.__hierarchy_fetching_event.clear()
+                self.__active_measurement_active.clear()
 
             if self.__restart_event.is_set():
                 self.__restart_event.clear()
@@ -61,12 +69,11 @@ class GUICommunicationManager:
             deploy_status_now: bool = self.__update_status()
             if deploy_status_now:
                 self.__deploy_status()
+            self.__deploy_error()
 
     def __deploy_error(self):
-        error: BaseException = self.__error_queue.get(True, 7)
-        if error is None:
-            return
-        self.__error_signal.emit()
+        if not self.__error_queue.empty():
+            self.__error_signal.emit()
 
     def __update_status(self) -> bool:
         if self.__time_of_last_status_change + 1.5 > time.time():
@@ -78,7 +85,6 @@ class GUICommunicationManager:
             self.__status = StatusSettings.SEARCHING
         if self.__found_project.is_set():
             self.__status = StatusSettings.MEASURING
-
         if self.__finished_project_event.is_set():
             self.__status = StatusSettings.FINISHED
         if self.__active_measurement_active.is_set():

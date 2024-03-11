@@ -1,8 +1,8 @@
-from multiprocessing import Queue
+from multiprocessing import Queue, Event, Lock
 from multiprocessing.synchronize import Event as SyncEvent
+
 import os
 from os.path import join
-from threading import Event, Lock
 
 from PyQt5.QtCore import pyqtSignal
 from src.app.Threads.ActiveFetcherThread import ActiveFetcherThread
@@ -26,13 +26,14 @@ class App(AppRequestsInterface):
                  load_path_queue: Queue, source_file_name_queue: Queue, visualize_signal: pyqtSignal,
                  error_queue: Queue, error_signal: pyqtSignal, status_signal: pyqtSignal,
                  status_queue: Queue, project_queue: Queue, cancel_event: Event, restart_event: Event, model: Model):
-
         self.__model_lock: Lock = Lock()
 
         self.passive_mode_event = passive_mode_event
         self.shutdown_event = shutdown_event
         self.load_event = load_event
+
         self.load_path_queue = load_path_queue
+
         self.__source_file_name_queue = source_file_name_queue
         self.__error_queue = error_queue
         self.__error_signal = error_signal
@@ -77,14 +78,16 @@ class App(AppRequestsInterface):
                                                                    self.passive_mode_event, self.fetching_passive_data)
 
         self.hierarchy_thread: HierarchyThread = HierarchyThread(shutdown_event, self.hierarchy_fetcher,
-                                                                 self.error_queue, self.__hierarchy_fetcher_work_queue,
+                                                                 self.__error_queue, self.__hierarchy_fetcher_work_queue,
                                                                  self.__hierarchy_fetching_event)
 
         self.file_saver_thread: FileSaverThread = FileSaverThread(self.shutdown_event, self.__model, self.saver,
                                                                   self.__model_lock, self.__finished_project_event,
                                                                   self.__file_saver_work_queue)
-        self.file_fetch_thread: FileFetcherThread = FileFetcherThread(self.error_queue, self.__model, self.__model_lock,
-                                                                      self.shutdown_event, self.load_path_queue)
+        self.file_fetch_thread: FileFetcherThread = FileFetcherThread(self.__error_queue, self.__model, self.__model_lock,
+                                                                      self.shutdown_event, self.load_path_queue,
+                                                                      self.load_event, self.__project_queue,
+                                                                      self.visualize_signal)
         self.__status_and_error_thread: GUICommunicationManager = (
             GUICommunicationManager(shutdown_event=self.shutdown_event, error_queue=self.__error_queue,
                                     error_signal=self.__error_signal, passive_mode_event=self.passive_mode_event,
@@ -109,6 +112,7 @@ class App(AppRequestsInterface):
         self.passive_thread.start()
         self.file_saver_thread.start()
         self.hierarchy_thread.start()
+        self.file_fetch_thread.start()
 
     def stop(self):
         self.shutdown_event.set()
@@ -116,6 +120,7 @@ class App(AppRequestsInterface):
         self.hierarchy_thread.stop()
         self.file_saver_thread.stop()
         self.__status_and_error_thread.stop()
+        self.file_fetch_thread.stop()
         print("[App]    stopped")
 
     def __get_cti_folder_path(self) -> str:
