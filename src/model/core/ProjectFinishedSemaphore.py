@@ -1,10 +1,11 @@
 from multiprocessing import Queue
 from multiprocessing.synchronize import Event as SyncEvent
-from threading import Lock
+from multiprocessing.synchronize import Lock as SyncLock
+
+from multiprocessing import Lock
 from typing import List
 
 from PyQt5.QtCore import pyqtSignal
-from colorama import Fore
 
 
 class ProjectFinishedSemaphore:
@@ -12,7 +13,7 @@ class ProjectFinishedSemaphore:
     def __init__(self, project_dir: str, project_name: str, project_queue: Queue, visualize_event: pyqtSignal,
                  project_finished_event: SyncEvent, semaphore_list: List):
         self.__visualize_event = visualize_event
-        self.set_lock: Lock = Lock()
+        self.set_lock: SyncLock = Lock()
         self.project_dir = project_dir
         self.project_name = project_name
         self.__project_queue = project_queue
@@ -42,6 +43,7 @@ class ProjectFinishedSemaphore:
             self.__semaphore_list.remove(self)
 
             self.__project_queue.put(self.project_name)
-            print(Fore.GREEN + "project finished " + self.project_name + Fore.RESET)
+            print(Fore.GREEN + "project finished " +
+                  self.project_name + Fore.RESET)
             self.__visualize_event.emit()
             self.__project_finished_event.set()

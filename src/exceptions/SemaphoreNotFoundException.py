@@ -1,0 +1,2 @@
+class SemaphoreNotFoundException(Exception):
+  pass
