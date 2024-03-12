@@ -1,13 +1,11 @@
 import os
 from os.path import join
 
-from typing import Optional, Self
+from typing import Self
 import json
 from attr import define, frozen
 import cattrs
 from cattrs.gen import override
-
-from src.app.FetcherCountConfiguration import FetcherCountConfiguration
 
 @define(frozen=True)
 class Configuration:
@@ -36,3 +34,6 @@ class Configuration:
         path += join(os.getcwd().split("cti-engine-prototype")[0])
         return path
 
+if __name__ == "__main__":
+    config = Configuration("config/ConfigFile.json")
+    print(config.active_build_dir_path)
