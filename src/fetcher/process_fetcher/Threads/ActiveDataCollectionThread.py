@@ -1,6 +1,7 @@
 import os
-from threading import Lock
 from multiprocessing.synchronize import Event as SyncEvent
+from multiprocessing.synchronize import Lock as SyncLock
+
 
 import psutil
 from psutil import NoSuchProcess
@@ -15,10 +16,11 @@ from src.model.core.SourceFile import SourceFile
 
 class ActiveDataCollectionThread(DataCollectionThread):
 
-    def __init__(self, process_list: list[psutil.Process], process_list_lock: Lock, model: Model, model_lock: Lock,
+    def __init__(self, process_list: list[psutil.Process], process_list_lock: SyncLock, model: Model, model_lock: SyncLock,
                  data_observer: DataObserver, process_count, shutdown: SyncEvent, source_file: SourceFile, active_event: SyncEvent):
         self.__source_file = source_file
-        super().__init__(process_list, process_list_lock, model, model_lock, data_observer, process_count, shutdown, active_event)
+        super().__init__(process_list, process_list_lock, model, model_lock,
+                         data_observer, process_count, shutdown, active_event)
 
     def _add_data_entry(self, data_entry: DataEntry):
         with self._model_lock:
@@ -32,7 +34,6 @@ class ActiveDataCollectionThread(DataCollectionThread):
 
             if "cc1plus" not in cmdline[0]:
                 return
-
 
             has_o: bool = False
             for line in cmdline:
@@ -51,7 +52,8 @@ class ActiveDataCollectionThread(DataCollectionThread):
                     break
             if not has_o:
                 return
-            entry: DataEntry = DataEntry(path, process_point.timestamp, process_point.metrics)
+            entry: DataEntry = DataEntry(
+                path, process_point.timestamp, process_point.metrics)
             self._add_data_entry(entry)
         except NoSuchProcess:
             return

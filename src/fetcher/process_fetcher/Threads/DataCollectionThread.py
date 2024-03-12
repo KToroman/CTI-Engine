@@ -1,9 +1,10 @@
 import os
 import time
 from os.path import join
-from threading import Thread, Lock
+from threading import Thread
 from typing import List, Optional
 from multiprocessing.synchronize import Event as SyncEvent
+from multiprocessing.synchronize import Lock as SyncLock
 
 import psutil
 from psutil import NoSuchProcess
@@ -15,7 +16,7 @@ from src.model.core.ProcessPoint import ProcessPoint
 
 
 class DataCollectionThread:
-    def __init__(self, process_list: List[psutil.Process], process_list_lock: Lock, model: Model, model_lock: Lock,
+    def __init__(self, process_list: List[psutil.Process], process_list_lock: SyncLock, model: Model, model_lock: SyncLock,
                  data_observer: DataObserver, process_count, shutdown: SyncEvent, active_event: SyncEvent):
         self._thread: Thread
         self._shutdown = shutdown
@@ -91,12 +92,14 @@ class DataCollectionThread:
             has_o: bool = False
             for line in cmdline:
                 if line.endswith(".o"):
-                    path = join(path, "CMakeFiles", line.split("CMakeFiles/")[-1])
+                    path = join(path, "CMakeFiles",
+                                line.split("CMakeFiles/")[-1])
                     has_o = True
                     break
             if not has_o:
                 return
-            entry: DataEntry = DataEntry(path, process_point.timestamp, process_point.metrics)
+            entry: DataEntry = DataEntry(
+                path, process_point.timestamp, process_point.metrics)
             self._add_data_entry(entry)
         except NoSuchProcess:
             return
