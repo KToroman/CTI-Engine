@@ -35,8 +35,7 @@ def setupUI(mainWindow, active_mode_queue):
     icon_label = QLabel()
     icon_label.setAlignment(Qt.AlignHCenter)
 
-    icon_label.setPixmap(QIcon('/common/homes/all/uyioc_brentel/PyCharm/pycharm-community-2023.3.1/'
-                               'cti-engine-prototype/src/view/GUI/Images/CTIEngineLogo.png').pixmap(24, 24))
+    icon_label.setPixmap(QIcon('src/view/GUI/Images/CTIEngineLogo.png').pixmap(24, 24))
     mainWindow.verticalLayout_2.addWidget(icon_label)
 
     mainWindow.small_load_button = mainWindow.menu_bar.small_load_file_button
@@ -79,8 +78,7 @@ def setupUI(mainWindow, active_mode_queue):
     mainWindow.verticalLayout.addWidget(mainWindow.label)
     icon_label2 = QLabel()
     icon_label2.setAlignment(Qt.AlignHCenter)
-    icon_label2.setPixmap(QIcon('/common/homes/all/uyioc_brentel/PyCharm/pycharm-community-2023.3.1/'
-                               'cti-engine-prototype/src/view/GUI/Images/CTIEngineLogo.png').pixmap(40, 40))
+    icon_label2.setPixmap(QIcon('src/view/GUI/Images/CTIEngineLogo.png').pixmap(40, 40))
     mainWindow.verticalLayout.addWidget(icon_label2)
 
 

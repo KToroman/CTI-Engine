@@ -126,6 +126,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
 
     def visualize(self):
+        print("visualize")
         """displays the data contained in that Model to the user."""
         project_name: str = self.project_queue.get()
         project = self.__model.get_project_by_name(project_name)
