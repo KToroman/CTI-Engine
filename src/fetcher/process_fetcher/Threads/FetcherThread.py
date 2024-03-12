@@ -77,7 +77,7 @@ class FetcherThread:
     def __add_data_entry(self, data_entry: DataEntry):
         with self.__model_lock:
             self.__model.insert_datapoint(data_entry)
-        self.time_till_false = time.time() + 15
+        self.time_till_false = time.time() + 20
 
     def __make_entry(self, process_point: ProcessPoint) -> None:
         try:

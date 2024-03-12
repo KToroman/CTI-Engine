@@ -33,13 +33,11 @@ class HierarchyThread:
                         self.__current_work = ""
                         repeat = False
                         continue
-                    print(self.__current_work)
                     self.__data_fetcher.project_name = self.__current_work
                     repeat = self.__data_fetcher.update_project()
                     if repeat:
                         continue
                 except FileNotFoundError as e:
-
                     self.__error_queue.put(FileNotFoundError("could not find the compile-commands.json file"))
                     print(Fore.RED + "[HierarchyThread]   could not find the compile-commands.json file for project: " +
                           Fore.BLUE + self.__current_work + Fore.RESET)

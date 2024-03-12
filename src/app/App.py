@@ -11,6 +11,7 @@ from src.app.Threads.FileFetcherThread import FileFetcherThread
 from src.app.Threads.FileSaverThread import FileSaverThread
 from src.app.Threads.HierarchyThread import HierarchyThread
 from src.app.Threads.PassiveDataThread import PassiveDataThread
+from src.fetcher.file_fetcher.FileLoader import FileLoader
 from src.fetcher.hierarchy_fetcher.HierarchyFetcher import HierarchyFetcher
 from src.fetcher.process_fetcher.PassiveDataFetcher import PassiveDataFetcher
 from src.app.Threads.GUICommunicationManager import GUICommunicationManager
@@ -63,10 +64,10 @@ class App(AppRequestsInterface):
                                                                              self.visualize_signal,
                                                                              self.__finished_project_event,
                                                                              self.passive_mode_event,
-                                                                             process_finder_count=1,
-                                                                             process_collector_count=1,
-                                                                             fetcher_count=1,
-                                                                             fetcher_process_count=15)
+                                                                             process_finder_count=5,
+                                                                             process_collector_count=3,
+                                                                             fetcher_count=3,
+                                                                             fetcher_process_count=20)
         self.__hierarchy_fetching_event: SyncEvent = Event()
         self.__hierarchy_fetching_event.set()
 

@@ -4,6 +4,7 @@ from threading import Lock
 from typing import List
 
 from PyQt5.QtCore import pyqtSignal
+from colorama import Fore
 
 
 class ProjectFinishedSemaphore:
@@ -36,16 +37,11 @@ class ProjectFinishedSemaphore:
             self.__semaphore += 1
             self.__semaphore_check()
 
-    def restore_fetcher_set(self):
-        if self.__passive_been_set:
-            self.__semaphore += 1
-            self.__passive_been_set = False
-
     def __semaphore_check(self):
         if self.__semaphore == 0:
             self.__semaphore_list.remove(self)
-            print(self.__semaphore_list.__len__())
+
             self.__project_queue.put(self.project_name)
-            print("project finished " + self.project_name)
+            print(Fore.GREEN + "project finished " + self.project_name + Fore.RESET)
             self.__visualize_event.emit()
             self.__project_finished_event.set()

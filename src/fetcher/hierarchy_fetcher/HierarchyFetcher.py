@@ -44,7 +44,7 @@ class HierarchyFetcher(FetcherInterface):
             self.command_getter = CompileCommandGetter(project.working_dir, self.__model_lock)
             self.__open_timeout = 0
         except FileNotFoundError as e:
-            time.sleep(5)
+            time.sleep(10)
             if self.__open_timeout > 2:
                 self.__open_timeout = 0
                 self.set_semaphore(self.project_name)
