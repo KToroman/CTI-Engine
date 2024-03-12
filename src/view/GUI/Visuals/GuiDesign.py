@@ -145,7 +145,6 @@ def setupUI(mainWindow, active_mode_queue):
 
     mainWindow.horizontalLayout_5 = QHBoxLayout()
 
-    mainWindow.select_all_checkbox = QCheckBox("select all")
     mainWindow.select_all_checkbox.setMaximumWidth(80)
     mainWindow.horizontalLayout_5.addWidget(mainWindow.select_all_checkbox)
 

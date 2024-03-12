@@ -32,38 +32,40 @@ class BarWidget(QWidget):
         self.toolbar = CustomToolbar(self.canvas, self)
         layout.addWidget(self.toolbar)
         layout.addWidget(self.canvas)
-        self.__plot_bar_chart()
+        self.plot_bar_chart()
 
         # Connect pick events for the bar chart
         self.canvas.mpl_connect('pick_event', self.on_pick)
 
     def add_bar(self, plot: Plot):
-        """adds bar to bar chart"""
+        """Adds bar to bar chart."""
         self.categories.append(plot.name)
         self.values.append(plot.y_values[0])
         self.colors.append(plot.color)
 
         # Update chart
-        self.__plot_bar_chart()
+        #self.__plot_bar_chart()
 
     def remove_bar(self, plot: Plot):
-        """removes bar from bar chart"""
+        """Removes bar from bar chart."""
         self.categories.remove(plot.name)
         self.values.remove(plot.y_values[0])
         self.colors.remove(plot.color)
 
         # Update chart
-        self.__plot_bar_chart()
+        #self.__plot_bar_chart()
 
-    def __plot_bar_chart(self):
-        """(re)draws bar chart"""
+    def plot_bar_chart(self):
+        """(Re)draws bar chart."""
 
         # Remove previous axes labels
         self.figure.clear()
         #self.figure.set_facecolor("#61b3bf")
         # Create subplot for bar chart
         self.ax = self.figure.add_subplot(111)
-
+        print("VALUES LISTE: " + len(self.values).__str__())
+        print("COLORS LISTE: " + len(self.colors).__str__())
+        print("CATEGORIES LISTE: " + len(self.categories).__str__())
         # Create bar chart
         bars = self.ax.bar(self.categories, self.values, color=self.colors, label=self.categories)
         self.ax.set_xticks([])
@@ -79,6 +81,6 @@ class BarWidget(QWidget):
             bar.set_picker(True)
 
     def on_pick(self, event: PickEvent):
-        """reacts to click on bar"""
+        """Reacts to click on bar."""
         self.bar_clicked = event.artist.get_label().__str__()
         self.click_signal.emit()

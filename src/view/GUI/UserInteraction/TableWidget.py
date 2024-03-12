@@ -1,9 +1,13 @@
+import time
+from multiprocessing import Queue
 from typing import List
 
+from PyQt5.QtCore import QThreadPool, pyqtSignal
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QInputDialog, QWidget, QHBoxLayout, QCheckBox
 
 from src.view.GUI.Graph.Plot import Plot
+from src.view.GUI.SelectAllWorker import SelectAllWorker
 from src.view.GUI.UserInteraction.Displayable import Displayable
 from src.view.GUI.UserInteraction.TableRow import TableRow
 from src.view.AppRequestsInterface import AppRequestsInterface
@@ -16,7 +20,7 @@ class TableWidget(QTableWidget):
     COLUMN_3_LABEL = "Peak CPU (%)"
     COLUMN_4_LABEL = "Runtime"
 
-    def __init__(self, active_mode_queue):
+    def __init__(self, active_mode_queue: Queue):
         super().__init__()
 
         self.active_mode_queue = active_mode_queue
@@ -31,6 +35,9 @@ class TableWidget(QTableWidget):
         self.insertion_point: str = ""
         self.active_started: bool = False
         self.all_selected: bool = False
+        self.in_row_loop: bool = False
+
+        self.thread_pool: QThreadPool = QThreadPool.globalInstance()
 
     def insert_values(self, displayable: Displayable):
         row_pos: int = self.rowCount()
@@ -150,8 +157,14 @@ class TableWidget(QTableWidget):
 
     def toggle_all_rows(self):
         """Selects or deselects checkboxes of all rows."""
+        last_checkbox:int = self.__find_last_checkbox()
+        row_count: int = 1
+        self.in_row_loop = True
         for row in self.rows:
             if row.displayable.ram_plot.name != "":
+                if row_count == last_checkbox:
+                    self.in_row_loop = False
+                row_count += 1
                 if not self.all_selected:
                     try:
                         row.checkbox.setChecked(True)
@@ -166,22 +179,44 @@ class TableWidget(QTableWidget):
 
     def toggle_custom_amount(self, lower_limit: int, upper_limit: int):
         """Receives two limits and selects checkboxes of rows inbetween them."""
-        real_lower_limit = min(lower_limit, upper_limit)
-        real_upper_limit = max(lower_limit, upper_limit)
-        row_index = 1
+        real_lower_limit: int = min(lower_limit, upper_limit)
+        real_upper_limit: int = max(lower_limit, upper_limit)
+        last_checkbox: int = self.__find_last_checkbox()
+        if real_upper_limit > last_checkbox:
+            real_upper_limit = last_checkbox
+        row_count: int = 1
+        self.in_row_loop = True
         for row in self.rows:
             if row.displayable.ram_plot.name != "":
-                if real_lower_limit <= row_index <= real_upper_limit:
+                if real_lower_limit <= row_count <= real_upper_limit:
+                    if row_count == real_upper_limit:
+                        self.in_row_loop = False
                     try:
+                        row.checkbox.setChecked(False)
                         row.checkbox.setChecked(True)
                     except RuntimeError as e:
                         pass
+                    self.in_row_loop = True
                 else:
+                    if row_count == last_checkbox:
+                        self.in_row_loop = False
                     try:
                         row.checkbox.setChecked(False)
                     except RuntimeError as r:
                         pass
-                row_index += 1
+                row_count += 1
+        self.in_row_loop = False
+
+    def __find_last_checkbox(self) -> int:
+        last_checkbox: int = 0
+        for row in self.rows:
+            if row.displayable.ram_plot.name != "":
+                try:
+                    row.checkbox.isWidgetType()
+                    last_checkbox += 1
+                except RuntimeError as e:
+                    pass
+        return last_checkbox
 
     def sort_table(self, column: int):
         """Sorts table according to a given parameter."""
