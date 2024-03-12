@@ -1,9 +1,8 @@
 import os.path
 import threading
 import time
-from multiprocessing import Queue
+from multiprocessing import Queue, Lock
 from os.path import join
-from threading import Lock
 from multiprocessing.synchronize import Lock as SyncLock
 from typing import List
 from multiprocessing.synchronize import Event as SyncEvent
@@ -38,7 +37,7 @@ class PassiveDataFetcher(DataFetcher):
 
         self.__save_path = save_path
 
-        self.__time_till_false_lock: Lock = Lock()
+        self.__time_till_false_lock: SyncLock = Lock()
 
         self.__saver_queue = saver_queue
         self.__hierarchy_queue = hierarchy_queue
