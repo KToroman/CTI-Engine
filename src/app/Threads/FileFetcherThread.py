@@ -38,7 +38,7 @@ class FileFetcherThread:
                 file_loader.update_project()
             except FileNotFoundError as e:
                 self.__error_queue.put(e)
-                print(Fore.RED + "No file found for path: " + Fore.BLUE + work + Fore.RESET)
+                print(Fore.RED + "[FlieFetcherThread]   No file found for path: " + Fore.BLUE + work + Fore.RESET)
             self.__load_event.clear()
 
 

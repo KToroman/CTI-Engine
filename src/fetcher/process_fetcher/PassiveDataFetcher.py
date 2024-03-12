@@ -23,8 +23,8 @@ class PassiveDataFetcher(DataFetcher):
 
     def __init__(self, model: Model, model_lock: Lock, saver_queue: Queue, hierarchy_queue: Queue,
                  shutdown: Event, save_path: str, project_queue: Queue, finished_event: pyqtSignal,
-                 project_finished_event: SyncEvent, passive_mode_event: SyncEvent, process_finder_count=1,
-                 process_collector_count=1, fetcher_count=1, fetcher_process_count=15):
+                 project_finished_event: SyncEvent, passive_mode_event: SyncEvent, process_finder_count=2,
+                 process_collector_count=2, fetcher_count=2, fetcher_process_count=15):
 
         self.__model = model
         self.__model_lock = model_lock
@@ -36,7 +36,7 @@ class PassiveDataFetcher(DataFetcher):
         self.__project_finished_event = project_finished_event
 
         self.__save_path = save_path
-        self.__time_to_wait: float = 15
+
         self.__time_till_false_lock: Lock = Lock()
 
         self.__saver_queue = saver_queue
@@ -52,6 +52,7 @@ class PassiveDataFetcher(DataFetcher):
         self.__fetcher_process_count = fetcher_process_count
         self.__fetcher: List[FetcherThread] = list()
         self.__done_fetching: bool = True
+        self.max_time = 0
 
     def update_project(self) -> bool:
         for finder in self.__process_finder:
@@ -59,8 +60,9 @@ class PassiveDataFetcher(DataFetcher):
         time_keeper_bool: bool = self.__time_keeper()
         if time_keeper_bool:
             self.__done_fetching = False
-        elif not self.__done_fetching:
-            self.finish_fetching()
+        else:
+            if not self.__done_fetching:
+                self.finish_fetching()
         return time_keeper_bool
 
     def finish_fetching(self):
@@ -75,9 +77,22 @@ class PassiveDataFetcher(DataFetcher):
                     self.__model.get_semaphore_by_name(self.__model.get_current_working_directory()).stop_fetcher_set()
 
     def __time_keeper(self) -> bool:
-        if max(f.time_till_false for f in self.__fetcher) <= time.time():
+        if self.__get_time_till_false() < time.time():
             return False
         return True
+
+    def __get_time_till_false(self) -> float:
+        max_time: float = 0
+        process_time: float = 0
+        fetcher_time: float = 0
+        for p in self.__process_collector_list:
+            if max_time < p.time_till_false:
+                process_time = p.time_till_false
+        for f in self.__fetcher:
+            if max_time < f.time_till_false:
+                fetcher_time = f.time_till_false
+        max_time = max(process_time, fetcher_time)
+        return max_time
 
     def start(self):
         print("[PassiveDataFetcher]    sending start signal")
@@ -104,7 +119,6 @@ class PassiveDataFetcher(DataFetcher):
             finder = ProcessFindingThread(self.__process_collector_list, self.__shutdown, self.__passive_mode_event)
             self.__process_finder.append(finder)
             finder.start()
-            time.sleep(0.5)
 
     def stop(self):
         print("[PassiveDataFetcher]  stop signal sent...")

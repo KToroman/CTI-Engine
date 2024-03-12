@@ -89,6 +89,7 @@ class ProcessCollectorThread:
     def __make_process(self, line: str):
         process = self.__create_processes(line)
         if process is not None and not self.__is_process_in_list(process):
+            self.time_till_false = time.time() + 60
             if self.__check_for_project:
 
                 project_name = self.__get_project_name(process)
@@ -104,7 +105,6 @@ class ProcessCollectorThread:
                     if not f.has_work():
                         f.add_work(process)
                         break
-            self.time_till_false = time.time() + 20
 
     def __create_processes(self, line: str) -> Optional[psutil.Process]:
         proc_id = ""
