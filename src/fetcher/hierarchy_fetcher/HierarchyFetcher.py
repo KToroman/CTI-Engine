@@ -3,7 +3,7 @@ import threading
 import time
 from subprocess import CalledProcessError
 from concurrent.futures import ThreadPoolExecutor, Future
-from multiprocessing.synchronize import Event as SyncEvent
+from multiprocessing.synchronize import Event as SyncEvent, Lock
 
 from colorama import Fore
 
@@ -20,8 +20,8 @@ from src.exceptions.CompileCommandError import CompileCommandError
 
 class HierarchyFetcher(FetcherInterface):
 
-    def __init__(self, model: Model, model_lock: threading.Lock, hierarchy_fetching_event: SyncEvent,
-                 shutdown_event: SyncEvent, max_workers=16) -> None:
+    def __init__(self, model: Model, model_lock: Lock, hierarchy_fetching_event: SyncEvent,
+                 shutdown_event: SyncEvent, max_workers=32) -> None:
         self.project_name: str = None
         self.__model = model
         self.__model_lock = model_lock
@@ -30,7 +30,8 @@ class HierarchyFetcher(FetcherInterface):
         self.__open_timeout: int = 0
         self.__hierarchy_fetching_event = hierarchy_fetching_event
         self.__shutdown_event = shutdown_event
-        self.worker_thread_pool: ThreadPoolExecutor = ThreadPoolExecutor(max_workers=max_workers)
+        self.worker_thread_pool: ThreadPoolExecutor = ThreadPoolExecutor(max_workers=max_workers,
+                                                                         thread_name_prefix="hierarchy_worker")
 
     def update_project(self) -> bool:
         """Updates the current project by adding a hierarchical structure of header objects to all source files
@@ -72,8 +73,8 @@ class HierarchyFetcher(FetcherInterface):
         futures: dict[Future, SourceFile] = {}
         failed_source_files: int = 0
         for source_file in source_files:
-            if (not self.__hierarchy_fetching_event.is_set()) or self.__shutdown_event.is_set():
-                return
+            #if (not self.__hierarchy_fetching_event.is_set()) or self.__shutdown_event.is_set():
+            #    return
             try:
                 self.__set_compile_command(source_file)
                 futures[self.worker_thread_pool.submit(self.__generate_header_result, source_file)] = source_file
@@ -84,8 +85,8 @@ class HierarchyFetcher(FetcherInterface):
                 source_files_retry.append(source_file)
 
         for future in concurrent.futures.as_completed(futures):
-            if (not self.__hierarchy_fetching_event.is_set()) or self.__shutdown_event.is_set():
-                return
+            #if (not self.__hierarchy_fetching_event.is_set()) or self.__shutdown_event.is_set():
+            #    return
             try:
                 self.__update_headers(futures[future], future.result())
             except CompileCommandError as e:
@@ -98,10 +99,10 @@ class HierarchyFetcher(FetcherInterface):
             f"\033[96m [HierarchyFetcher]     Retry making Hierarchy for {len(source_files_retry)} Sourcefiles\033[0m")
         futures = {}
         for source_file in source_files_retry:
-            if (not self.__hierarchy_fetching_event.is_set()) or self.__shutdown_event.is_set():
-                return
+            #if (not self.__hierarchy_fetching_event.is_set()) or self.__shutdown_event.is_set():
+            #    return
             try:
-                self.__set_compile_command(source_file)
+                #self.__set_compile_command(source_file)
                 futures[self.worker_thread_pool.submit(self.__generate_header_result, source_file)] = source_file
             except CompileCommandError as e:
                 source_file.error = True
@@ -112,8 +113,8 @@ class HierarchyFetcher(FetcherInterface):
                 failed_source_files += 1
                 continue
         for future in concurrent.futures.as_completed(futures):
-            if (not self.__hierarchy_fetching_event.is_set()) or self.__shutdown_event.is_set():
-                return
+            #if (not self.__hierarchy_fetching_event.is_set()) or self.__shutdown_event.is_set():
+            #    return
             try:
                 self.__update_headers(futures[future], future.result())
             except CompileCommandError as e:
@@ -122,7 +123,7 @@ class HierarchyFetcher(FetcherInterface):
             except CalledProcessError as e:
                 futures[future].error = True
                 failed_source_files += 1
-        print(f"\033[96m [HierarchyFethcer]     Hierarchy Fetching completed. {failed_source_files} files failed\033[0m")
+        print(f"\033[96m [HierarchyFetcher]     Hierarchy Fetching completed. {failed_source_files} files failed\033[0m")
 
     def __setup_source_files(self, project: Project) -> list[SourceFile]:
         created_source_files: list[SourceFile] = []
@@ -170,7 +171,7 @@ class HierarchyFetcher(FetcherInterface):
                 hierarchy[-1][0], path)
             hierarchy.append((new_header, line_depth))
         else:
-            HierarchyFetcher.__HeaderDepthWrapper = hierarchy.pop()
+            hierarchy.pop()
             self.__append_header_recursive(line, hierarchy, source_file)
 
     def __append_header_to_file(self, cfile: CFile, new_header_path: str) -> Header:

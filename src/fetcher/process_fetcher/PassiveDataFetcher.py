@@ -11,7 +11,7 @@ import psutil
 from PyQt5.QtCore import pyqtSignal
 
 from src.fetcher.process_fetcher.DataFetcher import DataFetcher
-from src.fetcher.process_fetcher.Threads.FetcherThread import FetcherThread
+from src.fetcher.process_fetcher.Threads.DataCollectionThread import DataCollectionThread
 from src.fetcher.process_fetcher.Threads.ProcessCollectorThread import ProcessCollectorThread
 from src.fetcher.process_fetcher.Threads.ProcessFindingThread import ProcessFindingThread
 
@@ -22,7 +22,7 @@ from src.model.Model import Model
 class PassiveDataFetcher(DataFetcher):
 
     def __init__(self, model: Model, model_lock: Lock, saver_queue: Queue, hierarchy_queue: Queue,
-                 shutdown: Event, save_path: str, project_queue: Queue, finished_event: pyqtSignal,
+                 shutdown: SyncEvent, save_path: str, project_queue: Queue, finished_event: pyqtSignal,
                  project_finished_event: SyncEvent, passive_mode_event: SyncEvent, process_finder_count=2,
                  process_collector_count=2, fetcher_count=2, fetcher_process_count=15):
 
@@ -50,7 +50,7 @@ class PassiveDataFetcher(DataFetcher):
 
         self.__fetcher_count: int = fetcher_count
         self.__fetcher_process_count = fetcher_process_count
-        self.__fetcher: List[FetcherThread] = list()
+        self.__fetcher: List[DataCollectionThread] = list()
         self.__done_fetching: bool = True
         self.max_time = 0
 
@@ -58,6 +58,8 @@ class PassiveDataFetcher(DataFetcher):
         for finder in self.__process_finder:
             finder.set_work()
         time_keeper_bool: bool = self.__time_keeper()
+        if time_keeper_bool and self.__done_fetching:
+            self.__model.get_semaphore_by_name(self.__model.get_current_working_directory()).restore_fetcher_set()
         if time_keeper_bool:
             self.__done_fetching = False
         else:
@@ -100,7 +102,7 @@ class PassiveDataFetcher(DataFetcher):
         process_list_lock: threading.Lock = threading.Lock()
         # self.__data_fetching_thread.start()
         for i in range(self.__fetcher_count):
-            fetcher = FetcherThread(process_list, process_list_lock, self.__model, self.__model_lock,
+            fetcher = DataCollectionThread(process_list, process_list_lock, self.__model, self.__model_lock,
                                     DataObserver(), self.__fetcher_process_count, self.__shutdown,
                                     self.__passive_mode_event)
             self.__fetcher.append(fetcher)
@@ -116,7 +118,7 @@ class PassiveDataFetcher(DataFetcher):
             self.__process_collector_list.append(process_collector_thread)
             process_collector_thread.start()
         for i in range(self.__process_finder_count):
-            finder = ProcessFindingThread(self.__process_collector_list, self.__shutdown, self.__passive_mode_event)
+            finder = ProcessFindingThread(self.__shutdown, self.__process_collector_list, self.__passive_mode_event)
             self.__process_finder.append(finder)
             finder.start()
 

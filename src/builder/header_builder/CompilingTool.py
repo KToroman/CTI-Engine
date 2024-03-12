@@ -41,8 +41,7 @@ class CompilingTool(BuilderInterface):
             return False
         header: Header = self.__header_iterator.pop_next_header()
 
-        build_thread = threading.Thread(target=self.build_header, args=([header]), daemon=False)
-        build_thread.start()
+        self.build_header(header)
 
         return self.__header_iterator.has_next_header()
 
