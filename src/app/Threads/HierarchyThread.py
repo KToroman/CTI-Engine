@@ -1,12 +1,12 @@
 from multiprocessing import Queue
-from threading import Event, Thread, Lock
+from threading import Thread, Lock
 from multiprocessing.synchronize import Event as SyncEvent
 
 from src.fetcher.hierarchy_fetcher.HierarchyFetcher import HierarchyFetcher
 
 
 class HierarchyThread:
-    def __init__(self, shutdown_event: Event, data_fetcher: HierarchyFetcher, error_queue: Queue, work_queue: Queue,
+    def __init__(self, shutdown_event: SyncEvent, data_fetcher: HierarchyFetcher, error_queue: Queue, work_queue: Queue,
                  hierarchy_fetching_event: SyncEvent, fetching_hierarchy: SyncEvent):
 
         self.__thread: Thread

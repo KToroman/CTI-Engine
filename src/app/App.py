@@ -22,10 +22,10 @@ from src.view.AppRequestsInterface import AppRequestsInterface
 
 
 class App(AppRequestsInterface):
-    def __init__(self, shutdown_event: Event, passive_mode_event: Event, load_event: Event,
+    def __init__(self, shutdown_event: SyncEvent, passive_mode_event: SyncEvent, load_event: SyncEvent,
                  load_path_queue: Queue, source_file_name_queue: Queue, visualize_signal: pyqtSignal,
                  error_queue: Queue, error_signal: pyqtSignal, status_signal: pyqtSignal,
-                 status_queue: Queue, project_queue: Queue, cancel_event: Event, restart_event: Event, model: Model):
+                 status_queue: Queue, project_queue: Queue, cancel_event: SyncEvent, restart_event: SyncEvent, model: Model):
         self.__model_lock: Lock = Lock()
 
         self.passive_mode_event = passive_mode_event
@@ -42,14 +42,14 @@ class App(AppRequestsInterface):
         self.status_queue = status_queue
         self.__project_queue = project_queue
         self.__restart_event = restart_event
-        self.__finished_project_event: Event = Event()
+        self.__finished_project_event: SyncEvent = Event()
 
         self.__cancel_event = cancel_event
 
         self.__cti_dir_path = self.__get_cti_folder_path()
 
-        self.fetching_passive_data: Event = Event()
-        self.__active_measurement_active: Event = Event()
+        self.fetching_passive_data: SyncEvent = Event()
+        self.__active_measurement_active: SyncEvent = Event()
 
         self.__fetching_hierarchy: SyncEvent = Event()
 
