@@ -2,6 +2,7 @@ from typing import List
 
 from PyQt5.QtCore import Qt
 from multiprocessing import Queue
+from multiprocessing.synchronize import Event as SyncEvent
 from typing import List
 
 from PyQt5.QtCore import Qt, pyqtSignal
@@ -12,7 +13,7 @@ from src.view.AppRequestsInterface import AppRequestsInterface
 
 
 class MenuBar:
-    def __init__(self, load_path_queue, cancel_event, restart_event, project_queue: Queue, visualize_event: pyqtSignal):
+    def __init__(self, load_path_queue: Queue, cancel_event: SyncEvent, restart_event: SyncEvent, project_queue: Queue, visualize_event: pyqtSignal):
 
         self.__project_queue = project_queue
         self.__visualize_event = visualize_event
@@ -71,6 +72,8 @@ class MenuBar:
         text, ok = QInputDialog.getText(None, "File input", 'Enter file name:')
         if ok:
             self.load_path_queue.put(text)
+
+
 
     def show_project_name_input(self, name: str):
         text, ok = QInputDialog.getText(None, "Load Project", "Load the following project?", text= name)

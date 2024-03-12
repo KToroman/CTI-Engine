@@ -65,16 +65,22 @@ class Model(ModelReadViewInterface):
                 return semaphore
         raise Exception
 
-    def add_project(self, project: Project, semaphore: ProjectFinishedSemaphore) -> None:
+    def add_project(self, project: Project, semaphore: Optional[ProjectFinishedSemaphore]) -> None:
         """adds new project to model"""
 
-        print(self.semaphore_list.__len__())
-        if os.getcwd().split("/")[-1] not in project.working_dir:
+        if not self.project_in_list(project.name) and os.getcwd().split("/")[-1] not in project.working_dir:
             self.projects.append(project)
-            self.semaphore_list.append(semaphore)
+            if semaphore is not None:
+                self.semaphore_list.append(semaphore)
             self.current_project = project
             print("[Model]   new project")
 
+
+    def project_in_list(self, name: str) -> bool:
+        for p in self.projects:
+            if name == p.name:
+                return True
+        return False
     def get_sourcefile_by_name(self, name: str) -> SourceFile:
         return self.current_project.get_sourcefile(name)
 

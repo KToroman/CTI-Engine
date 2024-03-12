@@ -1,3 +1,5 @@
+
+
 from typing import List
 
 from PyQt5.QtCore import pyqtSignal
@@ -21,7 +23,7 @@ class GraphWidget(QWidget):
         self.lines: List[plt.plot] = []
         self.plot_clicked: str = ""
 
-        self.figure, self.ax = plt.subplots(figsize=(5, 4), dpi=100)
+        self.figure, self.ax = plt.subplots(figsize=(5, 4), dpi=90)
 
         # Add title and labels for axes
         self.ax.set_xlabel(self.X_AXIS)
@@ -41,9 +43,6 @@ class GraphWidget(QWidget):
     def add_plot(self, plot: Plot):
         """adds plot to graph widget"""
         line, = self.ax.plot(plot.x_values, plot.y_values, label=plot.name, color=plot.color, linewidth=1.5)
-
-        # Update graph
-        self.canvas.draw()
         line.set_picker(True)
 
         # Add line to cpu list
@@ -55,10 +54,17 @@ class GraphWidget(QWidget):
             if line.get_label() == plot.name:
                 line.remove()
                 self.lines.remove(line)
-                self.canvas.draw()
+                #self.plot_graph()
+                #self.canvas.draw()
                 break
+
+    def plot_graph(self):
+        self.ax.relim()
+        self.ax.autoscale()
+        self.canvas.draw()
 
     def on_pick(self, event: PickEvent):
         """reacts to click on graph"""
         self.plot_clicked = event.artist.get_label().__str__()
         self.click_signal.emit()
+

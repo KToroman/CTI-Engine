@@ -1,15 +1,12 @@
 import multiprocessing
-import time
-from multiprocessing import Queue, Process
-import sys
-from threading import Event, Thread
+
+from multiprocessing import Queue
+
 import click
-from PyQt5.QtCore import pyqtSignal
 
 from src.app.App import App
 from src.model.Model import Model
 from src.view.UIInterface import UIInterface
-from src.view.GUI.MainWindow import MainWindow
 from src.view.GUI.prepare_gui import prepare_gui
 
 
@@ -64,9 +61,11 @@ if __name__ == "__main__":
     passive_mode_event.set()
     load_event = multiprocessing.Event()
     # Queues for GUI messages
-    load_path_queue = Queue(1)
+    load_path_queue = Queue(3)
     source_file_name_queue = Queue(1)
-    error_queue = Queue(5)
+
+    error_queue: Queue = Queue(4)
+
     status_queue = Queue()
     project_queue = Queue()
     cancel_event = multiprocessing.Event()
