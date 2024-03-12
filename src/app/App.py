@@ -4,6 +4,7 @@ import os
 from os.path import join
 
 from PyQt5.QtCore import pyqtSignal
+from src.app.Configuration import Configuration
 from src.app.Threads.ActiveFetcherThread import ActiveFetcherThread
 
 from src.app.Threads.FileFetcherThread import FileFetcherThread
@@ -26,6 +27,9 @@ class App(AppRequestsInterface):
                  load_path_queue: Queue, source_file_name_queue: Queue, visualize_signal: pyqtSignal,
                  error_queue: Queue, error_signal: pyqtSignal, status_signal: pyqtSignal,
                  status_queue: Queue, project_queue: Queue, cancel_event: Event, restart_event: Event, model: Model):
+        # Events for backend:
+        self.__finished_project_event: Event = Event()
+        
         self.__model_lock: Lock = Lock()
 
         self.passive_mode_event = passive_mode_event
@@ -42,7 +46,7 @@ class App(AppRequestsInterface):
         self.status_queue = status_queue
         self.__project_queue = project_queue
         self.__restart_event = restart_event
-        self.__finished_project_event: Event = Event()
+        
 
         self.__cancel_event = cancel_event
 
@@ -50,6 +54,7 @@ class App(AppRequestsInterface):
 
         self.fetching_passive_data: Event = Event()
         self.__active_measurement_active: Event = Event()
+        self.config: Configuration = Configuration("config/ConfigFile.json")
 
         self.__fetching_hierarchy: SyncEvent = Event()
 
