@@ -4,13 +4,11 @@ from typing import List
 
 from PyQt5.QtCore import QThreadPool, pyqtSignal
 from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QInputDialog, QWidget, QHBoxLayout, QCheckBox
+from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QInputDialog, QWidget, QHBoxLayout, QHeaderView
 
 from src.view.GUI.Graph.Plot import Plot
-from src.view.GUI.SelectAllWorker import SelectAllWorker
 from src.view.GUI.UserInteraction.Displayable import Displayable
 from src.view.GUI.UserInteraction.TableRow import TableRow
-from src.view.AppRequestsInterface import AppRequestsInterface
 
 
 class TableWidget(QTableWidget):
@@ -38,6 +36,9 @@ class TableWidget(QTableWidget):
         self.in_row_loop: bool = False
 
         self.thread_pool: QThreadPool = QThreadPool.globalInstance()
+
+        self.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        self.setMaximumWidth(550)
 
     def insert_values(self, displayable: Displayable):
         row_pos: int = self.rowCount()
