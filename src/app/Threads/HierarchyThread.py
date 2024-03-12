@@ -9,7 +9,7 @@ from src.fetcher.hierarchy_fetcher.HierarchyFetcher import HierarchyFetcher
 
 class HierarchyThread:
     def __init__(self, shutdown_event: Event, data_fetcher: HierarchyFetcher, error_queue: Queue, work_queue: Queue,
-                 hierarchy_fetching_event: SyncEvent):
+                 hierarchy_fetching_event: SyncEvent, fetching_hierarchy: SyncEvent):
 
         self.__thread: Thread
         self.__shutdown = shutdown_event
@@ -18,6 +18,7 @@ class HierarchyThread:
         self.__error_queue = error_queue
         self.__current_work: str = ""
         self.__hierarchy_fetching_event = hierarchy_fetching_event
+        self.__fetching_hierarchy = fetching_hierarchy
 
     def __run(self):
         repeat: bool = False
@@ -32,7 +33,9 @@ class HierarchyThread:
                         print("[HierarchyThread]    work deleted: " + self.__current_work)
                         self.__current_work = ""
                         repeat = False
+                        self.__fetching_hierarchy.clear()
                         continue
+                    self.__fetching_hierarchy.set()
                     self.__data_fetcher.project_name = self.__current_work
                     repeat = self.__data_fetcher.update_project()
                     if repeat:
@@ -46,6 +49,7 @@ class HierarchyThread:
                 print("[HierarchyThread]    work deleted: " + self.__current_work)
                 self.__current_work = ""
                 repeat = False
+                self.__hierarchy_fetching_event.clear()
 
     def start(self):
         print("[HierarchyThread]    started")

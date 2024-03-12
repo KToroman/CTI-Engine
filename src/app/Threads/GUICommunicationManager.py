@@ -13,7 +13,8 @@ class GUICommunicationManager:
     def __init__(self, shutdown_event: Event, error_queue: Queue, error_signal: pyqtSignal, passive_mode_event: Event,
                  status_queue: Queue, status_signal: pyqtSignal, fetching_passive_data: Event,
                  active_measurement_active: Event, finished_project_event: Event,
-                 load_event: Event, cancel_event: Event, restart_event: Event, hierarchy_fetching_event: SyncEvent):
+                 load_event: Event, cancel_event: Event, restart_event: Event, hierarchy_fetching_event: SyncEvent,
+                 fetching_hierarchy: SyncEvent):
         self.__error_queue = error_queue
         self.__error_signal = error_signal
         self.__status_signal: pyqtSignal = status_signal
@@ -30,6 +31,7 @@ class GUICommunicationManager:
         self.__load_event: Event = load_event
         self.__restart_event = restart_event
         self.__hierarchy_fetching_event = hierarchy_fetching_event
+        self.__fetching_hierarchy = fetching_hierarchy
 
     def start(self):
         print("[StatusAndErrorThread]   started.")
@@ -85,6 +87,8 @@ class GUICommunicationManager:
             self.__status = StatusSettings.SEARCHING
         if self.__found_project.is_set():
             self.__status = StatusSettings.MEASURING
+        elif self.__fetching_hierarchy.is_set():
+            self.__status = StatusSettings.HIERARCHY
         if self.__finished_project_event.is_set():
             self.__status = StatusSettings.FINISHED
         if self.__active_measurement_active.is_set():
