@@ -1,26 +1,33 @@
+from multiprocessing import Queue
 import subprocess
 import time
 from re import split
-from threading import Event, Thread, Lock
-from typing import List
+from threading import Thread, Lock
+from multiprocessing.synchronize import Event as SyncEvent
+
+from typing import Optional
 from src.fetcher.process_fetcher.Threads.ProcessCollectorThread import ProcessCollectorThread
 from multiprocessing.synchronize import Event as SyncEvent
 
 
 class ProcessFindingThread:
-    def __init__(self, process_collector_list: List[ProcessCollectorThread], shutdown: Event, passive_mode_event: SyncEvent):
+    __STANDARD_GREP_COMMAND: str = 'ps -e | grep cc1plus'
+
+    def __init__(self, shut_down_event: SyncEvent, process_collector_list: list[ProcessCollectorThread], active_event: SyncEvent):
         self.__thread: Thread
-        self.__shutdown = shutdown
+        self.__shutdown: SyncEvent = shut_down_event
         self.__work_lock = Lock()
         self.__work: bool = False
         self.__process_collector_list = process_collector_list
         self.__counter = 0
-        self.__finding_list: List[str] = list()
-        self.__passive_mode_event = passive_mode_event
+        self.__finding_list: list[str] = list()
+        self.__grep_command: str = self.__STANDARD_GREP_COMMAND
+        self.__time_last_found = time.time()
+        self.__active_event = active_event
 
     def __run(self):
         while not self.__shutdown.is_set():
-            if not self.__passive_mode_event.is_set():
+            if not self.__active_event.is_set():
                 self.__finding_list.clear()
                 continue
             if self.has_work():
@@ -47,8 +54,11 @@ class ProcessFindingThread:
                 self.__work = True
 
     def __fetch_process(self):
-        grep = subprocess.Popen('ps -e | grep cc1plus', stdout=subprocess.PIPE, shell=True, encoding='utf-8')
+
+        grep = subprocess.Popen(self.__grep_command, stdout=subprocess.PIPE, shell=True, encoding='utf-8')
         temp_counter = 0
+        if grep == None:
+            return
         for line in grep.stdout:
             temp_counter += 1
             proc_id = ""

@@ -1,3 +1,6 @@
+from typing import List
+
+from PyQt5.QtCore import Qt
 from multiprocessing import Queue
 from multiprocessing.synchronize import Event as SyncEvent
 from typing import List
@@ -54,6 +57,7 @@ class MenuBar:
         self.scroll_bar.setMinimumHeight(200)
         self.scroll_widget = QWidget()
         self.scroll_layout = QVBoxLayout(self.scroll_widget)
+        self.scroll_layout.setSpacing(2)
         self.scroll_bar.setWidget(self.scroll_widget)
 
         self.icon = qta.icon("ei.align-justify")
@@ -63,7 +67,7 @@ class MenuBar:
         self.scroll_button.setCheckable(True)
         self.scroll_button.toggled.connect(lambda: self.toggle_scrollbar())
 
-
+        self.project_buttons: List[QPushButton] = []
 
     def show_input_dialog(self):
         text, ok = QInputDialog.getText(None, "File input", 'Enter file name:')
@@ -73,16 +77,18 @@ class MenuBar:
 
 
     def show_project_name_input(self, name: str):
-        text, ok = QInputDialog.getText(None, "Load Project", "Load the following project?", text= name)
+        text, ok = QInputDialog.getText(None, "Load Project", "Load the following project?", text=name)
         if ok:
             self.__project_queue.put(name)
             self.__visualize_event.emit()
+
     def toggle_scrollbar(self):
         # Überprüfen, ob die Scrollbar angezeigt wird oder nicht, und umschalten
         if self.scroll_bar.isHidden():
             self.scroll_bar.setHidden(False)
         else:
             self.scroll_bar.setHidden(True)
+
         # Das Widget neu zeichnen, um die Änderungen anzuzeigen
         self.scroll_bar.update()
 
@@ -96,11 +102,38 @@ class MenuBar:
                 if widget is not None:
                     widget.deleteLater()
         for name in project_names:
-
+            print(name)
             if name.split(" ").__len__() > 2:
                 show_name = name.split(" ")[0] + " " + name.split(" ")[-1]
             else:
                 show_name = name.split(" ")[0]
-            new_button: QPushButton = QPushButton(show_name)
+
+            new_button = ProjectNameButton(show_name, name, self.__project_queue, self.__visualize_event)
             self.scroll_layout.addWidget(new_button)
-            new_button.clicked.connect(lambda: self.show_project_name_input(name))
+            self.project_buttons.append(new_button)
+
+    def test(self, text):
+        print(text)
+
+
+class ProjectNameButton(QPushButton):
+    def __init__(self, show_name, project_name, project_queue, visualize_event, *__args):
+        super().__init__(*__args)
+        self.show_name = show_name
+        self.project_name = project_name
+        self.__project_queue = project_queue
+        self.__visualize_event = visualize_event
+        self.setText(show_name)
+        self.clicked.connect(lambda: self.show_project_name_input(project_name))
+
+    def show_project_name_input(self, name: str):
+        text, ok = QInputDialog.getText(None, "Load Project", "Load the following project?", text=name)
+        if ok:
+            self.__project_queue.put(name)
+            self.__visualize_event.emit()
+
+    def show_project_name_input(self, name: str):
+        text, ok = QInputDialog.getText(None, "Load Project", "Load the following project?", text=name)
+        if ok:
+            self.__project_queue.put(name)
+            self.__visualize_event.emit()

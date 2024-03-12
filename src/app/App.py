@@ -1,6 +1,5 @@
 from multiprocessing import Queue, Event, Lock
 from multiprocessing.synchronize import Event as SyncEvent
-
 import os
 from os.path import join
 
@@ -52,6 +51,8 @@ class App(AppRequestsInterface):
         self.fetching_passive_data: Event = Event()
         self.__active_measurement_active: Event = Event()
 
+        self.__fetching_hierarchy: SyncEvent = Event()
+
         self.__model = model
         self.__hierarchy_fetcher_work_queue: Queue = Queue()
         self.__file_saver_work_queue: Queue = Queue()
@@ -80,15 +81,16 @@ class App(AppRequestsInterface):
 
         self.hierarchy_thread: HierarchyThread = HierarchyThread(shutdown_event, self.hierarchy_fetcher,
                                                                  self.__error_queue, self.__hierarchy_fetcher_work_queue,
-                                                                 self.__hierarchy_fetching_event)
+                                                                 self.__hierarchy_fetching_event,
+                                                                 self.__fetching_hierarchy)
 
         self.file_saver_thread: FileSaverThread = FileSaverThread(self.shutdown_event, self.__model, self.saver,
                                                                   self.__model_lock, self.__finished_project_event,
                                                                   self.__file_saver_work_queue)
-        self.file_fetch_thread: FileFetcherThread = FileFetcherThread(self.__error_queue, self.__model, self.__model_lock,
-                                                                      self.shutdown_event, self.load_path_queue,
-                                                                      self.load_event, self.__project_queue,
-                                                                      self.visualize_signal)
+        self.file_fetch_thread: FileFetcherThread = FileFetcherThread(self.__error_queue, self.__model,
+                                                                      self.__model_lock, self.shutdown_event,
+                                                                      self.load_path_queue, self.load_event,
+                                                                      self.__project_queue, self.visualize_signal)
         self.__status_and_error_thread: GUICommunicationManager = (
             GUICommunicationManager(shutdown_event=self.shutdown_event, error_queue=self.__error_queue,
                                     error_signal=self.__error_signal, passive_mode_event=self.passive_mode_event,
@@ -97,10 +99,14 @@ class App(AppRequestsInterface):
                                     active_measurement_active=self.__active_measurement_active,
                                     finished_project_event=self.__finished_project_event, load_event=self.load_event,
                                     cancel_event=self.__cancel_event, restart_event=self.__restart_event,
-                                    hierarchy_fetching_event=self.__hierarchy_fetching_event))
+                                    hierarchy_fetching_event=self.__hierarchy_fetching_event,
+                                    fetching_hierarchy=self.__fetching_hierarchy))
 
     def prepare_threads(self):
-        self.__active_mode_fetcher_thread: ActiveFetcherThread = ActiveFetcherThread(self.shutdown_event, self.__model,
+        self.__active_mode_fetcher_thread: ActiveFetcherThread = ActiveFetcherThread(self.shutdown_event,
+                                                                                     self.__file_saver_work_queue,
+                                                                                     self.__cti_dir_path,
+                                                                                     self.__model,
                                                                                      self.__model_lock,
                                                                                      self.__source_file_name_queue,
                                                                                      self.__error_queue,
@@ -109,11 +115,16 @@ class App(AppRequestsInterface):
 
     def start(self):
         print("[app]    started")
+        self.prepare_threads()
+
         self.__status_and_error_thread.start()
         self.passive_thread.start()
         self.file_saver_thread.start()
         self.hierarchy_thread.start()
         self.file_fetch_thread.start()
+
+        self.__active_mode_fetcher_thread.start()
+
 
     def stop(self):
         self.shutdown_event.set()
@@ -121,6 +132,7 @@ class App(AppRequestsInterface):
         self.hierarchy_thread.stop()
         self.file_saver_thread.stop()
         self.__status_and_error_thread.stop()
+        self.__active_mode_fetcher_thread.stop()
         self.file_fetch_thread.stop()
         print("[App]    stopped")
 

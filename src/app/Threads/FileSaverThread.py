@@ -1,7 +1,9 @@
 from copy import copy, deepcopy
 from multiprocessing import Queue
-from threading import Event, Thread, Lock
+from threading import Thread, Lock
 from typing import List
+from multiprocessing.synchronize import Event as SyncEvent
+
 
 from src.model.Model import Model
 from src.saving.SaveInterface import SaveInterface
@@ -10,8 +12,8 @@ from src.saving.SaveInterface import SaveInterface
 class FileSaverThread:
     """Manages the thread which saves projects from model"""
 
-    def __init__(self, shutdown_event: Event, model: Model, data_fetcher: SaveInterface, model_lock: Lock,
-                 finished_project: Event, work_queue: Queue):
+    def __init__(self, shutdown_event: SyncEvent, model: Model, data_fetcher: SaveInterface, model_lock: Lock,
+                 finished_project: SyncEvent, work_queue: Queue):
         self.__thread: Thread
         self.__shutdown = shutdown_event
         self.__data_fetcher = data_fetcher

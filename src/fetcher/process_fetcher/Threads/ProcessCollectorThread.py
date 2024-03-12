@@ -5,27 +5,27 @@ from multiprocessing import Queue
 from os.path import join
 from re import split
 from threading import Event, Thread, Lock
-from typing import List, Optional, IO
 from multiprocessing.synchronize import Event as SyncEvent
 import psutil
 from PyQt5.QtCore import pyqtSignal
 from psutil import NoSuchProcess, AccessDenied
+from typing import Optional
 
-from src.fetcher.process_fetcher.Threads.FetcherThread import FetcherThread
+from src.fetcher.process_fetcher.Threads.DataCollectionThread import DataCollectionThread
 from src.model.Model import Model
 from src.model.core.Project import Project
 from src.model.core.ProjectFinishedSemaphore import ProjectFinishedSemaphore
 
 
 class ProcessCollectorThread:
-    def __init__(self, process_list: List[psutil.Process], process_list_lock: Lock, model: Model, model_lock: Lock,
-                 check_for_project: bool, fetcher_list: List[FetcherThread], saver_queue: Queue,
-                 hierarchy_queue: Queue, save_path: str, shutdown: Event, project_queue: Queue,
-                 finished_event: pyqtSignal, project_finished_event: SyncEvent, passive_mode_event: SyncEvent):
+    def __init__(self, process_list: list[psutil.Process], process_list_lock: Lock, model: Model, model_lock: Lock,
+                 check_for_project: bool, fetcher_list: list[DataCollectionThread], saver_queue: Queue,
+                 hierarchy_queue: Queue, save_path: str, shutdown: SyncEvent, project_queue: Queue,
+                 finished_event: pyqtSignal, project_finished_event: SyncEvent, active_event: SyncEvent):
         self.__thread: Thread
         self.__shutdown = shutdown
         self.__work_queue_lock = Lock()
-        self.__work_queue: List[str] = list()
+        self.__work_queue: list[str] = list()
         self.__process_list = process_list
         self.__process_list_lock = process_list_lock
         self.__model = model
@@ -33,12 +33,12 @@ class ProcessCollectorThread:
         self.__check_for_project = check_for_project
         self.__fetcher = fetcher_list
         self.__save_path = save_path
-        self.__not_fetched: List[psutil.Process] = list()
+        self.__not_fetched: list[psutil.Process] = list()
         self.__saver_queue = saver_queue
         self.__hierarchy_queue = hierarchy_queue
         self.__counter = 0
         self.time_till_false: float = 0
-        self.__passive_mode_event = passive_mode_event
+        self.__active_event = active_event
 
         self.__project_queue = project_queue
         self.__finished_event = finished_event
@@ -46,7 +46,7 @@ class ProcessCollectorThread:
 
     def __run(self):
         while not self.__shutdown.is_set():
-            if not self.__passive_mode_event.is_set():
+            if not self.__active_event.is_set():
                 with self.__work_queue_lock:
                     self.__work_queue.clear()
                 continue
@@ -122,7 +122,7 @@ class ProcessCollectorThread:
             return "del"
 
         if working_dir.split("build/").__len__() > 1:
-            working_dir_split: List[str] = working_dir.split("build/")
+            working_dir_split: list[str] = working_dir.split("build/")
             dir_path: str = working_dir_split[0]
             for i in range(working_dir_split.__len__() - 2):
                 dir_path = join(dir_path, "build", working_dir_split[i + 1])
