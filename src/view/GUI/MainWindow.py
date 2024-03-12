@@ -3,25 +3,22 @@ import colorsys
 import os
 
 import random
+import time
 
-from PyQt5.QtCore import pyqtSignal
-from threading import Thread, Lock
 from PyQt5.QtCore import pyqtSignal, QThreadPool
 from typing import List
 from multiprocessing import Queue, Event
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon, QIntValidator
-from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QWidget,
-                             QStackedWidget, QApplication, QHBoxLayout, QSplitter, QCheckBox, QSpinBox)
-from src.model.Model import Model
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import (QMainWindow, QStackedWidget, QApplication, QCheckBox, QSpinBox)
 from src.model.core.ProjectReadViewInterface import ProjectReadViewInterface
-from src.view.GUI.PlotRunnable import PlotRunnable
-from src.view.GUI.AddRunnable import AddRunnable
+from src.view.GUI.Threading.InsertTableWorker import InsertTableWorker
+from src.view.GUI.Threading.PlotRunnable import PlotRunnable
+from src.view.GUI.Threading.AddRunnable import AddRunnable
 from src.view.GUI.Graph.BarWidget import BarWidget
 from src.view.GUI.Graph.GraphWidget import GraphWidget
 from src.view.GUI.MainWindowMeta import MainWindowMeta
-from src.view.GUI.RemoveRunnable import RemoveRunnable
+from src.view.GUI.Threading.RemoveRunnable import RemoveRunnable
 from src.view.GUI.UserInteraction.MenuBar import MenuBar
 from src.view.GUI.UserInteraction.TableWidget import TableWidget
 from src.view.GUI.UserInteraction.Displayable import Displayable
@@ -34,7 +31,6 @@ from src.view.GUI.Visuals.StatusBar import StatusBar
 from src.model.core.StatusSettings import StatusSettings
 from src.view.UIInterface import UIInterface
 from src.view.GUI.Visuals.ErrorWindow import ErrorWindow
-from src.view.AppRequestsInterface import AppRequestsInterface
 import src.view.GUI.Visuals.GuiDesign as gd
 
 
@@ -49,6 +45,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     error_signal: pyqtSignal = pyqtSignal()
     visualize_signal: pyqtSignal = pyqtSignal()
     status_signal: pyqtSignal = pyqtSignal()
+    file_count_signal: pyqtSignal = pyqtSignal()
 
     def __init__(self, shutdown_event: Event, q_application: QApplication, status_queue: Queue, project_queue: Queue,
                  error_queue: Queue, load_path_queue: Queue, active_mode_queue: Queue, cancel_event: Event,
@@ -67,6 +64,9 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.error_queue: Queue = error_queue
         self.error_signal.connect(lambda: self.deploy_error())
         self.shutdown_event: Event = shutdown_event
+
+        self.file_count_queue: Queue = Queue()
+        self.file_count_signal.connect(lambda: self.update_limits())
 
         self.__q_application: QApplication = q_application
         self.__visible_plots: List[Displayable] = []
@@ -130,7 +130,6 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         project = self.__model.get_project_by_name(project_name)
         self.project_time = project.get_project_time()
         self.__update_project_list()
-
         if self.table_widget.active_started:
             self.__visualize_active(project)
             self.table_widget.active_started = False
@@ -138,6 +137,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
             self.__visualize_passive(project)
 
     def __visualize_passive(self, project: ProjectReadViewInterface):
+        tima = time.time()
         """Visualizes data from passive mode."""
         self.table_widget.clear_table()
 
@@ -146,17 +146,26 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
         # Update TableWidget for each cfile
         cfile_list: List[CFileReadViewInterface] = project.get_cfiles()
-        file_count: int = 1
+
+        insert_table_worker: InsertTableWorker = InsertTableWorker(table=self.table_widget, cfile_list=cfile_list,
+                                                                   file_count_signal=self.file_count_signal,
+                                                                   file_count_queue=self.file_count_queue,
+                                                                   project_time=self.project_time)
+        self.thread_pool.start(insert_table_worker)
+
+        """file_count: int = 1
+        timx = time.time()
         for cfile in cfile_list:
             file_count += 1
             self.table_widget.insert_values(self.__create_displayable(cfile))
-        print(file_count)
         self.lower_limit.setMaximum(file_count)
-        self.upper_limit.setMaximum(file_count)
+        self.upper_limit.setMaximum(file_count)"""
         # Update other Widgets
         self.setup_connections()
         self.status_bar.update_status(StatusSettings.FINISHED)
-        self.table_widget.rebuild_table(self.table_widget.rows)
+        #self.table_widget.rebuild_table(self.table_widget.rows)
+        print("[MW]   visualize passive: " + (time.time() - tima).__str__())
+        #print("[MW]   vor insert values: " + (time.time() - timx).__str__())
 
     def __visualize_active(self, project: ProjectReadViewInterface):
         """Visualizes data from active mode."""
@@ -186,6 +195,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         error = self.error_queue.get()
         error_window = ErrorWindow(error)
         error_window.show()
+
     def update_statusbar(self):
         """Receives a status string, changes the UI's status string accordingly."""
         status = self.status_queue.get()
@@ -249,6 +259,10 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         random_color_hex = "#{:02X}{:02X}{:02X}".format(*random_color_rgb)
 
         return random_color_hex
+
+    def update_limits(self, maximum: int):
+        self.lower_limit.setMaximum(maximum)
+        self.upper_limit.setMaximum(maximum)
 
     def setup_connections(self):
         """Sets up connections between table and graph widgets."""

@@ -9,6 +9,7 @@ from src.model.Model import Model
 from src.view.UIInterface import UIInterface
 from src.view.GUI.prepare_gui import prepare_gui
 
+# C:\Users\marie\Downloads\ArmarXGui 2024-03-12 4\ArmarXGui 2024-03-12 4
 
 @click.command()
 @click.option('--source_file_name', prompt='Enter a filepath', help='filepath for active measurement')

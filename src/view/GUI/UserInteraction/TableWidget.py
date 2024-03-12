@@ -7,7 +7,6 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QInputDialog, QWidget, QHBoxLayout, QCheckBox
 
 from src.view.GUI.Graph.Plot import Plot
-from src.view.GUI.SelectAllWorker import SelectAllWorker
 from src.view.GUI.UserInteraction.Displayable import Displayable
 from src.view.GUI.UserInteraction.TableRow import TableRow
 from src.view.AppRequestsInterface import AppRequestsInterface
