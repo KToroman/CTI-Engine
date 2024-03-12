@@ -1,12 +1,14 @@
 import multiprocessing
-
-from multiprocessing import Queue
-
+import time
+from multiprocessing import Queue, Process
+import sys
 import click
+from PyQt5.QtCore import pyqtSignal
 
 from src.app.App import App
 from src.model.Model import Model
 from src.view.UIInterface import UIInterface
+from src.view.GUI.MainWindow import MainWindow
 from src.view.GUI.prepare_gui import prepare_gui
 
 

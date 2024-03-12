@@ -1,6 +1,5 @@
 from multiprocessing import Queue, Event, Lock
 from multiprocessing.synchronize import Event as SyncEvent
-
 import os
 from os.path import join
 
@@ -100,7 +99,10 @@ class App(AppRequestsInterface):
                                     hierarchy_fetching_event=self.__hierarchy_fetching_event))
 
     def prepare_threads(self):
-        self.__active_mode_fetcher_thread: ActiveFetcherThread = ActiveFetcherThread(self.shutdown_event, self.__model,
+        self.__active_mode_fetcher_thread: ActiveFetcherThread = ActiveFetcherThread(self.shutdown_event,
+                                                                                     self.__file_saver_work_queue,
+                                                                                     self.__cti_dir_path,
+                                                                                     self.__model,
                                                                                      self.__model_lock,
                                                                                      self.__source_file_name_queue,
                                                                                      self.__error_queue,
@@ -109,11 +111,16 @@ class App(AppRequestsInterface):
 
     def start(self):
         print("[app]    started")
+        self.prepare_threads()
+
         self.__status_and_error_thread.start()
         self.passive_thread.start()
         self.file_saver_thread.start()
         self.hierarchy_thread.start()
         self.file_fetch_thread.start()
+
+        self.__active_mode_fetcher_thread.start()
+
 
     def stop(self):
         self.shutdown_event.set()
@@ -121,6 +128,7 @@ class App(AppRequestsInterface):
         self.hierarchy_thread.stop()
         self.file_saver_thread.stop()
         self.__status_and_error_thread.stop()
+        self.__active_mode_fetcher_thread.stop()
         self.file_fetch_thread.stop()
         print("[App]    stopped")
 

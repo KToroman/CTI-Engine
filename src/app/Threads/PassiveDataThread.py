@@ -1,14 +1,15 @@
-from multiprocessing import Queue
-from threading import Event, Thread
+from multiprocessing.synchronize import Event as SyncEvent
+
+from threading import Thread
 
 from src.fetcher.process_fetcher.PassiveDataFetcher import PassiveDataFetcher
 
 
 class PassiveDataThread:
-    def __init__(self, shutdown_event: Event, data_fetcher: PassiveDataFetcher, collect_data_passive: Event,
-                 found_project: Event):
+    def __init__(self, shutdown_event: SyncEvent, data_fetcher: PassiveDataFetcher, collect_data_passive: SyncEvent,
+                 found_project: SyncEvent):
         self.__thread: Thread
-        self.__shutdown: Event = shutdown_event
+        self.__shutdown: SyncEvent = shutdown_event
         self.__shutdown.clear()
         self.__collect_data_passive = collect_data_passive
         self.__found_project = found_project

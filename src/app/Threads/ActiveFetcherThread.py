@@ -1,20 +1,24 @@
 from multiprocessing import Queue
-from threading import Event, Lock, Thread
+from threading import Lock, Thread
+from multiprocessing.synchronize import Event as SyncEvent
+
 
 from src.fetcher.process_fetcher.ActiveDataFetcher import ActiveDataFetcher
 from src.model.Model import Model
 
 
 class ActiveFetcherThread:
-    def __init__(self, shutdown_event: Event, model: Model, model_lock: Lock, source_file_name_queue: Queue, error_queue: Queue, build_dir_path: str, active_measurement_active: Event) -> None:
+    def __init__(self, shutdown_event: SyncEvent, saver_queue: Queue, save_path: str, model: Model, model_lock: Lock, source_file_name_queue: Queue, error_queue: Queue, build_dir_path: str, active_measurement_active: SyncEvent) -> None:
         self.__thread: Thread
         self.__model: Model = model
         self.__model_lock: Lock = model_lock
-        self.__shutdown_event: Event = shutdown_event
+        self.__shutdown_event: SyncEvent = shutdown_event
         self.__source_file_name_queue: Queue = source_file_name_queue
         self.__error_queue: Queue = error_queue
         self.__build_dir_path: str = build_dir_path
-        self.__active_measurement_active: Event = active_measurement_active
+        self.__active_measurement_active: SyncEvent = active_measurement_active
+        self.__saver_queue: Queue = saver_queue
+        self.__save_path: str = save_path
 
     def start(self):
         print("[ActiveFetcherThread]    started")
@@ -33,12 +37,14 @@ class ActiveFetcherThread:
             timeout_error: TimeoutError = TimeoutError("[ActiveFetcherThread] Active Fetcher Thread could not access its source-file-queue.")
             self.__error_queue.put(timeout_error, True, 15)
             return
-        active_data_fetcher: ActiveDataFetcher = ActiveDataFetcher(source_file_name=source_file_name, model=self.__model, build_dir_path=self.__build_dir_path, model_lock=self.__model_lock)
-        self.measure_source_file(active_data_fetcher)
+        active_data_fetcher: ActiveDataFetcher
+        with ActiveDataFetcher(source_file_name=source_file_name, model=self.__model, saver_queue=self.__saver_queue, save_path=self.__save_path,
+                               build_dir_path=self.__build_dir_path, model_lock=self.__model_lock, hierarchy_queue=Queue()) as active_data_fetcher:
+            self.measure_source_file(active_data_fetcher)
         
     def measure_source_file(self, active_data_fetcher: ActiveDataFetcher):
-        actively_fetching: bool = False
-        while (not self.__shutdown_event.is_set) and (actively_fetching):
+        actively_fetching: bool = True
+        while (not self.__shutdown_event.is_set()) and actively_fetching:
             actively_fetching = active_data_fetcher.update_project()
 
     def stop(self):
