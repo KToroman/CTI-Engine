@@ -1,4 +1,4 @@
-from threading import Event, Thread
+from threading import Thread
 import time
 from multiprocessing.synchronize import Event as SyncEvent
 
@@ -10,25 +10,25 @@ from src.model.core.StatusSettings import StatusSettings
 
 
 class GUICommunicationManager:
-    def __init__(self, shutdown_event: Event, error_queue: Queue, error_signal: pyqtSignal, passive_mode_event: Event,
-                 status_queue: Queue, status_signal: pyqtSignal, fetching_passive_data: Event,
-                 active_measurement_active: Event, finished_project_event: Event,
-                 load_event: Event, cancel_event: Event, restart_event: Event, hierarchy_fetching_event: SyncEvent,
+    def __init__(self, shutdown_event: SyncEvent, error_queue: Queue, error_signal: pyqtSignal, passive_mode_event: SyncEvent,
+                 status_queue: Queue, status_signal: pyqtSignal, fetching_passive_data: SyncEvent,
+                 active_measurement_active: SyncEvent, finished_project_event: SyncEvent,
+                 load_event: SyncEvent, cancel_event: SyncEvent, restart_event: Event, hierarchy_fetching_event: SyncEvent,
                  fetching_hierarchy: SyncEvent):
         self.__error_queue = error_queue
         self.__error_signal = error_signal
         self.__status_signal: pyqtSignal = status_signal
         self.__status_queue: Queue = status_queue
-        self.__shutdown_event: Event = shutdown_event
+        self.__shutdown_event: SyncEvent = shutdown_event
         self.__thread: Thread
         self.__status: StatusSettings = StatusSettings.SEARCHING
         self.__time_of_last_status_change: float = -5
         self.__cancel_event = cancel_event
-        self.__passive_mode_event: Event = passive_mode_event
-        self.__active_measurement_active: Event = active_measurement_active
-        self.__found_project: Event = fetching_passive_data
-        self.__finished_project_event: Event = finished_project_event
-        self.__load_event: Event = load_event
+        self.__passive_mode_event: SyncEvent = passive_mode_event
+        self.__active_measurement_active: SyncEvent = active_measurement_active
+        self.__found_project: SyncEvent = fetching_passive_data
+        self.__finished_project_event: SyncEvent = finished_project_event
+        self.__load_event: SyncEvent = load_event
         self.__restart_event = restart_event
         self.__hierarchy_fetching_event = hierarchy_fetching_event
         self.__fetching_hierarchy = fetching_hierarchy
