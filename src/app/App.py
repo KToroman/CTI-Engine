@@ -4,6 +4,7 @@ import os
 from os.path import join
 
 from PyQt5.QtCore import pyqtSignal
+from src.app.Configuration import Configuration
 from src.app.Threads.ActiveFetcherThread import ActiveFetcherThread
 
 from src.app.Threads.FileFetcherThread import FileFetcherThread
