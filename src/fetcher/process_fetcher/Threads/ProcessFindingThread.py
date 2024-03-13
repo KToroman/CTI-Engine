@@ -103,4 +103,5 @@ class ProcessFindingThread:
         with self.__pid_list_lock:
             if self.__pid_list.__len__() > 50:
                 del self.__pid_list[0-10]
+                print("[ProcessFindingThread]   del 0-10 out of pid list")
 

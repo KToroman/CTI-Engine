@@ -61,7 +61,7 @@ class Model(ModelReadViewInterface):
 
     def get_semaphore_by_name(self, name) -> ProjectFinishedSemaphore:
         for semaphore in self.semaphore_list:
-            if name == semaphore.project_dir:
+            if name == semaphore.project_name:
                 return semaphore
         raise Exception(f"did not find semaphore '{name}'")
 
