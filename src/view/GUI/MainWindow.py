@@ -12,6 +12,7 @@ from multiprocessing import Queue, Event
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QMainWindow, QStackedWidget, QApplication, QCheckBox, QSpinBox)
 from src.model.core.ProjectReadViewInterface import ProjectReadViewInterface
+from src.view.GUI.Threading.TableWorker import TableWorker
 from src.view.GUI.Threading.InsertTableWorker import InsertTableWorker
 from src.view.GUI.Threading.PlotRunnable import PlotRunnable
 from src.view.GUI.Threading.AddRunnable import AddRunnable
@@ -45,7 +46,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     error_signal: pyqtSignal = pyqtSignal()
     visualize_signal: pyqtSignal = pyqtSignal()
     status_signal: pyqtSignal = pyqtSignal()
-    file_count_signal: pyqtSignal = pyqtSignal()
+    table_signal: pyqtSignal = pyqtSignal()
 
     def __init__(self, shutdown_event: Event, q_application: QApplication, status_queue: Queue, project_queue: Queue,
                  error_queue: Queue, load_path_queue: Queue, active_mode_queue: Queue, cancel_event: Event,
@@ -65,8 +66,8 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.error_signal.connect(lambda: self.deploy_error())
         self.shutdown_event: Event = shutdown_event
 
-        self.file_count_queue: Queue = Queue()
-        self.file_count_signal.connect(lambda: self.update_limits())
+        self.table_queue: Queue = Queue()
+        self.table_signal.connect(lambda: self.update_table())
 
         self.__q_application: QApplication = q_application
         self.__visible_plots: List[Displayable] = []
@@ -146,12 +147,28 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
         # Update TableWidget for each cfile
         cfile_list: List[CFileReadViewInterface] = project.get_cfiles()
+        #displayables: List[Displayable] = []
+        file_count: int = 1
+        for cfile in cfile_list:
+            file_count += 1
+            #displayables.append(self.__create_displayable(cfile))
+            insert_table_worker: InsertTableWorker = InsertTableWorker(table=self.table_widget,
+                                                                       displayable=self.__create_displayable(cfile),
+                                                                       table_signal=self.table_signal)
+            self.thread_pool.start(insert_table_worker)
+        self.lower_limit.setMaximum(file_count)
+        self.upper_limit.setMaximum(file_count)
 
-        insert_table_worker: InsertTableWorker = InsertTableWorker(table=self.table_widget, cfile_list=cfile_list,
-                                                                   file_count_signal=self.file_count_signal,
-                                                                   file_count_queue=self.file_count_queue,
-                                                                   project_time=self.project_time)
-        self.thread_pool.start(insert_table_worker)
+        #table_worker: TableWorker = TableWorker(active_mode_queue=self.table_widget.active_mode_queue,
+                                                #displayables=displayables, table_queue=self.table_queue,
+                                                #table_signal=self.table_signal)
+        #self.thread_pool.start(table_worker)
+        self.table_queue.put(self.table_widget)
+        time.sleep(0.3)
+        #insert_table_worker: InsertTableWorker = InsertTableWorker(table=self.table_widget,
+                                                    #               displayables=displayable,
+                                                     #              table_signal=self.table_signal)
+        #self.thread_pool.start(insert_table_worker)
 
         """file_count: int = 1
         timx = time.time()
@@ -161,8 +178,8 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.lower_limit.setMaximum(file_count)
         self.upper_limit.setMaximum(file_count)"""
         # Update other Widgets
-        self.setup_connections()
-        self.status_bar.update_status(StatusSettings.FINISHED)
+        #self.setup_connections()
+        #self.status_bar.update_status(StatusSettings.FINISHED)
         #self.table_widget.rebuild_table(self.table_widget.rows)
         print("[MW]   visualize passive: " + (time.time() - tima).__str__())
         #print("[MW]   vor insert values: " + (time.time() - timx).__str__())
@@ -185,6 +202,13 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
             self.table_widget.fill_subrows(self.__create_displayable(cfile))
 
         # Update other Widgets
+        self.setup_connections()
+        self.status_bar.update_status(StatusSettings.FINISHED)
+
+    def update_table(self):
+        #self.table_widget = self.table_queue.get()
+        print("[MW]   gotten new table")
+        #self.table_widget.rebuild_table()
         self.setup_connections()
         self.status_bar.update_status(StatusSettings.FINISHED)
 
@@ -259,10 +283,6 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         random_color_hex = "#{:02X}{:02X}{:02X}".format(*random_color_rgb)
 
         return random_color_hex
-
-    def update_limits(self, maximum: int):
-        self.lower_limit.setMaximum(maximum)
-        self.upper_limit.setMaximum(maximum)
 
     def setup_connections(self):
         """Sets up connections between table and graph widgets."""

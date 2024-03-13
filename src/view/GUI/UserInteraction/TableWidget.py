@@ -39,13 +39,14 @@ class TableWidget(QTableWidget):
         self.thread_pool: QThreadPool = QThreadPool.globalInstance()
 
     def insert_values(self, displayable: Displayable):
+        print("[Table]   in insert values")
         row_pos: int = self.rowCount()
         self.insertRow(row_pos)
 
         row: TableRow = TableRow(displayable)
         self.rows.append(row)
         self.fill_row(row, row_pos)
-
+        print("[Table]   jetzt kommen header in insert values")
         for header in displayable.headers:
             plot_mock: Plot = Plot("", "", [], [0])
             displayable_mock: Displayable = Displayable(header, plot_mock, plot_mock, plot_mock, 0, 0, [], [])
@@ -53,18 +54,25 @@ class TableWidget(QTableWidget):
             for subheader in displayable.secondary_headers[displayable.headers.index(header)]:
                 displayable_mock_2: Displayable = Displayable(subheader, plot_mock, plot_mock, plot_mock, 0, 0, [], [])
                 self.add_subrow(last_caller_row, displayable_mock_2)
+        print("[Table]   raus aus insert values")
 
     def rebuild_table(self, row_list: List[TableRow]):
+        print("[Table]   wir kommen rein")
         self.clear()
         self.setHorizontalHeaderLabels([self.COLUMN_1_LABEL, self.COLUMN_2_LABEL,
                                         self.COLUMN_3_LABEL, self.COLUMN_4_LABEL])
         for new_row in row_list:
+            print("a")
             if new_row.displayable.name.endswith(".o"):
                 self.format_subrows(new_row, row_list.index(new_row), QColor(255, 255, 255), False)
+                print("b")
                 for subrow in new_row.children:
                     self.format_subrows(subrow, row_list.index(subrow), QColor(220, 220, 220), True)
+                    print("c")
                     for subsubrow in subrow.children:
                         self.format_subrows(subsubrow, row_list.index(subsubrow), QColor(170, 170, 170), True)
+                        print("d")
+        print("[Table]   wir kommen auch wieder raus")
 
     def format_subrows(self, row: TableRow, row_index: int, color: QColor, hidden: bool):
 
