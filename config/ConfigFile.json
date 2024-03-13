@@ -4,6 +4,6 @@
   "fetcher_count": 1,
   "fetcher_process_count": 15,
   "hierarchy_fetcher_worker_count": 16,
-  "active_build_path": "default",
-  "save_path": "default"
+  "active_build_dir_path": null,
+  "saves_path": null
 }

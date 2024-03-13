@@ -1,6 +1,8 @@
 from copy import copy, deepcopy
-from multiprocessing import Queue
-from threading import Thread, Lock
+from multiprocessing import Queue, Lock
+from threading import Thread
+from multiprocessing.synchronize import Lock as SyncLock
+
 from typing import List
 from multiprocessing.synchronize import Event as SyncEvent
 
@@ -12,7 +14,7 @@ from src.saving.SaveInterface import SaveInterface
 class FileSaverThread:
     """Manages the thread which saves projects from model"""
 
-    def __init__(self, shutdown_event: SyncEvent, model: Model, data_fetcher: SaveInterface, model_lock: Lock,
+    def __init__(self, shutdown_event: SyncEvent, model: Model, data_fetcher: SaveInterface, model_lock: SyncLock,
                  finished_project: SyncEvent, work_queue: Queue):
         self.__thread: Thread
         self.__shutdown = shutdown_event
@@ -23,7 +25,7 @@ class FileSaverThread:
         self.__finished_project = finished_project
 
         self.__work_list: List[str] = list()  # TODO endless capacity not very clean for work queues
-        self.__work_list_lock: Lock = Lock()
+        self.__work_list_lock: SyncLock = Lock()
 
         self.__model = model
         self.__model_lock = model_lock

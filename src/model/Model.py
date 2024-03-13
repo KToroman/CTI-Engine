@@ -1,9 +1,7 @@
-import copy
 import os.path
 from multiprocessing import Event, Queue
-from optparse import Option
-import time
 from typing import List, Optional, cast
+from src.exceptions.SemaphoreNotFoundException import SemaphoreNotFoundException
 from src.exceptions.ProjectNotFoundException import ProjectNotFoundException
 
 from src.model.ModelReadViewInterface import ModelReadViewInterface
@@ -63,7 +61,8 @@ class Model(ModelReadViewInterface):
         for semaphore in self.semaphore_list:
             if name == semaphore.project_name:
                 return semaphore
-        raise Exception(f"did not find semaphore '{name}'")
+        raise SemaphoreNotFoundException(
+            "[Model]   Could not find semaphore for a project.")
 
     def add_project(self, project: Project, semaphore: Optional[ProjectFinishedSemaphore]) -> None:
         """adds new project to model"""
@@ -75,12 +74,12 @@ class Model(ModelReadViewInterface):
             self.current_project = project
             print(f"[Model]   new project {project}")
 
-
     def project_in_list(self, name: str) -> bool:
         for p in self.projects:
             if name == p.name:
                 return True
         return False
+
     def get_sourcefile_by_name(self, name: str) -> SourceFile:
         return self.current_project.get_sourcefile(name)
 

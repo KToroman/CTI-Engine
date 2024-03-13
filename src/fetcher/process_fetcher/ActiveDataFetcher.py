@@ -4,6 +4,7 @@ import time
 from typing import List, Self
 
 from multiprocessing.synchronize import Event as SyncEvent
+from multiprocessing.synchronize import Lock as SyncLock
 
 import psutil
 
@@ -23,10 +24,18 @@ from src.fetcher.process_fetcher.Threads.DataCollectionThread import DataCollect
 class ActiveDataFetcher(FetcherInterface):
     __seconds__to_move_on = 3
 
-    def __init__(
-            self, source_file_name: str, model: Model, build_dir_path: str, saver_queue: multiprocessing.Queue, save_path: str, hierarchy_queue: multiprocessing.Queue, model_lock: threading.Lock, fetcher_count: int = 1,
-            fetcher_process_count: int = 15, process_collector_count: int = 1, process_finder_count: int = 1,
-    ) -> None:
+    def __init__(self,
+                 source_file_name: str,
+                 model: Model, build_dir_path: str,
+                 saver_queue: multiprocessing.Queue,
+                 save_path: str,
+                 hierarchy_queue: multiprocessing.Queue,
+                 model_lock: SyncLock,
+                 fetcher_count: int = 2,
+                 fetcher_process_count: int = 15,
+                 process_collector_count: int = 2,
+                 process_finder_count: int = 2,
+                 ) -> None:
         self.__model = model
         self.__model_lock = model_lock
         self.__source_file: SourceFile = model.get_sourcefile_by_name(
@@ -61,7 +70,7 @@ class ActiveDataFetcher(FetcherInterface):
 
     def update_project(self) -> bool:
         """Main method of the active data fetcher. Returns True if this method should be called again."""
-        #TODO intended sequence: set start_builing event -> call fetcher to fetch -> when done_builing event is set, stop fetcher and return
+        # TODO intended sequence: set start_builing event -> call fetcher to fetch -> when done_builing event is set, stop fetcher and return
         self.__building_event.set()
         while self.__building_event.is_set():
             for finder in self.__process_finder_list:
@@ -72,23 +81,24 @@ class ActiveDataFetcher(FetcherInterface):
         else:
             return True
 
-
     # enter and exit define a context manager (with). each instance of ActiveDataFetcher should only exist in one with-Context
+
     def __enter__(self) -> Self:
         # required threads should be started here
         # queue to be used by builder thread and process finding thread
         self.__grep_command_queue = multiprocessing.Queue()
         process_list: List[psutil.Process] = list()
-        process_list_lock: threading.Lock = threading.Lock()
-        self.__building_thread = BuilderThread(self.__building_event, self.__compiling_tool, self.__grep_command_queue, self.__finished_event)
+        process_list_lock: SyncLock = multiprocessing.Lock()
+        self.__building_thread = BuilderThread(
+            self.__building_event, self.__compiling_tool, self.__grep_command_queue, self.__finished_event)
         self.__building_thread.start()
 
         for i in range(self.__data_collector_count):
             fetcher = ActiveDataCollectionThread(process_list, process_list_lock, self.__model, self.__model_lock,
-                                    DataObserver(), self.__fetcher_process_count, self.__shutdown_event, self.__source_file, self.__active_event)
+                                                 DataObserver(), self.__fetcher_process_count, self.__shutdown_event, self.__source_file, self.__active_event)
             self.__data_collector_list.append(fetcher)
             fetcher.start()
-        
+
         for i in range(self.__process_collector_count):
             process_collector_thread = ProcessCollectorThread(process_list, process_list_lock, self.__model,
                                                               self.__model_lock,
@@ -99,7 +109,8 @@ class ActiveDataFetcher(FetcherInterface):
             process_collector_thread.start()
 
         for i in range(self.__process_finder_count):
-            finder = ProcessFindingThread(self.__shutdown_event, self.__process_collector_list, self.__active_event)
+            finder = ProcessFindingThread(
+                self.__shutdown_event, self.__process_collector_list, self.__active_event)
             self.__process_finder_list.append(finder)
             finder.start()
             time.sleep(0.5)
@@ -109,7 +120,10 @@ class ActiveDataFetcher(FetcherInterface):
         # required threads should be stopped here
         self.__building_thread.stop()
         self.__shutdown_event.set()
-        for thread in self.__process_finder_list: thread.stop()
-        for thread in self.__process_collector_list: thread.stop()
-        for thread in self.__data_collector_list: thread.stop()
+        for thread in self.__process_finder_list:
+            thread.stop()
+        for thread in self.__process_collector_list:
+            thread.stop()
+        for thread in self.__data_collector_list:
+            thread.stop()
         return False
