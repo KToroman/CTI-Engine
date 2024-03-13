@@ -24,10 +24,18 @@ from src.fetcher.process_fetcher.Threads.DataCollectionThread import DataCollect
 class ActiveDataFetcher(FetcherInterface):
     __seconds__to_move_on = 3
 
-    def __init__(
-            self, source_file_name: str, model: Model, build_dir_path: str, saver_queue: multiprocessing.Queue, save_path: str, hierarchy_queue: multiprocessing.Queue, model_lock: threading.Lock, fetcher_count: int = 1,
-            fetcher_process_count: int = 15, process_collector_count: int = 1, process_finder_count: int = 1,
-    ) -> None:
+    def __init__(self,
+                 source_file_name: str,
+                 model: Model, build_dir_path: str,
+                 saver_queue: multiprocessing.Queue,
+                 save_path: str,
+                 hierarchy_queue: multiprocessing.Queue,
+                 model_lock: SyncLock,
+                 fetcher_count: int = 2,
+                 fetcher_process_count: int = 15,
+                 process_collector_count: int = 2,
+                 process_finder_count: int = 2,
+                 ) -> None:
         self.__model = model
         self.__model_lock = model_lock
         self.__source_file: SourceFile = model.get_sourcefile_by_name(
