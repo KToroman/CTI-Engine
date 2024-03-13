@@ -99,7 +99,7 @@ class ProcessCollectorThread:
                 return
             self.__project_checker(project_name)
             self.__counter += 1
-            self.time_till_false = time.time() + 40
+            self.time_till_false = time.time() + 45
             with self.__process_list_lock:
                 self.__process_list.append(process)
             if not self.__fetcher[self.__counter % len(self.__fetcher)].has_work():

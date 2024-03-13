@@ -58,8 +58,8 @@ class StatusBar(QWidget):
             self.__name = project_name
         if self.name_counter < len(self.__name):
             self.build_string += self.__name[self.name_counter]
-            self.project_name.setText(f"[{self.build_string}]")
             self.name_counter += 1
+        self.project_name.setText(f"[{self.build_string}]")
 
         dots = ""
         for i in range(self.counter % 4):
