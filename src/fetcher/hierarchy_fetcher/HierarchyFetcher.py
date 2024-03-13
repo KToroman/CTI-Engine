@@ -1,6 +1,7 @@
 import concurrent.futures
 import threading
 import time
+from multiprocessing import Queue
 from subprocess import CalledProcessError
 from concurrent.futures import ThreadPoolExecutor, Future
 from multiprocessing.synchronize import Event as SyncEvent, Lock
@@ -21,11 +22,11 @@ from src.exceptions.CompileCommandError import CompileCommandError
 class HierarchyFetcher(FetcherInterface):
 
     def __init__(self, model: Model, model_lock: Lock, hierarchy_fetching_event: SyncEvent,
-                 shutdown_event: SyncEvent, max_workers=32) -> None:
+                 shutdown_event: SyncEvent, pid_queue: Queue, max_workers=32) -> None:
         self.project_name: str = None
         self.__model = model
         self.__model_lock = model_lock
-        self.__gcc_command_executor: GCCCommandExecutor = GCCCommandExecutor()
+        self.__gcc_command_executor: GCCCommandExecutor = GCCCommandExecutor(pid_queue)
         self.command_getter: CompileCommandGetter
         self.__open_timeout: int = 0
         self.__hierarchy_fetching_event = hierarchy_fetching_event

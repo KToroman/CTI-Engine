@@ -82,8 +82,8 @@ class PassiveDataFetcher(DataFetcher):
     def __semaphore(self):
         with self.__model_lock:
             if self.__model.current_project is not None:
-                with self.__model.get_semaphore_by_name(self.__model.get_current_working_directory()).set_lock:
-                    self.__model.get_semaphore_by_name(self.__model.get_current_working_directory()).stop_fetcher_set()
+                with self.__model.get_semaphore_by_name(self.__model.current_project.name).set_lock:
+                    self.__model.get_semaphore_by_name(self.__model.current_project.name).stop_fetcher_set()
 
     def __time_keeper(self) -> bool:
         if self.__get_time_till_false() < time.time():
