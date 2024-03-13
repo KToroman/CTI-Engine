@@ -62,7 +62,7 @@ class App(AppRequestsInterface):
 
         # Configuration
         self.config: Configuration = Configuration.load(
-            "config/ConfigFile.json")
+            "/common/homes/all/udixi_schneider/Documents/git/cti-engine-prototype/config/ConfigFile.json")
 
         # Saving
         self.saver: SaveInterface = SaveToJSON(self.config.saves_path)

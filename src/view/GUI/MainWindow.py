@@ -167,16 +167,20 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         active_row: str = self.table_widget.insertion_point
         active_file: CFileReadViewInterface
         for cfile in project.get_cfiles():
-            active_file = self.__get_hierarchy(cfile, active_row)
-            if active_file.get_name() == active_row:
+            #active_file = self.__get_hierarchy(cfile, active_row)
+            #if active_file.get_name() == active_row:
+            #    break
+            if cfile.get_name() == active_row:
+                active_file = cfile
                 break
 
         # Update TableWidget for header list for said file
         cfile_list: List[CFileReadViewInterface] = active_file.get_headers()
         for cfile in cfile_list:
+            print("[MW]    cfile being filled: " + cfile.get_name())
             # self.table_widget.add_subrow(self.__create_displayable(cfile))
-            self.table_widget.fill_subrows(self.__create_displayable(cfile))
-
+            self.table_widget.fill_subrow(self.__create_displayable(cfile))
+        self.table_widget.active_started = False
         # Update other Widgets
         self.setup_connections()
         self.status_bar.update_status(StatusSettings.FINISHED)

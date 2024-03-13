@@ -140,6 +140,7 @@ class TableWidget(QTableWidget):
             row.toggle_button.setText("v")
 
     def start_active_measurement(self, name):
+        self.active_started = True
         self.insertion_point: str = name
         self.active_mode_queue.put(name)
 
