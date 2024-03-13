@@ -22,7 +22,7 @@ from src.exceptions.CompileCommandError import CompileCommandError
 class HierarchyFetcher(FetcherInterface):
 
     def __init__(self, model: Model, model_lock: Lock, hierarchy_fetching_event: SyncEvent,
-                 shutdown_event: SyncEvent, pid_queue: Queue, max_workers=32) -> None:
+                 shutdown_event: SyncEvent, pid_queue: Queue, max_workers=15) -> None:
         self.project_name: str = None
         self.__model = model
         self.__model_lock = model_lock
@@ -63,8 +63,8 @@ class HierarchyFetcher(FetcherInterface):
     def set_semaphore(self, project_name: str):
         with self.__model_lock:
             project = self.__model.get_project_by_name(project_name)
-        with self.__model.get_semaphore_by_name(project.working_dir).set_lock:
-            self.__model.get_semaphore_by_name(project.working_dir).hierarchy_fetcher_set()
+        with self.__model.get_semaphore_by_name(project.name).set_lock:
+            self.__model.get_semaphore_by_name(project.name).hierarchy_fetcher_set()
 
     def __setup_hierarchy(self, project: Project) -> None:
         """the main Method of the Hierarchy Fetcher class"""

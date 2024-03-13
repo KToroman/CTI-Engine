@@ -13,6 +13,7 @@ class GCCCommandExecutor:
         process: subprocess.Popen = subprocess.Popen(args=args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         self.__pid_queue.put(str(process.pid))
 
+
         stdout, stderr = process.communicate()
 
         if process.returncode != 0:

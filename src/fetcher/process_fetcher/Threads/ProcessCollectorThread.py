@@ -173,14 +173,14 @@ class ProcessCollectorThread:
         if name is None or name == "":
             name = project_name_split[- 2]
 
-        name = (name + " " + time_date.__str__())
+        name = (name + "_" + time_date.__str__())
         if os.path.exists(join(self.__save_path, name)):
             for i in range(1, 10):
-                name_temp = f"{name} {i}"
+                name_temp = f"{name}_{i}"
                 if not os.path.exists(join(self.__save_path, name_temp)):
                     return name_temp
 
-            name = f"{name} {time.time()}"
+            name = f"{name}_{int(time.time())}"
             return name
 
         return name

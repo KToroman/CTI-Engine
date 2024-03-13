@@ -10,6 +10,7 @@ from multiprocessing.synchronize import Event as SyncEvent
 from typing import Optional, List
 
 import psutil
+from colorama import Fore
 from psutil import NoSuchProcess, AccessDenied
 
 from src.fetcher.process_fetcher.Threads.ProcessCollectorThread import ProcessCollectorThread
@@ -97,11 +98,11 @@ class ProcessFindingThread:
                 continue
             except AccessDenied:
                 continue
+            except FileNotFoundError:
+                continue
         grep.stdout.close()
         if temp_counter == 0 and self.__finding_list.__len__() != 0 or self.__finding_list.__len__() > 50:
             self.__finding_list.clear()
         with self.__pid_list_lock:
             if self.__pid_list.__len__() > 50:
                 del self.__pid_list[0-10]
-                print("[ProcessFindingThread]   del 0-10 out of pid list")
-

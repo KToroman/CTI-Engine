@@ -66,10 +66,10 @@ class App(AppRequestsInterface):
                                                                              self.visualize_signal,
                                                                              self.__finished_project_event,
                                                                              self.passive_mode_event, self.__pid_queue,
-                                                                             process_finder_count=5,
-                                                                             process_collector_count=30,
-                                                                             fetcher_count=40,
-                                                                             fetcher_process_count=5)
+                                                                             process_finder_count=1,
+                                                                             process_collector_count=5,
+                                                                             fetcher_count=5,
+                                                                             fetcher_process_count=20)
         self.__hierarchy_fetching_event: SyncEvent = Event()
         self.__hierarchy_fetching_event.set()
 

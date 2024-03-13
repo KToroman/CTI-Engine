@@ -60,9 +60,9 @@ class PassiveDataFetcher(DataFetcher):
         self.__line_work_queue: Queue = Queue()
 
     def update_project(self) -> bool:
-        while not self.__project_queue.empty():
-            self.__pid_list.append(self.__pid_queue.get())
-
+        while not self.__pid_queue.empty():
+            item = self.__pid_queue.get()
+            self.__pid_list.append(item)
         for finder in self.__process_finder:
             finder.set_work(self.__pid_list)
         time_keeper_bool: bool = self.__time_keeper()
