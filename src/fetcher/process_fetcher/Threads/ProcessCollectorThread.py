@@ -1,10 +1,12 @@
 import os
 import time
 from datetime import date
-from multiprocessing import Queue
+from multiprocessing import Queue, Lock
 from os.path import join
 from re import split
-from threading import Event, Thread, Lock
+from threading import Thread
+from multiprocessing.synchronize import Lock as SyncLock
+
 from multiprocessing.synchronize import Event as SyncEvent
 import psutil
 from PyQt5.QtCore import pyqtSignal
@@ -18,7 +20,7 @@ from src.model.core.ProjectFinishedSemaphore import ProjectFinishedSemaphore
 
 
 class ProcessCollectorThread:
-    def __init__(self, process_list: list[psutil.Process], process_list_lock: Lock, model: Model, model_lock: Lock,
+    def __init__(self, process_list: list[psutil.Process], process_list_lock: SyncLock, model: Model, model_lock: SyncLock,
                  check_for_project: bool, fetcher_list: list[DataCollectionThread], saver_queue: Queue,
                  hierarchy_queue: Queue, save_path: str, shutdown: SyncEvent, project_queue: Queue,
                  finished_event: pyqtSignal, project_finished_event: SyncEvent, active_event: SyncEvent):

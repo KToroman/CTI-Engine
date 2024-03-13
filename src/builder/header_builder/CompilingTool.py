@@ -13,7 +13,7 @@ from subprocess import CompletedProcess, CalledProcessError
 class CompilingTool(BuilderInterface):
     """Class for building the Header files included in a Source File"""
 
-    DEFAULT_HEADER_DEPTH: int = 2
+    DEFAULT_HEADER_DEPTH: int = 1
 
     def __init__(self,
                  curr_project_dir: str,
@@ -26,7 +26,7 @@ class CompilingTool(BuilderInterface):
         path                -- The path at which the headers are built
         header_depth        -- Determines how many layers of the include hierarchy should be built.
                                0 means only headers directly included in the source file are built.
-                               Default: 2"""
+                               Default: 1"""
         self.source_file = source_file
         self.__build_path = path
         self.__file_builder = FileBuilder(curr_project_dir=curr_project_dir,

@@ -112,13 +112,15 @@ class App(AppRequestsInterface):
                                     fetching_hierarchy=self.__fetching_hierarchy))
         self.__active_mode_fetcher_thread: ActiveFetcherThread = ActiveFetcherThread(self.shutdown_event,
                                                                                      self.__file_saver_work_queue,
-                                                                                     self.config.active_build_dir_path,
+                                                                                     self.config.saves_path,
                                                                                      self.__model,
                                                                                      self.__model_lock,
                                                                                      self.__source_file_name_queue,
                                                                                      self.__error_queue,
                                                                                      self.config.active_build_dir_path,
-                                                                                     self.__active_measurement_active)
+                                                                                     self.__active_measurement_active,
+                                                                                     self.visualize_signal,
+                                                                                     self.__project_queue)
 
     def start(self):
         print("[app]    started")
