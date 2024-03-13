@@ -22,7 +22,7 @@ from src.exceptions.CompileCommandError import CompileCommandError
 class HierarchyFetcher(FetcherInterface):
 
     def __init__(self, model: Model, model_lock: Lock, hierarchy_fetching_event: SyncEvent,
-                 shutdown_event: SyncEvent, pid_queue: Queue, max_workers=15) -> None:
+                 shutdown_event: SyncEvent, pid_queue: Queue, max_workers) -> None:
         self.project_name: str = None
         self.__model = model
         self.__model_lock = model_lock

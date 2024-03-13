@@ -72,11 +72,13 @@ class App(AppRequestsInterface):
         self.__passive_data_fetcher: PassiveDataFetcher = PassiveDataFetcher(self.__model, self.__model_lock,
                                                                              self.__file_saver_work_queue,
                                                                              self.__hierarchy_fetcher_work_queue,
-                                                                             self.shutdown_event, self.__cti_dir_path,
+                                                                             self.shutdown_event,
+                                                                             self.config.saves_path,
                                                                              self.__project_queue,
                                                                              self.visualize_signal,
                                                                              self.__finished_project_event,
                                                                              self.passive_mode_event,
+                                                                             self.__pid_queue,
                                                                              process_finder_count=5,
                                                                              process_collector_count=3,
                                                                              fetcher_count=3,
@@ -86,7 +88,7 @@ class App(AppRequestsInterface):
                                                                    self.passive_mode_event, self.fetching_passive_data)
 
         self.hierarchy_fetcher = HierarchyFetcher(self.__model, self.__model_lock, self.__hierarchy_fetching_event,
-                                                  self.__pid_queue)
+                                                  shutdown_event, self.__pid_queue, max_workers=1)
 
     def prepare_threads(self):
         self.hierarchy_thread: HierarchyThread = HierarchyThread(self.shutdown_event, self.hierarchy_fetcher,
@@ -144,8 +146,3 @@ class App(AppRequestsInterface):
         self.__active_mode_fetcher_thread.stop()
         self.file_fetch_thread.stop()
         print("[App]    stopped")
-
-    def __get_cti_folder_path(self) -> str:
-        path: str = ""
-        path += join(os.getcwd().split("cti-engine-prototype")[0])
-        return path

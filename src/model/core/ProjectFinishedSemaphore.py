@@ -6,6 +6,7 @@ from multiprocessing import Lock
 from typing import List
 
 from PyQt5.QtCore import pyqtSignal
+from colorama import Fore
 
 
 class ProjectFinishedSemaphore:

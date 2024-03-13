@@ -10,11 +10,11 @@ from src.model.core.StatusSettings import StatusSettings
 
 
 class GUICommunicationManager:
-    def __init__(self, shutdown_event: SyncEvent, error_queue: Queue, error_signal: pyqtSignal, passive_mode_event: SyncEvent,
-                 status_queue: Queue, status_signal: pyqtSignal, fetching_passive_data: SyncEvent,
-                 active_measurement_active: SyncEvent, finished_project_event: SyncEvent,
-                 load_event: SyncEvent, cancel_event: SyncEvent, restart_event: Event, hierarchy_fetching_event: SyncEvent,
-                 fetching_hierarchy: SyncEvent):
+    def __init__(self, shutdown_event: SyncEvent, error_queue: Queue, error_signal: pyqtSignal,
+                 passive_mode_event: SyncEvent, status_queue: Queue, status_signal: pyqtSignal,
+                 fetching_passive_data: SyncEvent, active_measurement_active: SyncEvent,
+                 finished_project_event: SyncEvent, load_event: SyncEvent, cancel_event: SyncEvent,
+                 restart_event: SyncEvent, hierarchy_fetching_event: SyncEvent, fetching_hierarchy: SyncEvent):
         self.__error_queue = error_queue
         self.__error_signal = error_signal
         self.__status_signal: pyqtSignal = status_signal

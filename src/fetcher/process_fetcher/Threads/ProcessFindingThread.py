@@ -91,7 +91,6 @@ class ProcessFindingThread:
                 if not any(proc_id in l for l in self.__finding_list) and not os.getcwd().split("/")[-1] in process.cwd():
                     time.sleep(0.01)
                     self.__process_collector_list[self.__counter % self.__process_collector_list.__len__()].add_work(process)
-                    #self.__line_work_queue.put(process)
                     self.__finding_list.append(proc_id)
                     self.__counter += 1
             except NoSuchProcess:
