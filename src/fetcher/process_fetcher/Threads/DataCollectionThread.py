@@ -7,6 +7,7 @@ from multiprocessing.synchronize import Event as SyncEvent
 from multiprocessing import Lock
 
 import psutil
+from colorama import Fore
 from psutil import NoSuchProcess
 
 from src.fetcher.process_fetcher.process_observer.metrics_observer.DataObserver import DataObserver
@@ -49,14 +50,12 @@ class DataCollectionThread:
                         time.sleep(0.01)
                         with self._process_list_lock:
                             self._process_list.remove(process)
-                            print("Process list" + self._process_list.__len__().__str__())
                         self._current_processes.remove(process)
                         self._is_full = False
                 except NoSuchProcess:
                     time.sleep(0.01)
                     with self._process_list_lock:
                         self._process_list.remove(process)
-                        print("Process list" + self._process_list.__len__().__str__())
                     self._current_processes.remove(process)
                     self._is_full = False
                     continue

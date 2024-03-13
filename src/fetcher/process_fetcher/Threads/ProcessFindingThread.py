@@ -1,3 +1,4 @@
+import os
 from multiprocessing import Queue
 import subprocess
 import time
@@ -7,6 +8,10 @@ from multiprocessing import Lock
 from multiprocessing.synchronize import Event as SyncEvent
 
 from typing import Optional, List
+
+import psutil
+from psutil import NoSuchProcess
+
 from src.fetcher.process_fetcher.Threads.ProcessCollectorThread import ProcessCollectorThread
 from multiprocessing.synchronize import Event as SyncEvent
 
@@ -64,19 +69,23 @@ class ProcessFindingThread:
             return
         for line in grep.stdout:
             temp_counter += 1
+            line.strip()
             proc_id = ""
             proc_info = split(" ", line, 10)
             for i in range(proc_info.__len__() - 1):
                 if proc_info[i]:
                     proc_id = proc_info[i]
                     break
-            if not any(proc_id in l for l in self.__finding_list):
-                time.sleep(0.01)
-                #self.__process_collector_list[self.__counter % self.__process_collector_list.__len__()].add_work(line)
-                self.__line_work_queue.put(line)
-                self.__finding_list.append(proc_id)
-                self.__counter += 1
-                print("Findings_length" + self.__finding_list.__len__().__str__())
+            try:
+                process = psutil.Process(int(proc_id))
+                if not any(proc_id in l for l in self.__finding_list) and not os.getcwd().split("/")[-1] in process.cwd():
+                    time.sleep(0.01)
+                    self.__process_collector_list[self.__counter % self.__process_collector_list.__len__()].add_work(process)
+                    #self.__line_work_queue.put(process)
+                    self.__finding_list.append(proc_id)
+                    self.__counter += 1
+            except NoSuchProcess:
+                continue
         grep.stdout.close()
         if temp_counter == 0 and self.__finding_list.__len__() != 0 or self.__finding_list.__len__() > 50:
             self.__finding_list.clear()

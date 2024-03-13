@@ -9,6 +9,7 @@ from multiprocessing import Lock
 from multiprocessing.synchronize import Event as SyncEvent
 import psutil
 from PyQt5.QtCore import pyqtSignal
+from colorama import Fore
 from psutil import NoSuchProcess, AccessDenied
 from typing import Optional
 
@@ -27,7 +28,7 @@ class ProcessCollectorThread:
         self.__thread: Thread
         self.__shutdown = shutdown
         self.__work_queue_lock = Lock()
-        self.__work_queue: list[str] = list()
+        self.__work_queue: list[psutil.Process] = list()
         self.__process_list = process_list
         self.__process_list_lock = process_list_lock
         self.__model = model
@@ -54,15 +55,18 @@ class ProcessCollectorThread:
             #       self.__work_queue.clear()
             #    continue
             #
-            line = ""
-            #with self.__work_queue_lock:
-            if not self.__line_work_queue.empty():
-                #line = self.__work_queue.pop()
+
+            with self.__work_queue_lock:
+                if self.__work_queue:
+            #if not self.__line_work_queue.empty():
+                    process = self.__work_queue.pop()
                 #print(self.__work_queue.__len__())
-                line = self.__line_work_queue.get()
+                #process = self.__line_work_queue.get()
+                else:
+                    continue
+
             try:
-                if line != "":
-                    self.__make_process(line)
+                self.__make_process(process)
             except AccessDenied:
                 continue
             except NoSuchProcess:
@@ -79,28 +83,23 @@ class ProcessCollectorThread:
         self.__thread.join()
         print("[ProcessCollectorThread]    stopped now")
 
-    def add_work(self, line: str):
+    def add_work(self, process: psutil.Process):
         time.sleep(0.01)
-        proc_id = ""
-        proc_info = split(" ", line, 10)
-        for i in range(proc_info.__len__() - 1):
-            if proc_info[i]:
-                proc_id = proc_info[i]
-                break
         with self.__work_queue_lock:
-            if not any(proc_id in l for l in self.__work_queue):
-                self.__work_queue.append(line)
+            self.__work_queue.append(process)
 
-    def __make_process(self, line: str):
-        process = self.__create_processes(line)
+    def __make_process(self, process: psutil.Process):
+        #process = self.__create_processes(line)
         if process is not None and not self.__is_process_in_list(process):
-            self.time_till_false = time.time() + 40
             if self.__check_for_project:
+                pass
 
-                project_name = self.__get_project_name(process)
-                if project_name == "del":
-                    return
-                self.__project_checker(project_name)
+            project_name = self.__get_project_name(process)
+            if project_name == "del":
+                return
+            self.__project_checker(project_name)
+            self.__counter += 1
+            self.time_till_false = time.time() + 40
             with self.__process_list_lock:
                 self.__process_list.append(process)
             if not self.__fetcher[self.__counter % len(self.__fetcher)].has_work():
@@ -110,15 +109,11 @@ class ProcessCollectorThread:
                     if not f.has_work():
                         f.add_work(process)
                         break
-            self.__counter += 1
 
     def __create_processes(self, line: str) -> Optional[psutil.Process]:
-        proc_id = ""
+        line.strip()
         proc_info = split(" ", line, 10)
-        for i in range(proc_info.__len__() - 1):
-            if proc_info[i]:
-                proc_id = proc_info[i]
-                break
+        proc_id = proc_info[0]
         process = psutil.Process(int(proc_id))
         return process
 
