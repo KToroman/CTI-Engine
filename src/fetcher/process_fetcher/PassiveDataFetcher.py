@@ -23,8 +23,8 @@ class PassiveDataFetcher(DataFetcher):
 
     def __init__(self, model: Model, model_lock: Lock, saver_queue: Queue, hierarchy_queue: Queue,
                  shutdown: SyncEvent, save_path: str, project_queue: Queue, finished_event: pyqtSignal,
-                 project_finished_event: SyncEvent, passive_mode_event: SyncEvent, process_finder_count=2,
-                 process_collector_count=2, fetcher_count=2, fetcher_process_count=15):
+                 project_finished_event: SyncEvent, passive_mode_event: SyncEvent, pid_queue: Queue,
+                 process_finder_count=2, process_collector_count=2, fetcher_count=2, fetcher_process_count=15):
 
         self.__model = model
         self.__model_lock = model_lock
@@ -53,18 +53,25 @@ class PassiveDataFetcher(DataFetcher):
         self.__fetcher: List[DataCollectionThread] = list()
         self.__done_fetching: bool = True
         self.max_time = 0
+        self.__pid_queue = pid_queue
+
+        self.__pid_list: List[str] = list()
 
         self.__line_work_queue: Queue = Queue()
 
     def update_project(self) -> bool:
+        while not self.__project_queue.empty():
+            self.__pid_list.append(self.__pid_queue.get())
+
         for finder in self.__process_finder:
-            finder.set_work()
+            finder.set_work(self.__pid_list)
         time_keeper_bool: bool = self.__time_keeper()
         if time_keeper_bool:
             self.__done_fetching = False
         else:
             if not self.__done_fetching:
                 self.finish_fetching()
+        self.__pid_list.clear()
         return time_keeper_bool
 
     def finish_fetching(self):
@@ -103,8 +110,8 @@ class PassiveDataFetcher(DataFetcher):
         # self.__data_fetching_thread.start()
         for i in range(self.__fetcher_count):
             fetcher = DataCollectionThread(process_list, process_list_lock, self.__model, self.__model_lock,
-                                    DataObserver(), self.__fetcher_process_count, self.__shutdown,
-                                    self.__passive_mode_event)
+                                           DataObserver(), self.__fetcher_process_count, self.__shutdown,
+                                           self.__passive_mode_event)
             self.__fetcher.append(fetcher)
             fetcher.start()
         for i in range(self.__process_collector_count):

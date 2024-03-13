@@ -10,7 +10,7 @@ from multiprocessing.synchronize import Event as SyncEvent
 from typing import Optional, List
 
 import psutil
-from psutil import NoSuchProcess
+from psutil import NoSuchProcess, AccessDenied
 
 from src.fetcher.process_fetcher.Threads.ProcessCollectorThread import ProcessCollectorThread
 from multiprocessing.synchronize import Event as SyncEvent
@@ -32,6 +32,9 @@ class ProcessFindingThread:
         self.__time_last_found = time.time()
         self.__active_event = active_event
         self.__line_work_queue = line_work_queue
+
+        self.__pid_list: List[str] = list()
+        self.__pid_list_lock: Lock = Lock()
 
     def __run(self):
         while not self.__shutdown.is_set():
@@ -56,18 +59,24 @@ class ProcessFindingThread:
         with self.__work_lock:
             return self.__work
 
-    def set_work(self):
+    def set_work(self, pid_list: List[str]):
         if not self.has_work():
             with self.__work_lock:
                 self.__work = True
+            with self.__pid_list_lock:
+                self.__pid_list.extend(pid_list)
 
     def __fetch_process(self):
-
         grep = subprocess.Popen(self.__grep_command, stdout=subprocess.PIPE, shell=True, encoding='utf-8')
         temp_counter = 0
         if grep == None:
             return
         for line in grep.stdout:
+            with self.__pid_list_lock:
+                for pid in self.__pid_list:
+                    if pid in line:
+                        continue
+
             temp_counter += 1
             line.strip()
             proc_id = ""
@@ -86,9 +95,12 @@ class ProcessFindingThread:
                     self.__counter += 1
             except NoSuchProcess:
                 continue
+            except AccessDenied:
+                continue
         grep.stdout.close()
         if temp_counter == 0 and self.__finding_list.__len__() != 0 or self.__finding_list.__len__() > 50:
             self.__finding_list.clear()
-
-
+        with self.__pid_list_lock:
+            if self.__pid_list.__len__() > 50:
+                del self.__pid_list[0-10]
 

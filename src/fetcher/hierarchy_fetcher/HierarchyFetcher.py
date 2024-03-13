@@ -55,7 +55,7 @@ class HierarchyFetcher(FetcherInterface):
                 print("[HierarchyFetcher]   " + Fore.YELLOW + e.__str__() + "\n trying again..." + Fore.RESET)
                 return True
 
-        self.__setup_hierarchy(project)
+        #self.__setup_hierarchy(project)
         self.set_semaphore(self.project_name)
         return False
 

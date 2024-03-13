@@ -65,7 +65,7 @@ class App(AppRequestsInterface):
                                                                              self.__project_queue,
                                                                              self.visualize_signal,
                                                                              self.__finished_project_event,
-                                                                             self.passive_mode_event,
+                                                                             self.passive_mode_event, self.__pid_queue,
                                                                              process_finder_count=5,
                                                                              process_collector_count=30,
                                                                              fetcher_count=40,
