@@ -61,7 +61,8 @@ class App(AppRequestsInterface):
         self.visualize_signal: pyqtSignal = visualize_signal
 
         # Configuration
-        self.config: Configuration = Configuration("config/ConfigFile.json")
+        self.config: Configuration = Configuration.load(
+            "config/ConfigFile.json")
 
         # Saving
         self.saver: SaveInterface = SaveToJSON(self.config.saves_path)
