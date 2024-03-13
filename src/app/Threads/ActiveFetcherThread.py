@@ -3,13 +3,25 @@ from threading import Thread
 from multiprocessing.synchronize import Event as SyncEvent
 from multiprocessing.synchronize import Lock as SyncLock
 
+from PyQt5.QtCore import pyqtSignal
 
 from src.fetcher.process_fetcher.ActiveDataFetcher import ActiveDataFetcher
 from src.model.Model import Model
 
 
 class ActiveFetcherThread:
-    def __init__(self, shutdown_event: SyncEvent, saver_queue: Queue, save_path: str, model: Model, model_lock: SyncLock, source_file_name_queue: Queue, error_queue: Queue, build_dir_path: str, active_measurement_active: SyncEvent) -> None:
+    def __init__(self,
+                 shutdown_event: SyncEvent,
+                 saver_queue: Queue,
+                 save_path: str,
+                 model: Model,
+                 model_lock: Lock,
+                 source_file_name_queue: Queue,
+                 error_queue: Queue,
+                 build_dir_path: str,
+                 active_measurement_active: SyncEvent,
+                 visualise_event: pyqtSignal,
+                 visualise_project_queue: Queue) -> None:
         self.__thread: Thread
         self.__model: Model = model
         self.__model_lock: SyncLock = model_lock
@@ -20,6 +32,8 @@ class ActiveFetcherThread:
         self.__active_measurement_active: SyncEvent = active_measurement_active
         self.__saver_queue: Queue = saver_queue
         self.__save_path: str = save_path
+        self.__visualise_signal: pyqtSignal = visualise_event
+        self.__visualise_project_queue: Queue = visualise_project_queue
 
     def start(self):
         print("[ActiveFetcherThread]    started")
@@ -44,6 +58,13 @@ class ActiveFetcherThread:
                                build_dir_path=self.__build_dir_path, model_lock=self.__model_lock, hierarchy_queue=Queue()) as active_data_fetcher:
             self.measure_source_file(active_data_fetcher)
 
+        with self.__model_lock:
+            project: str = self.__model.current_project.name
+
+        self.__saver_queue.put(project)
+        self.__visualise_project_queue.put(project)
+        self.__visualise_signal.emit()
+        
     def measure_source_file(self, active_data_fetcher: ActiveDataFetcher):
         actively_fetching: bool = True
         while (not self.__shutdown_event.is_set()) and actively_fetching:
