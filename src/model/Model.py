@@ -63,7 +63,7 @@ class Model(ModelReadViewInterface):
         for semaphore in self.semaphore_list:
             if name == semaphore.project_dir:
                 return semaphore
-        raise Exception
+        raise Exception(f"did not find semaphore '{name}'")
 
     def add_project(self, project: Project, semaphore: Optional[ProjectFinishedSemaphore]) -> None:
         """adds new project to model"""
@@ -73,7 +73,7 @@ class Model(ModelReadViewInterface):
             if semaphore is not None:
                 self.semaphore_list.append(semaphore)
             self.current_project = project
-            print("[Model]   new project")
+            print(f"[Model]   new project {project}")
 
 
     def project_in_list(self, name: str) -> bool:

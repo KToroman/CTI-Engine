@@ -74,7 +74,7 @@ class App(AppRequestsInterface):
         self.__hierarchy_fetching_event.set()
 
         self.hierarchy_fetcher = HierarchyFetcher(self.__model, self.__model_lock, self.__hierarchy_fetching_event,
-                                                  self.shutdown_event)
+                                                  self.shutdown_event, self.__pid_queue)
         self.saver: SaveInterface = SaveToJSON(self.__cti_dir_path)
 
         self.passive_thread: PassiveDataThread = PassiveDataThread(shutdown_event, self.__passive_data_fetcher,

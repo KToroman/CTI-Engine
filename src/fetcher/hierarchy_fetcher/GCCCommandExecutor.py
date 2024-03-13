@@ -1,15 +1,20 @@
 import subprocess, shlex
+from multiprocessing import Queue
+
 
 class GCCCommandExecutor:
 
-    def __init__(self) -> None:
-        pass
+    def __init__(self, pid_queue: Queue) -> None:
+        self.__pid_queue: Queue = pid_queue
 
     def execute(self, command: str) -> str:
         """executes the passed command via a subprocess and returns the standart output. Raises CalledProcessError if the Command is not completed sucessfully (exitcode != 0)"""
         args: list[str] = shlex.split(command)
-        completed_process: subprocess.CompletedProcess = subprocess.run(
-            args=args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        if completed_process.returncode != 0:
-            completed_process.check_returncode()
-        return completed_process.stderr
+        process: subprocess.Popen = subprocess.Popen(args=args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        self.__pid_queue.put(str(process.pid))
+
+        stdout, stderr = process.communicate()
+
+        if process.returncode != 0:
+            raise subprocess.CalledProcessError(cmd=command, returncode=process.returncode)
+        return stderr
