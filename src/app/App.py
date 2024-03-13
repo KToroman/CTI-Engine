@@ -56,6 +56,7 @@ class App(AppRequestsInterface):
         self.__model = model
         self.__hierarchy_fetcher_work_queue: Queue = Queue()
         self.__file_saver_work_queue: Queue = Queue()
+        self.__pid_queue: Queue = Queue()
 
         self.__passive_data_fetcher: PassiveDataFetcher = PassiveDataFetcher(self.__model, self.__model_lock,
                                                                              self.__file_saver_work_queue,
