@@ -54,12 +54,12 @@ class PassiveDataFetcher(DataFetcher):
         self.__done_fetching: bool = True
         self.max_time = 0
 
+        self.__line_work_queue: Queue = Queue()
+
     def update_project(self) -> bool:
         for finder in self.__process_finder:
             finder.set_work()
         time_keeper_bool: bool = self.__time_keeper()
-        if time_keeper_bool and self.__done_fetching:
-            self.__model.get_semaphore_by_name(self.__model.get_current_working_directory()).restore_fetcher_set()
         if time_keeper_bool:
             self.__done_fetching = False
         else:
@@ -114,11 +114,12 @@ class PassiveDataFetcher(DataFetcher):
                                                               self.__hierarchy_queue,
                                                               self.__save_path, self.__shutdown, self.__project_queue,
                                                               self.__finished_event, self.__project_finished_event,
-                                                              self.__passive_mode_event)
+                                                              self.__passive_mode_event, self.__line_work_queue)
             self.__process_collector_list.append(process_collector_thread)
             process_collector_thread.start()
         for i in range(self.__process_finder_count):
-            finder = ProcessFindingThread(self.__shutdown, self.__process_collector_list, self.__passive_mode_event)
+            finder = ProcessFindingThread(self.__shutdown, self.__process_collector_list, self.__passive_mode_event,
+                                          self.__line_work_queue)
             self.__process_finder.append(finder)
             finder.start()
 

@@ -15,6 +15,7 @@ class PassiveDataThread:
         self.__found_project = found_project
         self.__data_fetcher = data_fetcher
 
+
     def __run(self):
         while not self.__shutdown.is_set():
             if self.__collect_data_passive.is_set():

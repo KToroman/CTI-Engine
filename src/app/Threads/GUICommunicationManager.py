@@ -32,7 +32,7 @@ class GUICommunicationManager:
         self.__restart_event = restart_event
         self.__hierarchy_fetching_event = hierarchy_fetching_event
         self.__fetching_hierarchy = fetching_hierarchy
-
+        self.__current_project_name: str = "sussy"
     def start(self):
         print("[StatusAndErrorThread]   started.")
         self.__thread = Thread(target=self.__run)
@@ -78,7 +78,7 @@ class GUICommunicationManager:
             self.__error_signal.emit()
 
     def __update_status(self) -> bool:
-        if self.__time_of_last_status_change + 1.5 > time.time():
+        if self.__time_of_last_status_change + 0.45 > time.time():
             return False
         self.__status = StatusSettings.WAITING
         if self.__cancel_event.is_set():

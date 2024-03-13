@@ -1,30 +1,71 @@
-from PyQt5.QtWidgets import QLabel, QWidget, QHBoxLayout
+import time
+from typing import Optional
+
+from PyQt5 import QtCore
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QLabel, QWidget, QHBoxLayout, QBoxLayout, QVBoxLayout, QGridLayout
 from src.model.core.StatusSettings import StatusSettings
 
 
 class StatusBar(QWidget):
     """StatusBar is used to display the program's status."""
     WINDOW_SIZE: int = 20
+    SIZE_X: int = 300
+    SIZE_Y: int = 100
+
     SPACING: int = 10
     STATUS_TEXT: str = "Status: "
 
     def __init__(self):
         super().__init__()
         # Create Components of StatusBar
+
+        self.counter = 0
+        self.last_update = 0
+
+        self.project_name = QLabel(self)
+        self.project_name.setText("[]")
+        self.setFixedSize(self.SIZE_X, self.SIZE_Y)
         self.status_message = QLabel(self)
         self.color_window = QLabel(self)
         self.color_window.setFixedSize(self.WINDOW_SIZE, self.WINDOW_SIZE)
         # Setup Layout for StatusBar
-        layout = QHBoxLayout(self)
-        layout.addWidget(self.color_window)
-        layout.addWidget(self.status_message)
-        layout.setSpacing(self.SPACING)
-        self.setLayout(layout)
-        # Initialize StatusBar to WAITING
-        self.update_status(StatusSettings.WAITING)
+        layout = QVBoxLayout()
+        layout.addWidget(self.project_name)
+        layout_1 = QHBoxLayout()
+        layout_1.addWidget(self.color_window)
+        layout_1.addWidget(self.status_message)
+        layout_1.addStretch(4)
+        layout_1.setSpacing(self.SPACING)
+        layout_1.setAlignment(Qt.AlignHCenter)
+        layout.setSpacing(0)
+        layout.addLayout(layout_1)
+        layout_1.setAlignment(Qt.AlignRight)
 
-    def update_status(self, status: StatusSettings):
+        self.setLayout(layout)
+
+        self.layout().setAlignment(Qt.AlignTop)
+        # Initialize StatusBar to WAITING
+        self.__name: str = ""
+        self.name_counter = 0
+        self.build_string = ""
+        self.update_status(StatusSettings.WAITING, "")
+
+    def update_status(self, status: StatusSettings, project_name: Optional[str]):
         """Updates the statusbar according to a given setting."""
-        self.status_message.setText(self.STATUS_TEXT + status.value[0])
+        if project_name != self.__name:
+            self.build_string = ""
+            self.__name = project_name
+        if self.name_counter < len(self.__name):
+            self.build_string += self.__name[self.name_counter]
+            self.project_name.setText(f"[{self.build_string}]")
+            self.name_counter += 1
+
+        dots = ""
+        for i in range(self.counter % 4):
+            dots += "."
+        self.counter += 1
+
+        self.status_message.setText(status.value[0] + dots)
         self.color_window.setStyleSheet(f"background-color: {status.value[1]}")
         self.update()

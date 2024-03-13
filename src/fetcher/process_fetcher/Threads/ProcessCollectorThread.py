@@ -4,7 +4,8 @@ from datetime import date
 from multiprocessing import Queue
 from os.path import join
 from re import split
-from threading import Event, Thread, Lock
+from threading import Thread
+from multiprocessing import Lock
 from multiprocessing.synchronize import Event as SyncEvent
 import psutil
 from PyQt5.QtCore import pyqtSignal
@@ -21,7 +22,8 @@ class ProcessCollectorThread:
     def __init__(self, process_list: list[psutil.Process], process_list_lock: Lock, model: Model, model_lock: Lock,
                  check_for_project: bool, fetcher_list: list[DataCollectionThread], saver_queue: Queue,
                  hierarchy_queue: Queue, save_path: str, shutdown: SyncEvent, project_queue: Queue,
-                 finished_event: pyqtSignal, project_finished_event: SyncEvent, active_event: SyncEvent):
+                 finished_event: pyqtSignal, project_finished_event: SyncEvent, active_event: SyncEvent,
+                 line_work_queue: Queue):
         self.__thread: Thread
         self.__shutdown = shutdown
         self.__work_queue_lock = Lock()
@@ -43,18 +45,21 @@ class ProcessCollectorThread:
         self.__project_queue = project_queue
         self.__finished_event = finished_event
         self.__project_finished_event = project_finished_event
+        self.__line_work_queue = line_work_queue
 
     def __run(self):
         while not self.__shutdown.is_set():
-            if not self.__active_event.is_set():
-                with self.__work_queue_lock:
-                    self.__work_queue.clear()
-                continue
-            time.sleep(0.001)
+            #if not self.__active_event.is_set():
+            #    with self.__work_queue_lock:
+            #       self.__work_queue.clear()
+            #    continue
+            #
             line = ""
-            with self.__work_queue_lock:
-                if self.__work_queue.__len__() != 0:
-                    line = self.__work_queue.pop()
+            #with self.__work_queue_lock:
+            if not self.__line_work_queue.empty():
+                #line = self.__work_queue.pop()
+                #print(self.__work_queue.__len__())
+                line = self.__line_work_queue.get()
             try:
                 if line != "":
                     self.__make_process(line)
@@ -75,21 +80,21 @@ class ProcessCollectorThread:
         print("[ProcessCollectorThread]    stopped now")
 
     def add_work(self, line: str):
-        time.sleep(0.001)
+        time.sleep(0.01)
+        proc_id = ""
+        proc_info = split(" ", line, 10)
+        for i in range(proc_info.__len__() - 1):
+            if proc_info[i]:
+                proc_id = proc_info[i]
+                break
         with self.__work_queue_lock:
-            proc_id = ""
-            proc_info = split(" ", line, 10)
-            for i in range(proc_info.__len__() - 1):
-                if proc_info[i]:
-                    proc_id = proc_info[i]
-                    break
             if not any(proc_id in l for l in self.__work_queue):
                 self.__work_queue.append(line)
 
     def __make_process(self, line: str):
         process = self.__create_processes(line)
         if process is not None and not self.__is_process_in_list(process):
-            self.time_till_false = time.time() + 60
+            self.time_till_false = time.time() + 40
             if self.__check_for_project:
 
                 project_name = self.__get_project_name(process)
@@ -105,6 +110,7 @@ class ProcessCollectorThread:
                     if not f.has_work():
                         f.add_work(process)
                         break
+            self.__counter += 1
 
     def __create_processes(self, line: str) -> Optional[psutil.Process]:
         proc_id = ""
@@ -132,6 +138,7 @@ class ProcessCollectorThread:
 
     def __project_checker(self, project_name: str):
         try:
+            time.sleep(0.01)
             with self.__model_lock:
                 if (project_name != self.__model.get_current_working_directory() or
                         not self.__model.project_in_semaphore_list(project_name)):
@@ -154,6 +161,7 @@ class ProcessCollectorThread:
             return
 
     def __is_process_in_list(self, process: psutil.Process) -> bool:
+        time.sleep(0.01)
         with self.__process_list_lock:
             for proc in self.__process_list:
                 try:

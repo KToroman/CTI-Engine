@@ -1,9 +1,10 @@
 import os
 import time
 from os.path import join
-from threading import Thread, Lock
+from threading import Thread
 from typing import List, Optional
 from multiprocessing.synchronize import Event as SyncEvent
+from multiprocessing import Lock
 
 import psutil
 from psutil import NoSuchProcess
@@ -35,24 +36,27 @@ class DataCollectionThread:
         while not self._shutdown.is_set():
             for process in self._current_processes:
 
-                if not self._active_event.is_set():
-                    self._current_processes.clear()
-                    with self._process_list_lock:
-                        self._process_list.clear()
-                    continue
+                # if not self._active_event.is_set():
+                #   self._current_processes.clear()
+                #  with self._process_list_lock:
+                #     self._process_list.clear()
+                # continue
 
                 try:
                     if process.is_running():
                         self._make_entry(self._data_observer.observe(process))
-                        time.sleep(0.001)
                     else:
+                        time.sleep(0.01)
                         with self._process_list_lock:
                             self._process_list.remove(process)
+                            print("Process list" + self._process_list.__len__().__str__())
                         self._current_processes.remove(process)
                         self._is_full = False
                 except NoSuchProcess:
+                    time.sleep(0.01)
                     with self._process_list_lock:
                         self._process_list.remove(process)
+                        print("Process list" + self._process_list.__len__().__str__())
                     self._current_processes.remove(process)
                     self._is_full = False
                     continue
@@ -78,6 +82,7 @@ class DataCollectionThread:
         return self._is_full
 
     def _add_data_entry(self, data_entry: DataEntry):
+        time.sleep(0.01)
         with self._model_lock:
             self._model.insert_datapoint(data_entry)
         self.time_till_false = time.time() + 20

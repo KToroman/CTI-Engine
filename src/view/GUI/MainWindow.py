@@ -157,7 +157,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.upper_limit.setMaximum(file_count)
         # Update other Widgets
         self.setup_connections()
-        self.status_bar.update_status(StatusSettings.FINISHED)
+        self.status_bar.update_status(StatusSettings.FINISHED, project.get_project_name())
         self.table_widget.rebuild_table(self.table_widget.rows)
 
     def __visualize_active(self, project: ProjectReadViewInterface):
@@ -191,7 +191,10 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     def update_statusbar(self):
         """Receives a status string, changes the UI's status string accordingly."""
         status = self.status_queue.get()
-        self.status_bar.update_status(status)
+        if status.value[0] == "measuring":
+            self.status_bar.update_status(status, self.__model.get_current_project_name())
+        else:
+            self.status_bar.update_status(status, "")
 
     def __get_hierarchy(self, cfile: CFileReadViewInterface, active_row: str) -> CFileReadViewInterface:
         """Finds cfile which started active mode."""

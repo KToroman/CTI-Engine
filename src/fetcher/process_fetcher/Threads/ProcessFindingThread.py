@@ -2,10 +2,11 @@ from multiprocessing import Queue
 import subprocess
 import time
 from re import split
-from threading import Thread, Lock
+from threading import Thread
+from multiprocessing import Lock
 from multiprocessing.synchronize import Event as SyncEvent
 
-from typing import Optional
+from typing import Optional, List
 from src.fetcher.process_fetcher.Threads.ProcessCollectorThread import ProcessCollectorThread
 from multiprocessing.synchronize import Event as SyncEvent
 
@@ -13,7 +14,8 @@ from multiprocessing.synchronize import Event as SyncEvent
 class ProcessFindingThread:
     __STANDARD_GREP_COMMAND: str = 'ps -e | grep cc1plus'
 
-    def __init__(self, shut_down_event: SyncEvent, process_collector_list: list[ProcessCollectorThread], active_event: SyncEvent):
+    def __init__(self, shut_down_event: SyncEvent, process_collector_list: list[ProcessCollectorThread],
+                 active_event: SyncEvent, line_work_queue: Queue):
         self.__thread: Thread
         self.__shutdown: SyncEvent = shut_down_event
         self.__work_lock = Lock()
@@ -24,12 +26,13 @@ class ProcessFindingThread:
         self.__grep_command: str = self.__STANDARD_GREP_COMMAND
         self.__time_last_found = time.time()
         self.__active_event = active_event
+        self.__line_work_queue = line_work_queue
 
     def __run(self):
         while not self.__shutdown.is_set():
-            if not self.__active_event.is_set():
-                self.__finding_list.clear()
-                continue
+            #if not self.__active_event.is_set():
+             #   self.__finding_list.clear()
+              #  continue
             if self.has_work():
                 self.__fetch_process()
                 with self.__work_lock:
@@ -68,9 +71,15 @@ class ProcessFindingThread:
                     proc_id = proc_info[i]
                     break
             if not any(proc_id in l for l in self.__finding_list):
-                self.__process_collector_list[self.__counter % self.__process_collector_list.__len__()].add_work(line)
+                time.sleep(0.01)
+                #self.__process_collector_list[self.__counter % self.__process_collector_list.__len__()].add_work(line)
+                self.__line_work_queue.put(line)
                 self.__finding_list.append(proc_id)
                 self.__counter += 1
+                print("Findings_length" + self.__finding_list.__len__().__str__())
         grep.stdout.close()
-        if temp_counter == 0 and self.__finding_list.__len__() != 0:
+        if temp_counter == 0 and self.__finding_list.__len__() != 0 or self.__finding_list.__len__() > 50:
             self.__finding_list.clear()
+
+
+

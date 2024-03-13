@@ -94,3 +94,6 @@ class Model(ModelReadViewInterface):
         for project in self.projects:
             return_list.append(project.name)
         return return_list
+
+    def get_current_project_name(self) -> str:
+        return self.current_project.name

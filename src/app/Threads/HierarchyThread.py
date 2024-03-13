@@ -49,7 +49,7 @@ class HierarchyThread:
                 print("[HierarchyThread]    work deleted: " + self.__current_work)
                 self.__current_work = ""
                 repeat = False
-                self.__hierarchy_fetching_event.clear()
+                self.__fetching_hierarchy.clear()
 
     def start(self):
         print("[HierarchyThread]    started")
