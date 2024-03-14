@@ -6,7 +6,7 @@ from multiprocessing.synchronize import Event as SyncEvent
 from typing import List
 
 from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtWidgets import QPushButton, QInputDialog, QTextEdit, QScrollArea, QWidget, QVBoxLayout
+from PyQt5.QtWidgets import QPushButton, QInputDialog, QTextEdit, QScrollArea, QWidget, QVBoxLayout, QComboBox
 import qtawesome as qta
 
 from src.view.AppRequestsInterface import AppRequestsInterface
@@ -19,10 +19,13 @@ class MenuBar:
         self.__visualize_event = visualize_event
 
         self.load_path_queue = load_path_queue
-        self.cancel_event = cancel_event
+        self.cancel_event = cancel_event#qss="/common/homes/all/udixi_schneider/Documents/git/cti-engine-prototype/src/view/GUI/Stylesheets/StylesheetDark.qss"
+        #with open(qss, "r") as fh:
+            #self.__q_application.setStyleSheet(fh.read())
         self.restart_event = restart_event
 
         self.cancel_icon = qta.icon("ei.ban-circle")
+        self.style_icon = qta.icon("ei.ban-circle")
 
         self.load_file_button: QPushButton = QPushButton("Load file")
         self.load_file_button.setStyleSheet("background-color: #61b3bf;")
@@ -49,6 +52,11 @@ class MenuBar:
         self.small_cancel_button.setIcon(self.cancel_icon)
         self.small_cancel_button.setStyleSheet("background-color: #61b3bf;")
         self.small_cancel_button.clicked.connect(lambda: self.cancel_event.set())
+
+        self.switch_style_box: QComboBox = QComboBox()
+        #self.switch_style_box.itemIcon(self.style_icon)
+        self.switch_style_box.setStyleSheet("background-color: #61b3bf;")
+        self.switch_style_box.addItems(["Dark Mode", "Light Mode", "Pink Mode"])
 
         self.scroll_bar = QScrollArea()
         self.scroll_bar.setWidgetResizable(True)

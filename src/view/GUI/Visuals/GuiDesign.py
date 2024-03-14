@@ -94,6 +94,10 @@ def setupUI(mainWindow, active_mode_queue):
 
     mainWindow.verticalLayout.addWidget(mainWindow.pause_button)
 
+    mainWindow.switch_style_box = mainWindow.menu_bar.switch_style_box
+
+    mainWindow.verticalLayout.addWidget(mainWindow.switch_style_box)
+
     mainWindow.project_scroll_button = mainWindow.menu_bar.scroll_button
     mainWindow.scroll_bar = mainWindow.menu_bar.scroll_bar
     mainWindow.verticalLayout.addWidget(mainWindow.project_scroll_button)

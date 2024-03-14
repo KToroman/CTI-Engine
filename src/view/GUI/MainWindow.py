@@ -99,6 +99,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         icon: QIcon = QIcon(logo_path)
         self.setWindowIcon(icon)
         self.setStyleSheet("background-color: #ECEFF1;")
+        self.stylesheets = {"Dark Mode": "src/view/GUI/Stylesheets/StylesheetDark.qss", "Light Mode": " "}
 
         """colors from cti engine logo:
         #237277
@@ -117,13 +118,17 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.status_bar: StatusBar = StatusBar()
 
         gd.setupUI(self, active_mode_queue)
-
+        self.menu_bar.switch_style_box.currentIndexChanged.connect(self.set_stylesheet())
         self.setup_resource_connections()
 
     def execute(self):
         self.show()
         self.__q_application.exec()
 
+    def set_stylesheet(self):
+        selected_style = self.menu_bar.switch_style_box.currentText()
+        with open(selected_style, "r") as fh:
+            self.__q_application.setStyleSheet(fh.read())
 
     def visualize(self):
         print("visualize")
