@@ -81,6 +81,7 @@ class Model(ModelReadViewInterface):
         return False
 
     def get_sourcefile_by_name(self, name: str) -> SourceFile:
+        """returns the sourcefile from the current project that matches name"""
         return self.current_project.get_sourcefile(name)
 
     def get_current_working_directory(self) -> str:
@@ -93,3 +94,8 @@ class Model(ModelReadViewInterface):
         for project in self.projects:
             return_list.append(project.name)
         return return_list
+
+    def wait_for_project(self):
+        """Blocks until current_project is available"""
+        while self.current_project is None:
+            pass

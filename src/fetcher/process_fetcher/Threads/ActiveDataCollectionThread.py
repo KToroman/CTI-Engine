@@ -25,7 +25,6 @@ class ActiveDataCollectionThread(DataCollectionThread):
     def _add_data_entry(self, data_entry: DataEntry):
         with self._model_lock:
             self._model.insert_datapoint_header(data_entry, self.__source_file)
-            print("check2")
 
     def _make_entry(self, process_point: ProcessPoint) -> None:
         try:
@@ -46,8 +45,6 @@ class ActiveDataCollectionThread(DataCollectionThread):
                     path = line.split("/")[-1].replace("#", "/")
                     path = path.removesuffix(".cpp.o")
                     has_o = True
-
-                    print((source_file_path, path))
 
                     break
             if not has_o:
