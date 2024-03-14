@@ -167,9 +167,6 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         active_row: str = self.table_widget.insertion_point
         active_file: CFileReadViewInterface
         for cfile in project.get_cfiles():
-            #active_file = self.__get_hierarchy(cfile, active_row)
-            #if active_file.get_name() == active_row:
-            #    break
             if cfile.get_name() == active_row:
                 active_file = cfile
                 break
@@ -180,7 +177,9 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
             print("[MW]    cfile being filled: " + cfile.get_name())
             # self.table_widget.add_subrow(self.__create_displayable(cfile))
             self.table_widget.fill_subrow(self.__create_displayable(cfile))
-        self.table_widget.active_started = False
+        print("lol1")
+        self.table_widget.rebuild_table(self.table_widget.rows)
+        print("lol2")
         # Update other Widgets
         self.setup_connections()
         self.status_bar.update_status(StatusSettings.FINISHED)
@@ -192,6 +191,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         error = self.error_queue.get()
         error_window = ErrorWindow(error)
         error_window.show()
+
     def update_statusbar(self):
         """Receives a status string, changes the UI's status string accordingly."""
         status = self.status_queue.get()
