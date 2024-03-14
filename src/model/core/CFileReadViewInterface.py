@@ -31,4 +31,4 @@ class CFileReadViewInterface(Protocol):
 
     def has_error(self) -> bool:
         """Returns true if there is an error in this CFile."""
-        pass
+        raise NotImplementedError
