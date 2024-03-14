@@ -5,7 +5,6 @@ from subprocess import CalledProcessError
 from concurrent.futures import ThreadPoolExecutor, Future
 from multiprocessing.synchronize import Event as SyncEvent, Lock
 
-from colorama import Fore
 
 from src.fetcher.FetcherInterface import FetcherInterface
 from src.fetcher.hierarchy_fetcher.GCCCommandExecutor import GCCCommandExecutor
