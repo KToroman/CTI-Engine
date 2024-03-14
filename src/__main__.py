@@ -1,5 +1,4 @@
 import multiprocessing
-import time
 from multiprocessing import Queue, Process
 import sys
 import click

@@ -3,8 +3,6 @@ from threading import Thread
 from multiprocessing.synchronize import Event as SyncEvent
 
 from PyQt5.QtCore import pyqtSignal
-from colorama import Fore
-
 from src.fetcher.file_fetcher.FileLoader import FileLoader
 from src.model.Model import Model
 

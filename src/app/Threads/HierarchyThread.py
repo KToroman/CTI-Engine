@@ -2,8 +2,6 @@ from multiprocessing import Queue
 from threading import Thread, Lock
 from multiprocessing.synchronize import Event as SyncEvent
 
-from colorama import Fore
-
 from src.fetcher.hierarchy_fetcher.HierarchyFetcher import HierarchyFetcher
 
 
