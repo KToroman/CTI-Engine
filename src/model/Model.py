@@ -28,6 +28,7 @@ class Model(ModelReadViewInterface):
         """inserts datapoint to sourcefile according to their paths to the current project"""
         cfile: CFile = self.current_project.get_sourcefile(data_point.path)
         cfile.data_entries.append(data_point)
+        cfile.index_dataentries += 1
 
     def insert_datapoint_header(self, data_point: DataEntry, current_cfile: CFile = None):
         if current_cfile is None:
@@ -36,6 +37,8 @@ class Model(ModelReadViewInterface):
         else:
             if current_cfile.path == data_point.path:
                 current_cfile.data_entries.append(data_point)
+                current_cfile.index_dataentries += 1
+                
             for header in cast(list[Header], current_cfile.headers):
                 self.insert_datapoint_header(data_point, header)
 

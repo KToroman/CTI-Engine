@@ -38,3 +38,6 @@ class Project(ProjectReadViewInterface):
         cfiles_view: List[CFileReadViewInterface] = list()
         cfiles_view.extend(self.source_files)
         return cfiles_view
+
+    def get_all_source_files(self) -> List[SourceFile]:
+        return self.source_files
