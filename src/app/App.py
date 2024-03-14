@@ -64,6 +64,7 @@ class App(AppRequestsInterface):
         # Configuration
         self.config: Configuration = Configuration.load(
             "config/ConfigFile.json")
+        self.config: Configuration = Configuration.load(App.__get_config_path())
 
         # Saving
         self.saver: SaveInterface = SaveToJSON(self.config.saves_path)
@@ -146,3 +147,10 @@ class App(AppRequestsInterface):
         self.__active_mode_fetcher_thread.stop()
         self.file_fetch_thread.stop()
         print("[App]    stopped")
+
+    @classmethod
+    def __get_config_path(cls) -> str:
+        path: str = ""
+        path += join(os.getcwd().split("cti-engine-prototype")[0])
+        path += "config/ConfigFile.json"
+        return path
