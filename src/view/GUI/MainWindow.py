@@ -3,6 +3,7 @@ import colorsys
 import os
 
 import random
+import time
 
 from PyQt5.QtCore import pyqtSignal
 from threading import Thread, Lock
@@ -36,7 +37,7 @@ from src.view.UIInterface import UIInterface
 from src.view.GUI.Visuals.ErrorWindow import ErrorWindow
 from src.view.AppRequestsInterface import AppRequestsInterface
 import src.view.GUI.Visuals.GuiDesign as gd
-
+from src.view.GUI.UserInteraction.TreeWidget import TreeWidget
 
 class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     WINDOWSIZE1: int = 800
@@ -60,7 +61,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.visualize_signal.connect(lambda: self.visualize())
 
         self.__model = model
-        self.table_widget: TableWidget = TableWidget(active_mode_queue=active_mode_queue)
+        self.table_widget: TreeWidget = TreeWidget(active_mode_queue=active_mode_queue)
         self.status_queue: Queue = status_queue
         self.status_signal.connect(lambda: self.update_statusbar())
 
@@ -132,7 +133,6 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         project = self.__model.get_project_by_name(project_name)
         self.project_time = project.get_project_time()
         self.__update_project_list()
-
         if self.table_widget.active_started:
             self.__visualize_active(project)
             self.table_widget.active_started = False
@@ -141,45 +141,50 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
     def __visualize_passive(self, project: ProjectReadViewInterface):
         """Visualizes data from passive mode."""
-        self.table_widget.clear_table()
-
+        #self.table_widget.clear_table()
         # Select spot for Displayables to be inserted into
         self.table_widget.insertion_point = project.get_project_name()
 
         # Update TableWidget for each cfile
         cfile_list: List[CFileReadViewInterface] = project.get_cfiles()
         file_count: int = 1
+        displayable_list: List[Displayable] = []
         for cfile in cfile_list:
             file_count += 1
-            self.table_widget.insert_values(self.__create_displayable(cfile))
-        print(file_count)
+            displayable_list.append(self.__create_displayable(cfile))
+        self.table_widget.insert_values(displayable_list)
         self.lower_limit.setMaximum(file_count)
         self.upper_limit.setMaximum(file_count)
         # Update other Widgets
         self.setup_connections()
         self.status_bar.update_status(StatusSettings.FINISHED)
-        self.table_widget.rebuild_table(self.table_widget.rows)
+        #self.table_widget.rebuild_table(self.table_widget.rows)
 
     def __visualize_active(self, project: ProjectReadViewInterface):
         """Visualizes data from active mode."""
-
         # Find file used for active build
         active_row: str = self.table_widget.insertion_point
         active_file: CFileReadViewInterface
         for cfile in project.get_cfiles():
-            active_file = self.__get_hierarchy(cfile, active_row)
-            if active_file.get_name() == active_row:
+            if cfile.get_name() == active_row:
+                active_file = cfile
                 break
 
         # Update TableWidget for header list for said file
         cfile_list: List[CFileReadViewInterface] = active_file.get_headers()
+        for cfile in active_file.get_headers():
+            if cfile.get_headers():
+                cfile_list.extend(cfile.get_headers())
+        time1 = time.time()
         for cfile in cfile_list:
-            # self.table_widget.add_subrow(self.__create_displayable(cfile))
-            self.table_widget.fill_subrows(self.__create_displayable(cfile))
-
+            print("[MW]    cfile being filled: " + cfile.get_name())
+            print(cfile.get_total_time())
+            self.table_widget.add_active_data(self.__create_displayable(cfile))
+        print(str(time.time() - time1))
         # Update other Widgets
         self.setup_connections()
         self.status_bar.update_status(StatusSettings.FINISHED)
+        print("updated")
 
     def deploy_error(self):
         """Receives an Exception, displays information regarding that exception to the user."""
@@ -188,6 +193,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         error = self.error_queue.get()
         error_window = ErrorWindow(error)
         error_window.show()
+
     def update_statusbar(self):
         """Receives a status string, changes the UI's status string accordingly."""
         status = self.status_queue.get()

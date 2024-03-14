@@ -5,7 +5,6 @@ from os.path import join
 import json
 from attr import define, frozen
 import cattrs
-from cattrs.gen import override
 
 
 @define
@@ -39,5 +38,5 @@ class Configuration:
 
 
 if __name__ == "__main__":
-    config = Configuration.load("config/ConfigFile.json")
+    config = Configuration.load("/common/homes/all/udixi_schneider/Documents/git/cti-engine-prototype/config/ConfigFile.json")
     print(config.active_build_dir_path)
