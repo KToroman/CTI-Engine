@@ -61,8 +61,7 @@ class App(AppRequestsInterface):
         self.visualize_signal: pyqtSignal = visualize_signal
 
         # Configuration
-        self.config: Configuration = Configuration.load(
-            "config/ConfigFile.json")
+
         self.config: Configuration = Configuration.load(App.__get_config_path())
 
         # Saving
@@ -129,7 +128,7 @@ class App(AppRequestsInterface):
 
         self.__status_and_error_thread.start()
         self.passive_thread.start()
-        self.file_saver_thread.start()
+        # self.file_saver_thread.start()
         self.hierarchy_thread.start()
         self.file_fetch_thread.start()
 
@@ -148,6 +147,6 @@ class App(AppRequestsInterface):
     @classmethod
     def __get_config_path(cls) -> str:
         path: str = ""
-        path += join(os.getcwd().split("cti-engine-prototype")[0])
-        path += "config/ConfigFile.json"
+        path += join(os.getcwd().split("cti-engine-prototype")[0], "cti-engine-prototype", "config/ConfigFile.json")
+        # path += "config/ConfigFile.json"
         return path
