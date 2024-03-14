@@ -32,7 +32,7 @@ class GUICommunicationManager:
         self.__restart_event = restart_event
         self.__hierarchy_fetching_event = hierarchy_fetching_event
         self.__fetching_hierarchy = fetching_hierarchy
-        self.__current_project_name: str = "sussy"
+
     def start(self):
         print("[StatusAndErrorThread]   started.")
         self.__thread = Thread(target=self.__run)
