@@ -3,7 +3,9 @@ import threading
 import time
 from subprocess import CalledProcessError
 from concurrent.futures import ThreadPoolExecutor, Future
-from multiprocessing.synchronize import Event as SyncEvent, Lock
+from multiprocessing.synchronize import Event as SyncEvent
+from multiprocessing.synchronize import Lock as SyncLock
+
 
 
 from src.fetcher.FetcherInterface import FetcherInterface
@@ -19,7 +21,7 @@ from src.exceptions.CompileCommandError import CompileCommandError
 
 class HierarchyFetcher(FetcherInterface):
 
-    def __init__(self, model: Model, model_lock: Lock, hierarchy_fetching_event: SyncEvent,
+    def __init__(self, model: Model, model_lock: SyncLock, hierarchy_fetching_event: SyncEvent,
                  shutdown_event: SyncEvent, max_workers=32) -> None:
         self.project_name: str = None
         self.__model = model
