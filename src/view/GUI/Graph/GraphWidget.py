@@ -80,4 +80,4 @@ class GraphWidget(QWidget):
             self.ax.tick_params(colors="#000000")  # Farbe der Zahlen an der x-Achse
             self.ax.xaxis.label.set_color("#000000")  # Farbe der x-Achsenbeschriftung
             self.ax.yaxis.label.set_color("#000000")  # Farbe der y-Achsenbeschriftung
-            self.canvas.draw()
+        self.canvas.draw()

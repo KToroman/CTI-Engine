@@ -81,12 +81,6 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.upper_limit = QSpinBox()
         self.lower_limit = QSpinBox()
 
-        """self.select_all_checkbox.stateChanged.connect(lambda: self.table_widget.toggle_all_rows())
-        self.upper_limit.editingFinished.connect(
-            lambda: self.table_widget.toggle_custom_amount(self.lower_limit.value(), self.upper_limit.value()))
-        self.lower_limit.editingFinished.connect(
-            lambda: self.table_widget.toggle_custom_amount(self.lower_limit.value(), self.upper_limit.value()))"""
-
         # setting up main components
         self.current_table: TreeWidget = TreeWidget(self.active_mode_queue)
         self.menu_bar: MenuBar = MenuBar(load_path_queue, cancel_event, restart_event, self.project_queue,
@@ -99,16 +93,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         logo_path = os.path.join(images_folder, "CTIEngineLogo.png")
         icon: QIcon = QIcon(logo_path)
         self.setWindowIcon(icon)
-        #self.setStyleSheet("background-color: #ECEFF1;")
         self.stylesheets = {}
-
-        """colors from cti engine logo:
-        #237277
-        #4095a1
-        #61b3bf
-        chatgpt: #ECEFF1
-        himmelgrau: #CFD8DC
-        caspars farbe: #444447"""
 
         self.ram_graph_widget: GraphWidget = GraphWidget(self.RAM_Y_AXIS)
         self.cpu_graph_widget: GraphWidget = GraphWidget(self.CPU_Y_AXIS)
@@ -122,6 +107,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.stacked_table_widget: QStackedWidget = QStackedWidget()
         self.search_button: QPushButton = QPushButton()
         self.sidebar: QWidget = QWidget(self.central_widget)
+        self.menu_bar.switch_style_box.currentIndexChanged.connect(lambda: self.set_stylesheet())
 
         # initialize lists and variables
         self.__q_application: QApplication = q_application
@@ -137,10 +123,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.__setup_resource_connections()
         self.__connect_new_table()
         self.load_stylesheets()
-        self.menu_bar.switch_style_box.currentIndexChanged.connect(lambda: self.set_stylesheet())
         gd.setup_ui(self)
-        """self.widgets = {"__q_application": self.__q_application, "current_table": self.current_table,
-                        "sidebar": self.sidebar}"""
 
 
     def execute(self):
