@@ -15,10 +15,13 @@ from src.view.GUI.UserInteraction.ProjectNameButtonWrapper import ProjectNameBut
 
 class MenuBar:
     def __init__(self, load_path_queue: Queue, cancel_event: SyncEvent, restart_event: SyncEvent, project_queue: Queue,
-                 visualize_event: pyqtSignal):
+                 visualize_event: pyqtSignal, index_queue: Queue, change_table_signal: pyqtSignal):
 
         self.__project_queue = project_queue
         self.__visualize_event = visualize_event
+
+        self.index_queue = index_queue
+        self.change_table_signal = change_table_signal
 
         self.load_path_queue = load_path_queue
         self.cancel_event = cancel_event
@@ -58,6 +61,7 @@ class MenuBar:
 
         self.project_buttons: List[QPushButton] = []
 
+
     def show_input_dialog(self):
         text, ok = QInputDialog.getText(self.scroll_widget, "File input", 'Enter file name:')
         if ok:
@@ -73,9 +77,7 @@ class MenuBar:
         # Das Widget neu zeichnen, um die Änderungen anzuzeigen
         self.scroll_bar.update()
 
-
-
-    def update_scrollbar(self, project_names: List[str]):
+    def update_scrollbar(self, project_names: List[str], project_name: str):
         if self.scroll_layout.count() > 0:
             for i in range(self.scroll_layout.count()):
                 self.scroll_layout.itemAt(i).widget().disconnect()
@@ -83,7 +85,9 @@ class MenuBar:
                 item = self.scroll_layout.takeAt(0)
                 widget = item.widget()
                 if widget is not None:
+                    self.project_buttons.remove(widget)
                     widget.deleteLater()
+                    pass
         for name in project_names:
             if name.split(" ").__len__() > 2:
                 show_name = name.split(" ")[0] + " " + name.split(" ")[-1]
@@ -91,14 +95,6 @@ class MenuBar:
                 show_name = name.split(" ")[0]
 
             new_button = ProjectNameButton(self.project_buttons, show_name, name, self.__project_queue,
-                                           self.__visualize_event)
+                                           self.__visualize_event, self.index_queue, self.change_table_signal)
             self.scroll_layout.addWidget(new_button)
             self.project_buttons.append(new_button)
-        if len(self.project_buttons) != 0:
-            button = self.scroll_layout.itemAt(self.scroll_layout.count() - 1).widget()
-            button.setStyleSheet("background-color: #00FF00")
-
-
-
-
-

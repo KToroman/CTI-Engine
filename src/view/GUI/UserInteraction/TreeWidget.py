@@ -50,7 +50,6 @@ class TreeWidget(QTreeWidget):
         for displayable in displayables:
             item = ItemWrapper(displayable.name, self)
             self.__create_row(item, displayable)
-            #item.setText(5, displayable.name)
             for header in displayable.headers:
                 sub_item = ItemWrapper(header, item)
                 self.fill_subrow(sub_item, header)
@@ -71,12 +70,14 @@ class TreeWidget(QTreeWidget):
         item.setData(3, 0, round((values[2]), 4))
         row.name_button.clicked.connect(lambda: self.show_input_dialog_active(row.displayable.name))
         self.rows.append(row)
+        item.set_row(row)
         self.items.append(item)
 
     def fill_subrow(self, item, name):
         plot_mock: Plot = Plot("", "", [], [0])
         displayable_mock = Displayable(name, plot_mock, plot_mock, plot_mock, 0, 0, [], [])
         self.__create_row(item, displayable_mock)
+        item.row.checkbox.setDisabled(True)
 
     def add_active_data(self, displayable: Displayable):
         for item in self.items:
@@ -87,12 +88,14 @@ class TreeWidget(QTreeWidget):
                         item.child(i).setData(1, 0, round((values[0]), 4))
                         item.child(i).setData(2, 0, round((values[1]), 4))
                         item.child(i).setData(3, 0, round((values[2]), 4))
+                        item.child(i).row.checkbox.setDisabled(False)
                     for j in range(item.child(i).childCount()):
                         if displayable.name == item.child(i).child(j).name:
                             values = [displayable.ram_peak, displayable.cpu_peak, displayable.runtime_plot.y_values[0]]
                             item.child(i).child(j).setData(1, 0, round((values[0]), 4))
                             item.child(i).child(j).setData(2, 0, round((values[1]), 4))
                             item.child(i).child(j).setData(3, 0, round((values[2]), 4))
+                            item.child(i).child(j).row.checkbox.setDisabled(False)
 
     def start_active_measurement(self, name):
         self.active_started = True
@@ -173,3 +176,29 @@ class TreeWidget(QTreeWidget):
                 except RuntimeError as e:
                     pass
         return last_checkbox
+
+    def clear_tree(self):
+        for row in self.rows:
+            row.checkbox.disconnect()
+            row.checkbox.deleteLater()
+            row.name_button.disconnect()
+            row.name_button.deleteLater()
+        self.rows.clear()
+        self.items.clear()
+        self.clear()
+
+    def search_item(self, main_window):
+        search_text = main_window.line_edit.text().strip()
+        if search_text:
+            self.clearSelection()
+            items = []
+            for text in self.items:
+                if search_text in text.row.name_button.text():
+                    items.append(text)
+            for item in items:
+                item.setSelected(True)
+                parent = item.parent()
+                while parent:
+                    self.expandItem(parent)
+                    parent = parent.parent()
+
