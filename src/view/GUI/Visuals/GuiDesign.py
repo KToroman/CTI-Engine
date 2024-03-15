@@ -3,11 +3,10 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QWidget, QSizePolicy, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QSpacerItem,
                              QSplitter, QCheckBox)
 
-from src.view.GUI.UserInteraction.TableWidget import TableWidget
 import qtawesome as qta
 
 
-def setupUI(mainWindow, active_mode_queue):
+def setupUI(mainWindow):
     mainWindow.resize(800, 615)
     sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
     sizePolicy.setHorizontalStretch(0)
@@ -17,7 +16,7 @@ def setupUI(mainWindow, active_mode_queue):
     mainWindow.centralwidget = QWidget(mainWindow)
     mainWindow.horizontalLayout_4 = QHBoxLayout(mainWindow.centralwidget)
     mainWindow.horizontalLayout_4.setSpacing(5)
-    mainWindow.horizontalLayout_4.setContentsMargins(0, 0, 0, 0)
+    mainWindow.horizontalLayout_4.setContentsMargins(0, 0, 10, 0)
 
     mainWindow.verticalLayout_4 = QVBoxLayout()
     mainWindow.verticalLayout_4.setSpacing(0)
@@ -41,7 +40,7 @@ def setupUI(mainWindow, active_mode_queue):
     mainWindow.verticalLayout_4.addLayout(mainWindow.horizontalLayout_2)
 
     mainWindow.verticalSpacer_2 = QSpacerItem(20, 495, QSizePolicy.Minimum, QSizePolicy.Expanding)
-    mainWindow.horizontalSpacer_3 = QSpacerItem(300, 20, QSizePolicy.Minimum)
+    mainWindow.horizontalSpacer_3 = QSpacerItem(30, 20, QSizePolicy.Minimum)
 
     mainWindow.verticalLayout_4.addItem(mainWindow.verticalSpacer_2)
 
@@ -102,6 +101,7 @@ def setupUI(mainWindow, active_mode_queue):
     mainWindow.verticalLayout_6.setSpacing(0)
     mainWindow.verticalLayout_6.setContentsMargins(0, 0, 0, 0)
     mainWindow.upper_bar = QWidget(mainWindow.widget_3)
+    mainWindow.upper_bar.setMinimumWidth(900)
     mainWindow.upper_bar.setMaximumSize(QSize(1500, 50))
     mainWindow.verticalLayout_5 = QVBoxLayout(mainWindow.upper_bar)
     mainWindow.verticalLayout_5.setSpacing(0)
@@ -112,7 +112,8 @@ def setupUI(mainWindow, active_mode_queue):
     mainWindow.menu_button = QPushButton(mainWindow.upper_bar)
     mainWindow.menu_button.setMaximumSize(30, 30)
     mainWindow.menu_button.setCheckable(True)
-
+    mainWindow.small_spacer = QSpacerItem(4, 0, QSizePolicy.Minimum)
+    mainWindow.horizontalLayout_3.addItem(mainWindow.small_spacer)
     mainWindow.horizontalLayout_3.addWidget(mainWindow.menu_button)
 
     mainWindow.ram_button = mainWindow.metric_bar.ram_button
@@ -130,14 +131,18 @@ def setupUI(mainWindow, active_mode_queue):
     mainWindow.horizontalLayout_3.addItem(mainWindow.horizontalSpacer_3)
 
     mainWindow.horizontalLayout_5 = QHBoxLayout()
-
-    mainWindow.select_all_checkbox.setMaximumWidth(80)
-    mainWindow.horizontalLayout_5.addWidget(mainWindow.select_all_checkbox)
+    mainWindow.horizontalLayout_5.addWidget(mainWindow.line_edit)
+    mainWindow.line_edit.setPlaceholderText("Search...")
+    search_icon = qta.icon("fa.search")
+    mainWindow.search_button.setIcon(search_icon)
+    mainWindow.horizontalLayout_5.addWidget(mainWindow.search_button)
 
     mainWindow.horizontalLayout_5.addWidget(mainWindow.upper_limit)
     mainWindow.horizontalLayout_5.addWidget(mainWindow.lower_limit)
     mainWindow.upper_limit.setMaximumWidth(70)
     mainWindow.lower_limit.setMaximumWidth(70)
+    mainWindow.select_all_checkbox.setMaximumWidth(80)
+    mainWindow.horizontalLayout_5.addWidget(mainWindow.select_all_checkbox)
 
     mainWindow.horizontalLayout_3.addLayout(mainWindow.horizontalLayout_5, Qt.AlignRight)
 
@@ -155,7 +160,7 @@ def setupUI(mainWindow, active_mode_queue):
     mainWindow.stacked_widget.addWidget(mainWindow.bar_chart_widget)
     mainWindow.splitter.addWidget(mainWindow.stacked_widget)
 
-    mainWindow.splitter.addWidget(mainWindow.table_widget)
+    mainWindow.splitter.addWidget(mainWindow.stacked_table_widget)
 
     mainWindow.verticalLayout_6.addWidget(mainWindow.splitter)
 
@@ -168,7 +173,7 @@ def setupUI(mainWindow, active_mode_queue):
     QWidget.setTabOrder(mainWindow.menu_button, mainWindow.ram_button)
     QWidget.setTabOrder(mainWindow.ram_button, mainWindow.cpu_button)
     QWidget.setTabOrder(mainWindow.cpu_button, mainWindow.runtime_button)
-    QWidget.setTabOrder(mainWindow.runtime_button, mainWindow.table_widget)
+    QWidget.setTabOrder(mainWindow.runtime_button, mainWindow.current_table)
 
     mainWindow.sidebar.setHidden(True)
     mainWindow.menu_button.toggled.connect(mainWindow.sidebar.setVisible)
@@ -184,3 +189,7 @@ def setupUI(mainWindow, active_mode_queue):
     icon = qta.icon("ei.align-justify")
     mainWindow.menu_button.setIcon(icon)
     # setupUi
+
+
+
+
