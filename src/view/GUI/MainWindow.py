@@ -131,6 +131,8 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.all_tables: List[TreeWidget] = []
         self.stacked_table_widget: QStackedWidget = QStackedWidget()
         self.__connect_new_table()
+        self.load_stylesheets()
+        self.menu_bar.switch_style_box.currentIndexChanged.connect(lambda: self.set_stylesheet())
         gd.setupUI(self)
 
 
