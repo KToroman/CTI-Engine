@@ -1,7 +1,8 @@
 import threading
 import multiprocessing
 import time
-from typing import List, Self
+from typing import List
+from typing_extensions import Self
 
 from multiprocessing.synchronize import Event as SyncEvent
 from multiprocessing.synchronize import Lock as SyncLock
