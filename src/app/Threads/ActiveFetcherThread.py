@@ -45,6 +45,7 @@ class ActiveFetcherThread:
             if not self.__source_file_name_queue.empty():
                 self.__active_measurement_active.set()
                 self.__start_new_measurement()
+            self.__active_measurement_active.clear()
 
     def __start_new_measurement(self):
         source_file_name: str = self.__source_file_name_queue.get(True, 10)
@@ -54,20 +55,22 @@ class ActiveFetcherThread:
             self.__error_queue.put(timeout_error, True, 15)
             return
         active_data_fetcher: ActiveDataFetcher
-        with ActiveDataFetcher(source_file_name=source_file_name, model=self.__model, saver_queue=self.__saver_queue, save_path=self.__save_path,
-                               build_dir_path=self.__build_dir_path, model_lock=self.__model_lock, hierarchy_queue=Queue()) as active_data_fetcher:
+        with ActiveDataFetcher(source_file_name=source_file_name, model=self.__model, saver_queue=self.__saver_queue,
+                               save_path=self.__save_path, build_dir_path=self.__build_dir_path,
+                               model_lock=self.__model_lock, hierarchy_queue=Queue()) as active_data_fetcher:
             self.measure_source_file(active_data_fetcher)
 
         with self.__model_lock:
             project: str = self.__model.current_project.name
-
-        self.__saver_queue.put(project)
+            #self.__saver_queue.put(self.__model.current_project)
+        print("[ActiveFetcherThread]   finished active")
         self.__visualise_project_queue.put(project)
+        self.__active_measurement_active.clear()
         self.__visualise_signal.emit()
         
     def measure_source_file(self, active_data_fetcher: ActiveDataFetcher):
         actively_fetching: bool = True
-        while (not self.__shutdown_event.is_set()) and actively_fetching:
+        while self.__active_measurement_active.is_set() and actively_fetching and (not self.__shutdown_event.is_set()):
             actively_fetching = active_data_fetcher.update_project()
 
     def stop(self):

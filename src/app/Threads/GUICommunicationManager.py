@@ -10,11 +10,11 @@ from src.model.core.StatusSettings import StatusSettings
 
 
 class GUICommunicationManager:
-    def __init__(self, shutdown_event: SyncEvent, error_queue: Queue, error_signal: pyqtSignal, passive_mode_event: SyncEvent,
-                 status_queue: Queue, status_signal: pyqtSignal, fetching_passive_data: SyncEvent,
-                 active_measurement_active: SyncEvent, finished_project_event: SyncEvent,
-                 load_event: SyncEvent, cancel_event: SyncEvent, restart_event: SyncEvent, hierarchy_fetching_event: SyncEvent,
-                 fetching_hierarchy: SyncEvent):
+    def __init__(self, shutdown_event: SyncEvent, error_queue: Queue, error_signal: pyqtSignal,
+                 passive_mode_event: SyncEvent, status_queue: Queue, status_signal: pyqtSignal,
+                 fetching_passive_data: SyncEvent, active_measurement_active: SyncEvent,
+                 finished_project_event: SyncEvent, load_event: SyncEvent, cancel_event: SyncEvent,
+                 restart_event: SyncEvent, hierarchy_fetching_event: SyncEvent, fetching_hierarchy: SyncEvent):
         self.__error_queue = error_queue
         self.__error_signal = error_signal
         self.__status_signal: pyqtSignal = status_signal
@@ -32,6 +32,7 @@ class GUICommunicationManager:
         self.__restart_event = restart_event
         self.__hierarchy_fetching_event = hierarchy_fetching_event
         self.__fetching_hierarchy = fetching_hierarchy
+        self.finished_time = 0
 
     def start(self):
         print("[StatusAndErrorThread]   started.")
@@ -43,6 +44,8 @@ class GUICommunicationManager:
             if not self.__error_queue.empty():
                 self.__deploy_error()
 
+            if self.__active_measurement_active.is_set():
+                self.__passive_mode_event.clear()
             if self.__cancel_event.is_set():
                 self.__cancel_event.clear()
                 if self.__passive_mode_event.is_set() or self.__active_measurement_active.is_set():
@@ -55,10 +58,7 @@ class GUICommunicationManager:
                 self.__active_measurement_active.clear()
 
             if self.__load_event.is_set():
-                self.__cancel_event.set()
                 self.__status = StatusSettings.LOADING
-                self.__time_of_last_status_change = time.time() + 1.5
-                self.__deploy_status()
                 self.__passive_mode_event.clear()
                 self.__hierarchy_fetching_event.clear()
                 self.__active_measurement_active.clear()
@@ -78,7 +78,7 @@ class GUICommunicationManager:
             self.__error_signal.emit()
 
     def __update_status(self) -> bool:
-        if self.__time_of_last_status_change + 1.5 > time.time():
+        if self.__time_of_last_status_change + 0.45 > time.time():
             return False
         self.__status = StatusSettings.WAITING
         if self.__cancel_event.is_set():
@@ -90,9 +90,14 @@ class GUICommunicationManager:
         elif self.__fetching_hierarchy.is_set():
             self.__status = StatusSettings.HIERARCHY
         if self.__finished_project_event.is_set():
-            self.__status = StatusSettings.FINISHED
+            if self.finished_time == 0:
+                self.__status = StatusSettings.FINISHED
+                self.finished_time = time.time() + 5
+            if self.finished_time < time.time():
+                self.finished_time = 0
+                self.__finished_project_event.clear()
         if self.__active_measurement_active.is_set():
-            self.__status = StatusSettings.MEASURING
+            self.__status = StatusSettings.ACTIVE
         if self.__load_event.is_set():
             self.__status = StatusSettings.LOADING
         self.__time_of_last_status_change = time.time()

@@ -67,7 +67,7 @@ class Model(ModelReadViewInterface):
 
     def get_semaphore_by_name(self, name) -> ProjectFinishedSemaphore:
         for semaphore in self.semaphore_list:
-            if name == semaphore.project_dir:
+            if name == semaphore.project_name:
                 return semaphore
         raise SemaphoreNotFoundException(
             "[Model]   Could not find semaphore for a project."
@@ -86,7 +86,7 @@ class Model(ModelReadViewInterface):
             if semaphore is not None:
                 self.semaphore_list.append(semaphore)
             self.current_project = project
-            print("[Model]   new project")
+            print(f"[Model]   new project {project}")
 
     def project_in_list(self, name: str) -> bool:
         for p in self.projects:
@@ -115,3 +115,6 @@ class Model(ModelReadViewInterface):
         """Blocks until current_project is available"""
         while self.current_project is None:
             pass
+
+    def get_current_project_name(self) -> str:
+        return self.current_project.name
