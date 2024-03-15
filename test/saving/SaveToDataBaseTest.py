@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 
 from rocksdict import Rdict
 from src.model.DataBaseEntry import DataBaseEntry
@@ -19,11 +19,12 @@ def test_db():
     saver.save_project(Project(path, "project_name", ""), delta)
     saves_path = saver.__saves_path
     db = Rdict("saves/project_name/project_name_DataBase")
-    value = db["testfile" + "\n" + ""]
+    value: Tuple[float, List[Metric]] = db["testfile" + "\n" + ""]  # type: ignore
     assert value[0] == 0.6
-    print("correct timestamp (0.6) was saved")
-    assert value[1][0].value == 40
-    assert value[1][0].name == MetricName.RAM
+    print(f"correct timestamp = {value[0]} was saved")
+    first_metric: Metric = value[1][0]
+    assert first_metric.value == 40
+    assert first_metric.name == MetricName.RAM
     print("correct metric was saved")
     db.close()
     print("test_passed")
