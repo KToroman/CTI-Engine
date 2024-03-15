@@ -14,10 +14,10 @@ from PyQt5.QtCore import pyqtSignal
 
 class FileLoader(FetcherInterface):
 
-    def __init__(self, path: str, model: Model, model_lock: SyncLock, visualize_event: pyqtSignal,
+    def __init__(self, directory_path: str, model: Model, model_lock: SyncLock, visualize_event: pyqtSignal,
                  project_queue: Queue):
         self.__model_lock = model_lock
-        self.__path = path
+        self.__path = directory_path
         self.__model = model
         self.__visualize_event = visualize_event
         self.__project_queue = project_queue
