@@ -35,6 +35,7 @@ class FileBuilder:
     def get_compile_command(self, file_path: Path) -> list[str]:
         """amends the original compile command of the Source File (passed in the constructor) to compile the header at the given path"""
         command: list[str] = shlex.split(self.__original_compile_command)
+
         delindex: int = -1
         for i in range(len(command)):
             if command[i] == "-o":

@@ -18,19 +18,15 @@ def setupUI(mainWindow, active_mode_queue):
     mainWindow.horizontalLayout_4 = QHBoxLayout(mainWindow.centralwidget)
     mainWindow.horizontalLayout_4.setSpacing(5)
     mainWindow.horizontalLayout_4.setContentsMargins(0, 0, 0, 0)
-    mainWindow.sidebar_small = QWidget(mainWindow.centralwidget)
-    mainWindow.sidebar_small.setMaximumSize(QSize(0, 16777215))
-    mainWindow.sidebar_small.setStyleSheet(u"background-color: rgb(61, 61, 61);")
-    mainWindow.verticalLayout_4 = QVBoxLayout(mainWindow.sidebar_small)
+
+    mainWindow.verticalLayout_4 = QVBoxLayout()
     mainWindow.verticalLayout_4.setSpacing(0)
     mainWindow.verticalLayout_4.setContentsMargins(3, 3, 3, 3)
     mainWindow.horizontalLayout_2 = QHBoxLayout()
     mainWindow.horizontalLayout_2.setSpacing(0)
     mainWindow.verticalLayout_2 = QVBoxLayout()
     mainWindow.verticalLayout_2.setSpacing(10)
-    mainWindow.label_2 = QLabel(mainWindow.sidebar_small)
 
-    mainWindow.verticalLayout_2.addWidget(mainWindow.label_2)
 
     icon_label = QLabel()
     icon_label.setAlignment(Qt.AlignHCenter)
@@ -38,17 +34,6 @@ def setupUI(mainWindow, active_mode_queue):
     icon_label.setPixmap(QIcon('src/view/GUI/Images/CTIEngineLogo.png').pixmap(24, 24))
     mainWindow.verticalLayout_2.addWidget(icon_label)
 
-    mainWindow.small_load_button = mainWindow.menu_bar.small_load_file_button
-
-    mainWindow.verticalLayout_2.addWidget(mainWindow.small_load_button)
-
-    mainWindow.small_pause_button = mainWindow.menu_bar.small_pause_resume_button
-
-    mainWindow.verticalLayout_2.addWidget(mainWindow.small_pause_button)
-
-    mainWindow.small_cancel_button = mainWindow.menu_bar.small_cancel_button
-
-    mainWindow.verticalLayout_2.addWidget(mainWindow.small_cancel_button)
 
 
     mainWindow.horizontalLayout_2.addLayout(mainWindow.verticalLayout_2)
@@ -60,7 +45,6 @@ def setupUI(mainWindow, active_mode_queue):
 
     mainWindow.verticalLayout_4.addItem(mainWindow.verticalSpacer_2)
 
-    mainWindow.horizontalLayout_4.addWidget(mainWindow.sidebar_small)
 
     mainWindow.sidebar = QWidget(mainWindow.centralwidget)
     mainWindow.sidebar.setMinimumSize(QSize(140, 0))
@@ -176,10 +160,7 @@ def setupUI(mainWindow, active_mode_queue):
     mainWindow.setCentralWidget(mainWindow.centralwidget)
     QWidget.setTabOrder(mainWindow.pause_button, mainWindow.cancel_button)
     QWidget.setTabOrder(mainWindow.cancel_button, mainWindow.load_button)
-    QWidget.setTabOrder(mainWindow.load_button, mainWindow.small_load_button)
-    QWidget.setTabOrder(mainWindow.small_load_button, mainWindow.small_pause_button)
-    QWidget.setTabOrder(mainWindow.small_pause_button, mainWindow.small_cancel_button)
-    QWidget.setTabOrder(mainWindow.small_cancel_button, mainWindow.menu_button)
+
     QWidget.setTabOrder(mainWindow.menu_button, mainWindow.ram_button)
     QWidget.setTabOrder(mainWindow.ram_button, mainWindow.cpu_button)
     QWidget.setTabOrder(mainWindow.cpu_button, mainWindow.runtime_button)
@@ -187,7 +168,6 @@ def setupUI(mainWindow, active_mode_queue):
 
     mainWindow.sidebar.setHidden(True)
     mainWindow.menu_button.toggled.connect(mainWindow.sidebar.setVisible)
-    mainWindow.menu_button.toggled.connect(mainWindow.sidebar_small.setHidden)
 
     QMetaObject.connectSlotsByName(mainWindow)
 
