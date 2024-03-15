@@ -134,6 +134,8 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.load_stylesheets()
         self.menu_bar.switch_style_box.currentIndexChanged.connect(lambda: self.set_stylesheet())
         gd.setupUI(self)
+        self.widgets = {"__q_application": self.__q_application, "current_table": self.current_table,
+                        "sidebar": gd.mainwindow.sidemenu}
 
 
 
@@ -142,6 +144,30 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.__q_application.exec()
 
     def load_stylesheets(self):
+        styles_dir = "/common/homes/all/udixi_schneider/Documents/git/cti-engine-prototype/src/view/GUI/Stylesheets"  # Pfad zu Ihrem Stylesheet-Verzeichnis
+        for mode in os.listdir(styles_dir):
+            if os.path.isdir(os.path.join(styles_dir, mode)):
+                self.menu_bar.switch_style_box.addItem(mode)
+                mode_path = os.path.join(styles_dir, mode)
+                mode_styles = {}
+                for file_name in os.listdir(mode_path):
+                    if file_name.endswith(".qss"):
+                        with open(os.path.join(mode_path, file_name), "r") as file:
+                            widget_name = os.path.splitext(file_name)[0]
+                            print(widget_name)
+                            mode_styles[widget_name] = file.read()
+                self.stylesheets[mode] = mode_styles
+        print(self.stylesheets)
+        self.set_stylesheet()
+
+    def set_stylesheet(self):
+        selected_mode = self.menu_bar.switch_style_box.currentText()
+        for widget_name, stylesheet in self.stylesheets[selected_mode].items():
+            widget = self.widgets.get(widget_name)
+            if widget:
+                widget.setStyleSheet(stylesheet)
+
+    """def load_stylesheets(self):
         stylesheets_dir = "/common/homes/all/udixi_schneider/Documents/git/cti-engine-prototype/src/view/GUI/Stylesheets"
         for stylesheet in os.listdir(stylesheets_dir):
             if stylesheet.endswith(".qss"):
@@ -153,7 +179,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
     def set_stylesheet(self):
         selected_style = self.menu_bar.switch_style_box.currentText()
-        self.__q_application.setStyleSheet(self.stylesheets[selected_style])
+        self.__q_application.setStyleSheet(self.stylesheets[selected_style])"""
 
     def visualize(self):
         self.select_all_checkbox.setChecked(True)
@@ -215,6 +241,8 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
             self.current_table.add_active_data(self.__create_displayable(cfile))
         print(str(time.time() - time1))
         # Update other Widgets
+        for row in self.current_table.rows:
+            row.connected = False
         self.setup_connections()
         self.status_bar.update_status(StatusSettings.FINISHED)
         print("updated")
@@ -238,9 +266,6 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.select_all_checkbox.setChecked(False)
         self.stacked_table_widget.setCurrentIndex(index + 1)
         self.current_table = self.all_tables[index + 1]
-
-
-
 
     def deploy_error(self):
         """Receives an Exception, displays information regarding that exception to the user."""
