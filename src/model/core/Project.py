@@ -1,7 +1,9 @@
 import time
-from typing import List
+from typing import List, Optional
+from src.model.DataBaseEntry import DataBaseEntry
 from src.model.core.CFile import CFile
 from src.model.core.CFileReadViewInterface import CFileReadViewInterface
+from src.model.core.DataEntry import DataEntry
 from src.model.core.FileDictionary import FileDictionary
 from src.model.core.ProjectFinishedSemaphore import ProjectFinishedSemaphore
 from src.model.core.ProjectReadViewInterface import ProjectReadViewInterface
@@ -13,13 +15,16 @@ class Project(ProjectReadViewInterface):
 
     __DEFAULT_PATH_TO_SAVE = ""
 
-    def __init__(self, working_dir: str, name: str, path_to_save: str = __DEFAULT_PATH_TO_SAVE):
+    def __init__(
+        self, working_dir: str, name: str, path_to_save: str = __DEFAULT_PATH_TO_SAVE
+    ):
         self.source_files: List[SourceFile] = list()
         self.working_dir = working_dir
         self.name = name
         self.file_dict = FileDictionary()
         self.project_time = time.time() - 0.5
         self.path_to_save = f"{path_to_save}/{self.working_dir}/{self.project_time}"
+        self.delta_entries: List[DataBaseEntry] = list()
 
     def get_sourcefile(self, name: str) -> SourceFile:
         file_exists: bool = self.file_dict.isInDictionary(name)
@@ -27,6 +32,15 @@ class Project(ProjectReadViewInterface):
         if not file_exists:
             self.source_files.append(source_file)
         return source_file
+
+    def add_to_delta(
+        self, source_file_path: str, header_path: Optional[str], data_entry: DataEntry
+    ):
+        self.delta_entries.append(
+            DataBaseEntry(
+                source_file_path, header_path, data_entry.timestamp, data_entry.metrics
+            )
+        )
 
     def get_project_time(self) -> float:
         return self.project_time

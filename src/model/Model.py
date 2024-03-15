@@ -1,9 +1,10 @@
 import os.path
 from multiprocessing import Event, Queue
-from typing import List, Optional, cast
+from typing import Dict, List, Optional, cast
 from src.exceptions.SemaphoreNotFoundException import SemaphoreNotFoundException
 from src.exceptions.ProjectNotFoundException import ProjectNotFoundException
 
+from src.model.DataBaseEntry import DataBaseEntry
 from src.model.ModelReadViewInterface import ModelReadViewInterface
 from src.model.core.CFile import CFile
 from src.model.core.CFileReadViewInterface import CFileReadViewInterface
@@ -20,27 +21,31 @@ class Model(ModelReadViewInterface):
     A model consists of an arbitrary number of projects."""
 
     def __init__(self) -> None:
-        self.current_project: Project = None
+        self.current_project: Optional[Project] = None
         self.projects: List[Project] = list()
         self.semaphore_list: List[ProjectFinishedSemaphore] = list()
+        self.headers: Dict[str, Header] = dict()
 
     def insert_datapoint(self, data_point: DataEntry):
         """inserts datapoint to sourcefile according to their paths to the current project"""
+        if self.current_project is None:
+            raise ProjectNotFoundException
         cfile: CFile = self.current_project.get_sourcefile(data_point.path)
         cfile.data_entries.append(data_point)
-        cfile.index_dataentries += 1
+        self.current_project.add_to_delta(cfile.path, None, data_point)
 
-    def insert_datapoint_header(self, data_point: DataEntry, current_cfile: CFile = None):
-        if current_cfile is None:
-            for cfile in self.current_project.source_files:
-                self.insert_datapoint_header(data_point, cfile)
-        else:
-            if current_cfile.path == data_point.path:
-                current_cfile.data_entries.append(data_point)
-                current_cfile.index_dataentries += 1
-                
-            for header in cast(list[Header], current_cfile.headers):
-                self.insert_datapoint_header(data_point, header)
+    def insert_datapoint_header(self, source_file_path: str, data_entry: DataEntry):
+        path = source_file_path + data_entry.path
+        header = self.headers.get(path, Header(path))
+        self.headers.update({path: header})
+        header.data_entries.append(data_entry)
+        if self.current_project is None:
+            raise ProjectNotFoundException
+        self.current_project.add_to_delta(
+            source_file_path=source_file_path,
+            header_path=header.path,
+            data_entry=data_entry,
+        )
 
     def project_in_semaphore_list(self, project_dir: str):
         for semaphore in self.semaphore_list:
@@ -65,12 +70,18 @@ class Model(ModelReadViewInterface):
             if name == semaphore.project_dir:
                 return semaphore
         raise SemaphoreNotFoundException(
-            "[Model]   Could not find semaphore for a project.")
+            "[Model]   Could not find semaphore for a project."
+        )
 
-    def add_project(self, project: Project, semaphore: Optional[ProjectFinishedSemaphore]) -> None:
+    def add_project(
+        self, project: Project, semaphore: Optional[ProjectFinishedSemaphore]
+    ) -> None:
         """adds new project to model"""
 
-        if not self.project_in_list(project.name) and os.getcwd().split("/")[-1] not in project.working_dir:
+        if (
+            not self.project_in_list(project.name)
+            and os.getcwd().split("/")[-1] not in project.working_dir
+        ):
             self.projects.append(project)
             if semaphore is not None:
                 self.semaphore_list.append(semaphore)
@@ -84,6 +95,8 @@ class Model(ModelReadViewInterface):
         return False
 
     def get_sourcefile_by_name(self, name: str) -> SourceFile:
+        if self.current_project is None:
+            raise ProjectNotFoundException
         return self.current_project.get_sourcefile(name)
 
     def get_current_working_directory(self) -> str:
