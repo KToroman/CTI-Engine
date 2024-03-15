@@ -24,6 +24,7 @@ class MenuBar:
         self.change_table_signal = change_table_signal
 
         self.load_path_queue = load_path_queue
+        self.load_path_name: str = ""
         self.cancel_event = cancel_event
         self.restart_event = restart_event
 
@@ -66,6 +67,7 @@ class MenuBar:
         text, ok = QInputDialog.getText(self.scroll_widget, "File input", 'Enter file name:')
         if ok:
             self.load_path_queue.put(text)
+            self.load_path_name = text.split("/")[-1]
 
     def toggle_scrollbar(self):
         # Überprüfen, ob die Scrollbar angezeigt wird oder nicht, und umschalten

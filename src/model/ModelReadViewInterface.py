@@ -12,3 +12,6 @@ class ModelReadViewInterface(Protocol):
 
     def get_all_project_names(self) -> List[str]:
         raise NotImplementedError
+
+    def get_current_project_name(self) -> str:
+        raise NotImplementedError
