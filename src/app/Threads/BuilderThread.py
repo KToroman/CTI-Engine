@@ -10,14 +10,15 @@ from src.model.core.SourceFile import SourceFile
 
 class BuilderThread:
     def __init__(self, start_building_event: SyncEvent,
-            compiling_tool: BuilderInterface, grep_command_queue: Queue, finished_event: SyncEvent) -> None:
+            compiling_tool: BuilderInterface, grep_command_queue: Queue, finished_event: SyncEvent,
+                 shutdown_event: SyncEvent) -> None:
         self.__building_event: SyncEvent = start_building_event
-        self.__shutdown_event: SyncEvent = multiprocessing.Event()
+        self.__shutdown_event: SyncEvent = shutdown_event
         self.__compiling_tool: BuilderInterface = compiling_tool
         self.__grep_command_queue: Queue = grep_command_queue
         self.__finished_event: SyncEvent = finished_event
 
-        self.__thread: threading.Thread
+        self.__process: multiprocessing.Process
 
     def __run(self) -> None:
         while not self.__shutdown_event.is_set():
@@ -37,12 +38,12 @@ class BuilderThread:
 
 
     def start(self) -> None:
-        self.__thread = threading.Thread(target=self.__run)
-        self.__thread.start()
+        self.__process = multiprocessing.Process(target=self.__run)
+        self.__process.start()
         print("[Builder Thread]     started.")
 
     def stop(self) -> None:
         self.__shutdown_event.set()
-        if self.__thread.is_alive():
-            self.__thread.join()
+        if self.__process.is_alive():
+            self.__process.join()
         print("[Builder Thread]     stopped")

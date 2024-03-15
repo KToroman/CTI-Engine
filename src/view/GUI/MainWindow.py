@@ -90,11 +90,6 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.upper_limit = QSpinBox()
         self.lower_limit = QSpinBox()
 
-        """self.select_all_checkbox.stateChanged.connect(lambda: self.table_widget.toggle_all_rows())
-        self.upper_limit.editingFinished.connect(
-            lambda: self.table_widget.toggle_custom_amount(self.lower_limit.value(), self.upper_limit.value()))
-        self.lower_limit.editingFinished.connect(
-            lambda: self.table_widget.toggle_custom_amount(self.lower_limit.value(), self.upper_limit.value()))"""
 
         self.menu_bar: MenuBar = MenuBar(load_path_queue, cancel_event, restart_event, self.project_queue,
                                          self.visualize_signal, self.index_queue, self.change_table_signal)
@@ -129,7 +124,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
         self.line_edit = QLineEdit()
         self.search_button = QPushButton()
-        #self.search_button.clicked.connect(lambda: self.table_widget.search_item(self))
+
         self.current_table: TreeWidget = self.table_widget
         self.all_tables: List[TreeWidget] = []
         self.stacked_table_widget: QStackedWidget = QStackedWidget()
@@ -176,7 +171,8 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.upper_limit.setMaximum(file_count)
         # Update other Widgets
         self.setup_connections()
-        self.status_bar.update_status(StatusSettings.FINISHED)
+        self.status_bar.update_status(StatusSettings.FINISHED, project.get_project_name())
+
         self.menu_bar.project_buttons[len(self.menu_bar.project_buttons) - 1].setStyleSheet("background-color: #00FF00")
 
 
@@ -197,13 +193,10 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
                 cfile_list.extend(cfile.get_headers())
         time1 = time.time()
         for cfile in cfile_list:
-            print("[MW]    cfile being filled: " + cfile.get_name())
-            print(cfile.get_total_time())
             self.current_table.add_active_data(self.__create_displayable(cfile))
-        print(str(time.time() - time1))
         # Update other Widgets
         self.setup_connections()
-        self.status_bar.update_status(StatusSettings.FINISHED)
+        self.status_bar.update_status(StatusSettings.FINISHED, project.get_project_name())
         print("updated")
 
     def __connect_new_table(self):
@@ -240,7 +233,14 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     def update_statusbar(self):
         """Receives a status string, changes the UI's status string accordingly."""
         status = self.status_queue.get()
-        self.status_bar.update_status(status)
+        if status.value[0] == "measuring":
+            self.status_bar.update_status(status, self.__model.get_current_project_name())
+        elif status.value[0] == "active measuring":
+            self.status_bar.update_status(status, self.current_table.insertion_point.split(".o")[0].split("/")[-1])
+        elif status.value[0] == "loading file":
+            self.status_bar.update_status(status, self.menu_bar.load_path_name)
+        else:
+            self.status_bar.update_status(status, "")
 
     def __get_hierarchy(self, cfile: CFileReadViewInterface, active_row: str) -> CFileReadViewInterface:
         """Finds cfile which started active mode."""

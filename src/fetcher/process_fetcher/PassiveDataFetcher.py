@@ -1,3 +1,4 @@
+import multiprocessing
 import os.path
 import threading
 import time
@@ -23,14 +24,14 @@ class PassiveDataFetcher(DataFetcher):
 
     def __init__(self, model: Model, model_lock: SyncLock, saver_queue: Queue, hierarchy_queue: Queue,
                  shutdown: SyncEvent, save_path: str, project_queue: Queue, finished_event: pyqtSignal,
-                 project_finished_event: SyncEvent, passive_mode_event: SyncEvent, process_finder_count=2,
-                 process_collector_count=2, fetcher_count=2, fetcher_process_count=15):
+                 project_finished_event: SyncEvent, passive_mode_event: SyncEvent, pid_queue: Queue,
+                 process_finder_count=2, process_collector_count=2, fetcher_count=2, fetcher_process_count=15):
 
         self.__model = model
         self.__model_lock = model_lock
         self.__shutdown = shutdown
 
-        self.__passive_mode_event = passive_mode_event
+        self.__passive_event = passive_mode_event
         self.__project_queue = project_queue
         self.__finished_event = finished_event
         self.__project_finished_event = project_finished_event
@@ -53,18 +54,33 @@ class PassiveDataFetcher(DataFetcher):
         self.__fetcher: List[DataCollectionThread] = list()
         self.__done_fetching: bool = True
         self.max_time = 0
+        self.__pid_queue = pid_queue
+
+        self.__pid_list: List[str] = list()
+
+        self.__line_work_queue: Queue = Queue()
+        self.__save_time: float = 0
+
+        self.workers_on: bool = False
 
     def update_project(self) -> bool:
+        current_project = ""
+        if self.__model.current_project is not None:
+            current_project = self.__model.current_project.working_dir
+        while not self.__pid_queue.empty():
+            item = self.__pid_queue.get()
+            self.__pid_list.append(item)
         for finder in self.__process_finder:
-            finder.set_work()
+            finder.set_work(self.__pid_list)
+        for p in self.__process_collector_list:
+            p.current_project = current_project
         time_keeper_bool: bool = self.__time_keeper()
-        if time_keeper_bool and self.__done_fetching:
-            self.__model.get_semaphore_by_name(self.__model.get_current_working_directory()).restore_fetcher_set()
         if time_keeper_bool:
             self.__done_fetching = False
         else:
             if not self.__done_fetching:
                 self.finish_fetching()
+        self.__pid_list.clear()
         return time_keeper_bool
 
     def finish_fetching(self):
@@ -74,9 +90,10 @@ class PassiveDataFetcher(DataFetcher):
 
     def __semaphore(self):
         with self.__model_lock:
-            if self.__model.current_project is not None:
-                with self.__model.get_semaphore_by_name(self.__model.get_current_working_directory()).set_lock:
-                    self.__model.get_semaphore_by_name(self.__model.get_current_working_directory()).stop_fetcher_set()
+            if self.__model.current_project is not None and self.__model.project_in_semaphore_list(self.__model.get_current_working_directory()):
+                with self.__model.get_semaphore_by_name(self.__model.current_project.name).set_lock:
+                    #self.__saver_queue.put(self.__model.current_project)
+                    self.__model.get_semaphore_by_name(self.__model.current_project.name).stop_fetcher_set()
 
     def __time_keeper(self) -> bool:
         if self.__get_time_till_false() < time.time():
@@ -103,8 +120,8 @@ class PassiveDataFetcher(DataFetcher):
         # self.__data_fetching_thread.start()
         for i in range(self.__fetcher_count):
             fetcher = DataCollectionThread(process_list, process_list_lock, self.__model, self.__model_lock,
-                                    DataObserver(), self.__fetcher_process_count, self.__shutdown,
-                                    self.__passive_mode_event)
+                                           DataObserver(), self.__fetcher_process_count, self.__shutdown,
+                                           self.__passive_event)
             self.__fetcher.append(fetcher)
             fetcher.start()
         for i in range(self.__process_collector_count):
@@ -114,13 +131,15 @@ class PassiveDataFetcher(DataFetcher):
                                                               self.__hierarchy_queue,
                                                               self.__save_path, self.__shutdown, self.__project_queue,
                                                               self.__finished_event, self.__project_finished_event,
-                                                              self.__passive_mode_event)
+                                                              self.__passive_event)
             self.__process_collector_list.append(process_collector_thread)
             process_collector_thread.start()
         for i in range(self.__process_finder_count):
-            finder = ProcessFindingThread(self.__shutdown, self.__process_collector_list, self.__passive_mode_event)
+            finder = ProcessFindingThread(self.__shutdown, self.__process_collector_list, self.__passive_event,
+                                          active_fetching=False)
             self.__process_finder.append(finder)
             finder.start()
+        self.workers_on = True
 
     def stop(self):
         print("[PassiveDataFetcher]  stop signal sent...")
@@ -130,4 +149,14 @@ class PassiveDataFetcher(DataFetcher):
             collector.stop()
         for f in self.__fetcher:
             f.stop()
+        self.workers_on = False
         print("[PassiveDataFetcher]  stopped all threads")
+
+    def restart_workers(self):
+        for finder in self.__process_finder:
+            finder.start()
+        for collector in self.__process_collector_list:
+            collector.start()
+        for f in self.__fetcher:
+            f.start()
+        self.workers_on = True
