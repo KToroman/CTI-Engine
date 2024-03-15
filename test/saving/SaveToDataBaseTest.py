@@ -1,7 +1,9 @@
+from multiprocessing import Lock
 from typing import List, Tuple
 
 from rocksdict import Rdict
 from src.model.DataBaseEntry import DataBaseEntry
+from src.model.Model import Model
 from src.model.core.Metric import Metric
 from src.model.core.MetricName import MetricName
 from src.model.core.Project import Project
@@ -10,13 +12,15 @@ from src.saving.SaveToDatabase import SaveToDatabase
 
 def test_db():
     path = "DataBaseTest"
-    saver = SaveToDatabase("saves")
+    saver = SaveToDatabase("saves", Lock(), Model())
     saver.__saves_path = "saves"
     saves_path = saver.__saves_path
     delta: List[DataBaseEntry] = list()
     metrics: List[Metric] = [Metric(40, MetricName.RAM), Metric(300, MetricName.CPU)]
     delta.append(DataBaseEntry("testfile", "", 0.6, metrics))
-    saver.save_project(Project(path, "project_name", ""), delta)
+    project: Project = Project(path, "project_name", "")
+    project.delta_entries = delta
+    saver.save_project(project.name)
     saves_path = saver.__saves_path
     db = Rdict("saves/project_name/project_name_DataBase")
     value: Tuple[float, List[Metric]] = db["testfile" + "\n" + ""]  # type: ignore

@@ -1,7 +1,8 @@
 import os
-import threading
-from multiprocessing import Queue, Lock
+from multiprocessing import Queue
 from os.path import isfile, join
+from multiprocessing.synchronize import Lock as SyncLock
+
 
 import jsonpickle
 
@@ -13,7 +14,7 @@ from PyQt5.QtCore import pyqtSignal
 
 class FileLoader(FetcherInterface):
 
-    def __init__(self, path: str, model: Model, model_lock: Lock, visualize_event: pyqtSignal,
+    def __init__(self, path: str, model: Model, model_lock: SyncLock, visualize_event: pyqtSignal,
                  project_queue: Queue):
         self.__model_lock = model_lock
         self.__path = path
@@ -26,6 +27,7 @@ class FileLoader(FetcherInterface):
             project: Project = self.__create_project()
             with self.__model_lock:
                 self.__model.add_project(project, None)
+                self.__model.current_project = project
             self.__project_queue.put(project.name)
             self.__visualize_event.emit()
             return False

@@ -45,9 +45,11 @@ class SaveToDatabase(SaveInterface):
         )
         self.__data_base_path = data_base_path
         db: Rdict = Rdict(self.__data_base_path)
+        db.close()
 
     def __add_to_data_base(self, delta: List[DataBaseEntry]):
         db: Rdict = Rdict(self.__data_base_path)
+        print(f"opened Database: {self.__data_base_path}")
         for entry in delta:
             key = entry.source_file + "\n" + entry.header
             value = (entry.timestamp, entry.metrics)

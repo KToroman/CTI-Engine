@@ -3,7 +3,6 @@ import time
 from datetime import date
 from multiprocessing import Queue, Lock
 from os.path import join
-from re import split
 from threading import Thread
 from multiprocessing.synchronize import Lock as SyncLock
 
@@ -12,7 +11,6 @@ import psutil
 from PyQt5.QtCore import pyqtSignal
 
 from psutil import NoSuchProcess, AccessDenied
-from typing import Optional
 
 from src.fetcher.process_fetcher.Threads.PassiveDataCollectionThread import PassiveDataCollectionThread
 from src.model.Model import Model
@@ -90,7 +88,8 @@ class ProcessCollectorThread:
             if self.__check_for_project:
                 self.__project_checker(project_name)
             else:
-                name = self.__create_project_name(project_name)
+                with self.__model_lock:
+                    name = self.__model.get_current_project_name()
                 self.__saver_queue.put(name)
             self.__counter += 1
             self.time_till_false = time.time() + 45
