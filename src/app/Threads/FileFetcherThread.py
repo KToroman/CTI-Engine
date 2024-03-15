@@ -26,7 +26,6 @@ class FileFetcherThread:
             work: str
             if not self.__work_queue.empty():
                 self.__load_event.set()
-
                 work = self.__work_queue.get()
             else:
                 continue

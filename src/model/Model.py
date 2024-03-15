@@ -117,4 +117,6 @@ class Model(ModelReadViewInterface):
             pass
 
     def get_current_project_name(self) -> str:
+        if self.current_project is None:
+            raise ProjectNotFoundException
         return self.current_project.name

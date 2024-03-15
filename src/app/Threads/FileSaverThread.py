@@ -2,9 +2,12 @@ from copy import copy, deepcopy
 from multiprocessing import Queue, Lock
 from threading import Thread
 from multiprocessing.synchronize import Lock as SyncLock
+import time
 
-from typing import List
+from typing import List, Optional
 from multiprocessing.synchronize import Event as SyncEvent
+
+from click import Option
 
 
 from src.model.Model import Model
@@ -18,45 +21,48 @@ class FileSaverThread:
                  finished_project: SyncEvent, work_queue: Queue):
         self.__thread: Thread
         self.__shutdown = shutdown_event
-        self.__saver = saver
+        self.__saver: SaveInterface = saver
 
         self.__work_queue = work_queue
 
         self.__finished_project = finished_project
 
         self.__work_list: List[str] = list()  # TODO endless capacity not very clean for work queues
-        self.__work_list_lock: SyncLock = Lock()
 
         self.__model = model
         self.__model_lock = model_lock
 
     def __run(self):
+        work_list_index: int = 0
         """is the methode which runs the saving thread"""
-        index_counter = 0
         while not self.__shutdown.is_set():
             if not self.__work_queue.empty():
-                project = self.__work_queue.get()
-            else:
+                print("[FileSaverThread]    adding work to work list")
+                self.__work_list.append(self.__work_queue.get())
+            work = self.__get_work(work_list_index)
+            if work is None:
                 continue
-            self.__saver.save_project(project=project)
+            work_list_index += 1
+            self.__remove_work()
+            print("[FileSaverThread]    now starting to save changes to project: " + work)
+            self.__saver.save_project(project_name=work)
+            time.sleep(10)
 
     def add_work(self, project_name: str):
         """this methode adds a project to the worklist for the saver thread"""
-        with self.__work_list_lock:
-            self.__work_list.append(project_name)
+
+        self.__work_list.append(project_name)
 
     def __remove_work(self):
         if self.__finished_project.is_set():
             self.__finished_project.clear()
-            with self.__work_list_lock:
-                work = self.__work_list.pop(0)
+            work = self.__work_list.pop(0)
             print("[FileSaverThread]    work deleted: " + work)
 
-    def __get_work(self, index: int):
-        with self.__work_list_lock:
-            if self.__work_list:
-                return self.__work_list[index % len(self.__work_list)]
-            return "none"
+    def __get_work(self, index: int) -> Optional[str]:
+        if self.__work_list:
+            return self.__work_list[index % len(self.__work_list)]
+        return None
 
     def start(self):
         """this method start the saver thread"""

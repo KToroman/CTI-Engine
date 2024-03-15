@@ -75,7 +75,7 @@ class App(AppRequestsInterface):
         self.config: Configuration = Configuration.load(App.__get_config_path())
 
         # Saving
-        self.saver: SaveInterface = SaveToDatabase(self.config.saves_path)
+        self.saver: SaveInterface = SaveToDatabase(self.config.saves_path, self.__model_lock, self.__model)
 
         # Passive Fetching:
         self.__passive_data_fetcher: PassiveDataFetcher = PassiveDataFetcher(self.__model, self.__model_lock,

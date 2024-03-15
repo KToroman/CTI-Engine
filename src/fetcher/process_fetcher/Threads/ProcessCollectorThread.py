@@ -10,11 +10,11 @@ from multiprocessing.synchronize import Lock as SyncLock
 from multiprocessing.synchronize import Event as SyncEvent
 import psutil
 from PyQt5.QtCore import pyqtSignal
-from colorama import Fore
+
 from psutil import NoSuchProcess, AccessDenied
 from typing import Optional
 
-from src.fetcher.process_fetcher.Threads.DataCollectionThread import DataCollectionThread
+from src.fetcher.process_fetcher.Threads.PassiveDataCollectionThread import PassiveDataCollectionThread
 from src.model.Model import Model
 from src.model.core.Project import Project
 from src.model.core.ProjectFinishedSemaphore import ProjectFinishedSemaphore
@@ -23,7 +23,7 @@ from src.model.core.ProjectFinishedSemaphore import ProjectFinishedSemaphore
 class ProcessCollectorThread:
     def __init__(self, process_list: list[psutil.Process], process_list_lock: SyncLock, model: Model,
                  model_lock: SyncLock,
-                 check_for_project: bool, fetcher_list: list[DataCollectionThread], saver_queue: Queue,
+                 check_for_project: bool, fetcher_list: list[PassiveDataCollectionThread], saver_queue: Queue,
                  hierarchy_queue: Queue, save_path: str, shutdown: SyncEvent, project_queue: Queue,
                  finished_event: pyqtSignal, project_finished_event: SyncEvent, active_event: SyncEvent):
         self.__thread: Thread
@@ -89,6 +89,9 @@ class ProcessCollectorThread:
 
             if self.__check_for_project:
                 self.__project_checker(project_name)
+            else:
+                name = self.__create_project_name(project_name)
+                self.__saver_queue.put(name)
             self.__counter += 1
             self.time_till_false = time.time() + 45
             with self.__process_list_lock:
@@ -136,6 +139,7 @@ class ProcessCollectorThread:
                     project = Project(project_name, name)
                     self.__model.add_project(project, semaphore)
                     self.__hierarchy_queue.put(project)
+                    self.__saver_queue.put(name)
                 else:
 
                     return
@@ -143,7 +147,7 @@ class ProcessCollectorThread:
             with self.__model_lock:
                 if self.__model.projects.__len__() > 1:
                     print("saving...")
-                    self.__saver_queue.put(self.__model.projects[-2])
+                    self.__saver_queue.put(self.__model.projects[-2].name)
         except NoSuchProcess:
             return
 

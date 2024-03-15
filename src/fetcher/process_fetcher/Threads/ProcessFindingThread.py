@@ -6,11 +6,12 @@ from re import split
 from threading import Thread
 from multiprocessing import Lock
 from multiprocessing.synchronize import Event as SyncEvent
+from multiprocessing.synchronize import Lock as SyncLock
+
 
 from typing import Optional, List
 
 import psutil
-from colorama import Fore
 from psutil import NoSuchProcess, AccessDenied
 
 from src.fetcher.process_fetcher.Threads.ProcessCollectorThread import ProcessCollectorThread
@@ -35,7 +36,7 @@ class ProcessFindingThread:
         self.__active_event = active_event
 
         self.__pid_list: List[str] = list()
-        self.__pid_list_lock: Lock = Lock()
+        self.__pid_list_lock: SyncLock = Lock()
 
     def __run(self):
         while self.__active_event.is_set() and (not self.__shutdown.is_set()):
@@ -60,7 +61,7 @@ class ProcessFindingThread:
     def __fetch_process(self):
         grep = subprocess.Popen(self.__grep_command, stdout=subprocess.PIPE, shell=True, encoding='utf-8')
         temp_counter = 0
-        if grep == None:
+        if grep is None:
             return
         for line in grep.stdout:
             with self.__pid_list_lock:

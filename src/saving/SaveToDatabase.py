@@ -3,8 +3,10 @@ from os.path import join
 from rocksdict import Rdict
 from pathlib import Path
 from typing import List
+from multiprocessing.synchronize import Lock as SyncLock
 
 from src.model.DataBaseEntry import DataBaseEntry
+from src.model.Model import Model
 
 
 from src.model.core.Project import Project
@@ -13,21 +15,26 @@ from src.saving.SaveInterface import SaveInterface
 
 class SaveToDatabase(SaveInterface):
 
-    def __init__(self, saves_path: str):
+    def __init__(self, saves_path: str, model_lock: SyncLock, model: Model):
         print("initializing")
         self.__current_project_name: str = ""
         self.__saves_path: str = saves_path
         print(self.__saves_path)
         self.__data_base_path: str
+        self.__model_lock = model_lock
+        self.__model: Model = model
 
-    def save_project(self, project: Project, delta: List[DataBaseEntry]):
-        project_name: str = project.name
+    def save_project(self, project_name: str):
+        project = self.__model.get_project_by_name(project_name)
+        with self.__model_lock:
+            delta: List[DataBaseEntry] = project.delta_entries
+            project.delta_entries = list()
         if self.__current_project_name != project_name:
             print("[SaveToDataBase]     new project saved")
             self.__add_new_project(project_name)
             # project is being saved for the first time
-            # TODO save metadata
         self.__add_to_data_base(delta)
+        print(f"[SaveToDatabase]    saved {len(delta)} new entries")
 
     def __add_new_project(self, new_proj_name: str):
         self.__current_project_name = new_proj_name

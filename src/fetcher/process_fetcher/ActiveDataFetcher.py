@@ -19,7 +19,7 @@ from src.model.Model import Model
 from src.model.core.SourceFile import SourceFile
 from src.fetcher.process_fetcher.Threads.ProcessFindingThread import ProcessFindingThread
 from src.fetcher.process_fetcher.Threads.ProcessCollectorThread import ProcessCollectorThread
-from src.fetcher.process_fetcher.Threads.DataCollectionThread import DataCollectionThread
+from src.fetcher.process_fetcher.Threads.PassiveDataCollectionThread import PassiveDataCollectionThread
 
 
 class ActiveDataFetcher(FetcherInterface):
@@ -59,7 +59,7 @@ class ActiveDataFetcher(FetcherInterface):
 
         self.__process_finder_list: List[ProcessFindingThread] = list()
         self.__process_collector_list: List[ProcessCollectorThread] = list()
-        self.__data_collector_list: List[DataCollectionThread] = list()
+        self.__data_collector_list: List[PassiveDataCollectionThread] = list()
         self.__data_collector_count: int = fetcher_count
         self.__process_collector_count = process_collector_count
 
@@ -94,7 +94,7 @@ class ActiveDataFetcher(FetcherInterface):
         for i in range(self.__data_collector_count):
             fetcher = ActiveDataCollectionThread(process_list, process_list_lock, self.__model, self.__model_lock,
                                                  DataObserver(), self.__fetcher_process_count, self.__shutdown_event,
-                                                 self.__source_file, self.__active_event)
+                                                 self.__source_file, self.__active_event, self.__saver_queue)
             self.__data_collector_list.append(fetcher)
             fetcher.start()
 

@@ -6,5 +6,5 @@ from src.model.core.Project import Project
 
 class SaveInterface(Protocol):
     """SaveInterface is used to save projects."""
-    def save_project(self, project: Project, delta: List[DataBaseEntry]):
+    def save_project(self, project_name: str):
         """Saves the given project into a file."""
