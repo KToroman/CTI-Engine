@@ -1,11 +1,13 @@
 from multiprocessing import Queue
+from typing import List
 
 from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtWidgets import QPushButton, QInputDialog
+from PyQt5.QtWidgets import QPushButton
 
 
 class ProjectNameButton(QPushButton):
-    def __init__(self, project_buttons, show_name, project_name, project_queue, visualize_event, index_queue: Queue,
+    def __init__(self, project_buttons: List[QPushButton], show_name: str, project_name: str, project_queue: Queue,
+                 visualize_event: pyqtSignal, index_queue: Queue,
                  change_table_signal: pyqtSignal, *__args):
         super().__init__(*__args)
         self.show_name = show_name
@@ -13,12 +15,13 @@ class ProjectNameButton(QPushButton):
         self.__project_queue = project_queue
         self.__visualize_event = visualize_event
         self.setText(show_name)
-        self.clicked.connect(lambda: self.show_project_name_input(project_name, self.button_list.index(self)))
+        self.clicked.connect(lambda: self.show_project_name_input(project_name, self.__button_list.index(self)))
         self.button_list = project_buttons
         self.index_queue = index_queue
         self.change_table_signal = change_table_signal
 
-    def show_project_name_input(self, name: str, index: str):
+    def __show_project_name_input(self, index: str):
+        """opens an input dialog to confirm the project you are about to load"""
         for button in self.button_list:
             button.setStyleSheet("")
         self.setStyleSheet("background-color: #00FF00")
