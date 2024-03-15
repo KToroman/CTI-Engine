@@ -5,7 +5,7 @@ import os
 import random
 import time
 
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import pyqtSignal, QThread
 from threading import Thread, Lock
 from PyQt5.QtCore import pyqtSignal, QThreadPool
 from typing import List
@@ -14,7 +14,8 @@ from multiprocessing import Queue, Event
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QIntValidator
 from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QWidget,
-                             QStackedWidget, QApplication, QHBoxLayout, QSplitter, QCheckBox, QSpinBox)
+                             QStackedWidget, QApplication, QHBoxLayout, QSplitter, QCheckBox, QSpinBox, QLineEdit,
+                             QPushButton)
 from src.model.Model import Model
 from src.model.core.ProjectReadViewInterface import ProjectReadViewInterface
 from src.view.GUI.PlotRunnable import PlotRunnable
@@ -24,7 +25,6 @@ from src.view.GUI.Graph.GraphWidget import GraphWidget
 from src.view.GUI.MainWindowMeta import MainWindowMeta
 from src.view.GUI.RemoveRunnable import RemoveRunnable
 from src.view.GUI.UserInteraction.MenuBar import MenuBar
-from src.view.GUI.UserInteraction.TableWidget import TableWidget
 from src.view.GUI.UserInteraction.Displayable import Displayable
 from src.view.GUI.UserInteraction.MetricBar import MetricBar
 from src.model.ModelReadViewInterface import ModelReadViewInterface
@@ -39,6 +39,7 @@ from src.view.AppRequestsInterface import AppRequestsInterface
 import src.view.GUI.Visuals.GuiDesign as gd
 from src.view.GUI.UserInteraction.TreeWidget import TreeWidget
 
+
 class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     WINDOWSIZE1: int = 800
     WINDOWSIZE2: int = 600
@@ -50,6 +51,9 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     error_signal: pyqtSignal = pyqtSignal()
     visualize_signal: pyqtSignal = pyqtSignal()
     status_signal: pyqtSignal = pyqtSignal()
+    change_table_signal: pyqtSignal = pyqtSignal()
+    index_queue: Queue = Queue()
+
 
     def __init__(self, shutdown_event: Event, q_application: QApplication, status_queue: Queue, project_queue: Queue,
                  error_queue: Queue, load_path_queue: Queue, active_mode_queue: Queue, cancel_event: Event,
@@ -60,8 +64,11 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.project_queue: Queue = project_queue
         self.visualize_signal.connect(lambda: self.visualize())
 
+        self.change_table_signal.connect(lambda: self.toggle_table_vis(self.index_queue.get()))
+
         self.__model = model
-        self.table_widget: TreeWidget = TreeWidget(active_mode_queue=active_mode_queue)
+        self.active_mode_queue = active_mode_queue
+        self.table_widget: TreeWidget = TreeWidget(active_mode_queue)
         self.status_queue: Queue = status_queue
         self.status_signal.connect(lambda: self.update_statusbar())
 
@@ -83,14 +90,14 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.upper_limit = QSpinBox()
         self.lower_limit = QSpinBox()
 
-        self.select_all_checkbox.stateChanged.connect(lambda: self.table_widget.toggle_all_rows())
+        """self.select_all_checkbox.stateChanged.connect(lambda: self.table_widget.toggle_all_rows())
         self.upper_limit.editingFinished.connect(
             lambda: self.table_widget.toggle_custom_amount(self.lower_limit.value(), self.upper_limit.value()))
         self.lower_limit.editingFinished.connect(
-            lambda: self.table_widget.toggle_custom_amount(self.lower_limit.value(), self.upper_limit.value()))
+            lambda: self.table_widget.toggle_custom_amount(self.lower_limit.value(), self.upper_limit.value()))"""
 
         self.menu_bar: MenuBar = MenuBar(load_path_queue, cancel_event, restart_event, self.project_queue,
-                                         self.visualize_signal)
+                                         self.visualize_signal, self.index_queue, self.change_table_signal)
         self.metric_bar: MetricBar = MetricBar()
 
         self.setup_resource_connections()
@@ -116,34 +123,46 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.stacked_widget = QStackedWidget()
 
         self.status_bar: StatusBar = StatusBar()
-
-        gd.setupUI(self, active_mode_queue)
-
         self.setup_resource_connections()
+
+        self.displayed_project: str = ""
+
+        self.line_edit = QLineEdit()
+        self.search_button = QPushButton()
+        #self.search_button.clicked.connect(lambda: self.table_widget.search_item(self))
+        self.current_table: TreeWidget = self.table_widget
+        self.all_tables: List[TreeWidget] = []
+        self.stacked_table_widget: QStackedWidget = QStackedWidget()
+        self.__connect_new_table()
+        gd.setupUI(self)
+
+
 
     def execute(self):
         self.show()
         self.__q_application.exec()
 
-
     def visualize(self):
-        print("visualize")
+        self.select_all_checkbox.setChecked(True)
+        self.select_all_checkbox.setChecked(False)
         """displays the data contained in that Model to the user."""
         project_name: str = self.project_queue.get()
         project = self.__model.get_project_by_name(project_name)
         self.project_time = project.get_project_time()
-        self.__update_project_list()
-        if self.table_widget.active_started:
+        self.displayed_project = project_name
+        self.__update_project_list(self.displayed_project)
+        if self.current_table.active_started:
             self.__visualize_active(project)
-            self.table_widget.active_started = False
+            self.current_table.active_started = False
         else:
             self.__visualize_passive(project)
 
     def __visualize_passive(self, project: ProjectReadViewInterface):
+        self.__connect_new_table()
         """Visualizes data from passive mode."""
-        #self.table_widget.clear_table()
         # Select spot for Displayables to be inserted into
-        self.table_widget.insertion_point = project.get_project_name()
+        #self.current_table.clear_tree()
+        self.current_table.insertion_point = project.get_project_name()
 
         # Update TableWidget for each cfile
         cfile_list: List[CFileReadViewInterface] = project.get_cfiles()
@@ -152,18 +171,19 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         for cfile in cfile_list:
             file_count += 1
             displayable_list.append(self.__create_displayable(cfile))
-        self.table_widget.insert_values(displayable_list)
+        self.current_table.insert_values(displayable_list)
         self.lower_limit.setMaximum(file_count)
         self.upper_limit.setMaximum(file_count)
         # Update other Widgets
         self.setup_connections()
         self.status_bar.update_status(StatusSettings.FINISHED)
-        #self.table_widget.rebuild_table(self.table_widget.rows)
+        self.menu_bar.project_buttons[len(self.menu_bar.project_buttons) - 1].setStyleSheet("background-color: #00FF00")
+
 
     def __visualize_active(self, project: ProjectReadViewInterface):
         """Visualizes data from active mode."""
         # Find file used for active build
-        active_row: str = self.table_widget.insertion_point
+        active_row: str = self.current_table.insertion_point
         active_file: CFileReadViewInterface
         for cfile in project.get_cfiles():
             if cfile.get_name() == active_row:
@@ -179,12 +199,35 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         for cfile in cfile_list:
             print("[MW]    cfile being filled: " + cfile.get_name())
             print(cfile.get_total_time())
-            self.table_widget.add_active_data(self.__create_displayable(cfile))
+            self.current_table.add_active_data(self.__create_displayable(cfile))
         print(str(time.time() - time1))
         # Update other Widgets
         self.setup_connections()
         self.status_bar.update_status(StatusSettings.FINISHED)
         print("updated")
+
+    def __connect_new_table(self):
+        print("connect")
+        self.current_table: TreeWidget = TreeWidget(self.active_mode_queue)
+        self.stacked_table_widget.addWidget(self.current_table)
+        self.all_tables.append(self.current_table)
+        self.select_all_checkbox.disconnect()
+        self.select_all_checkbox.stateChanged.connect(lambda: self.current_table.toggle_all_rows())
+        self.upper_limit.editingFinished.connect(
+            lambda: self.current_table.toggle_custom_amount(self.lower_limit.value(), self.upper_limit.value()))
+        self.lower_limit.editingFinished.connect(
+            lambda: self.current_table.toggle_custom_amount(self.lower_limit.value(), self.upper_limit.value()))
+        self.search_button.clicked.connect(lambda: self.current_table.search_item(self))
+        self.stacked_table_widget.setCurrentIndex(self.stacked_table_widget.count() - 1)
+
+    def toggle_table_vis(self, index: int):
+        self.select_all_checkbox.setChecked(True)
+        self.select_all_checkbox.setChecked(False)
+        self.stacked_table_widget.setCurrentIndex(index + 1)
+        self.current_table = self.all_tables[index + 1]
+
+
+
 
     def deploy_error(self):
         """Receives an Exception, displays information regarding that exception to the user."""
@@ -260,7 +303,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
     def setup_connections(self):
         """Sets up connections between table and graph widgets."""
-        for row in self.table_widget.rows:
+        for row in self.current_table.rows:
             if not row.connected:
                 row.checkbox.stateChanged.connect(
                     lambda state, current_row=row: self.update_visibility(current_row.displayable))
@@ -292,7 +335,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
                                                     cpu_graph=self.cpu_graph_widget,
                                                     runtime_graph=self.bar_chart_widget, displayable=displayable)
             self.thread_pool.start(add_runnable)
-        if not self.table_widget.in_row_loop:
+        if not self.current_table.in_row_loop:
             plot_runnable: PlotRunnable = PlotRunnable(ram_graph=self.ram_graph_widget, cpu_graph=self.cpu_graph_widget,
                                                        runtime_graph=self.bar_chart_widget)
             self.thread_pool.start(plot_runnable)
@@ -300,14 +343,14 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     def setup_click_connections(self):
         """Sets up connections between clicking on graph and highlighting according table row."""
         self.bar_chart_widget.click_signal.connect(
-            lambda: self.table_widget.highlight_row(self.bar_chart_widget.bar_clicked))
+            lambda: self.current_table.highlight_row(self.bar_chart_widget.bar_clicked))
         self.cpu_graph_widget.click_signal.connect(
-            lambda: self.table_widget.highlight_row(self.cpu_graph_widget.plot_clicked))
+            lambda: self.current_table.highlight_row(self.cpu_graph_widget.plot_clicked))
         self.ram_graph_widget.click_signal.connect(
-            lambda: self.table_widget.highlight_row(self.ram_graph_widget.plot_clicked))
+            lambda: self.current_table.highlight_row(self.ram_graph_widget.plot_clicked))
 
-    def __update_project_list(self):
-        self.menu_bar.update_scrollbar(self.__model.get_all_project_names())
+    def __update_project_list(self, project_name: str):
+        self.menu_bar.update_scrollbar(self.__model.get_all_project_names(), project_name)
 
     def closeEvent(self, event):
         self.shutdown_event.set()
