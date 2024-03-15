@@ -16,7 +16,6 @@ class TableRow:
         self.toggle_button: QPushButton = QPushButton()
         self.toggle_button.setMaximumWidth(20)
         self.button_name = displayable.name
-        # self.name_button: QPushButton = QPushButton(self.button_name[-1] + '/' + self.button_name[len(self.button_name) - 2])
         self.name_button: QPushButton = QPushButton(self.button_name.split(".o")[0].split("/")[-1])
         self.name_button.setFixedWidth(250)
         self.name_button.setToolTip(displayable.name)

@@ -10,6 +10,7 @@ from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QInputDialog, QWidge
 
 from src.view.GUI.Graph.Plot import Plot
 from src.view.GUI.UserInteraction.Displayable import Displayable
+from src.view.GUI.UserInteraction.DisplayableHolder import DisplayableHolder
 from src.view.GUI.UserInteraction.ItemWrapper import ItemWrapper
 from src.view.GUI.UserInteraction.TableRow import TableRow
 
@@ -46,16 +47,19 @@ class TreeWidget(QTreeWidget):
         self.setSortingEnabled(True)
         self.sortByColumn(0, Qt.AscendingOrder)
 
-    def insert_values(self, displayables: List[Displayable]):
-        for displayable in displayables:
-            item = ItemWrapper(displayable.name, self)
-            self.__create_row(item, displayable)
-            for header in displayable.headers:
-                sub_item = ItemWrapper(header, item)
-                self.fill_subrow(sub_item, header)
-                for subheader in displayable.secondary_headers[displayable.headers.index(header)]:
-                    subsub_item = ItemWrapper(subheader, sub_item)
-                    self.fill_subrow(subsub_item, subheader)
+    def insert_values(self, displayables: List[DisplayableHolder]):
+        for disp in displayables:
+            self.insert_data(disp, self)
+
+    def insert_data(self, displayable_holder: DisplayableHolder, parent):
+        if not displayable_holder.get_sub_disp():
+            item = ItemWrapper(displayable_holder.displayable.name, parent)
+            self.__create_row(item, displayable_holder.displayable)
+            return
+        item = ItemWrapper(displayable_holder.displayable.name, parent)
+        self.__create_row(item, displayable_holder.displayable)
+        for h in displayable_holder.get_sub_disp():
+            self.insert_data(h, item)
 
     def __create_row(self, item, displayable):
         row = TableRow(displayable)
@@ -69,33 +73,43 @@ class TreeWidget(QTreeWidget):
         item.setData(2, 0, round((values[1]), 4))
         item.setData(3, 0, round((values[2]), 4))
         row.name_button.clicked.connect(lambda: self.show_input_dialog_active(row.displayable.name))
-        self.rows.append(row)
         item.set_row(row)
+        if values[2] == 0:
+            item.row.checkbox.setDisabled(True)
+        if displayable.failed:
+            item.setStyleSheet("::section{Background-color: #FF3232}")
         self.items.append(item)
+        self.rows.append(row)
 
-    def fill_subrow(self, item, name):
-        plot_mock: Plot = Plot("", "", [], [0])
-        displayable_mock = Displayable(name, plot_mock, plot_mock, plot_mock, 0, 0, [], [])
-        self.__create_row(item, displayable_mock)
-        item.row.checkbox.setDisabled(True)
-
-    def add_active_data(self, displayable: Displayable):
+    def add_active_data(self, displayable: DisplayableHolder):
         for item in self.items:
             if item.name == self.insertion_point:
                 for i in range(item.childCount()):
-                    if displayable.name == item.child(i).name:
-                        values = [displayable.ram_peak, displayable.cpu_peak, displayable.runtime_plot.y_values[0]]
+                    if displayable.displayable.name == item.child(i).name:
+                        values = [displayable.displayable.ram_peak, displayable.displayable.cpu_peak,
+                                  displayable.displayable.runtime_plot.y_values[0]]
                         item.child(i).setData(1, 0, round((values[0]), 4))
                         item.child(i).setData(2, 0, round((values[1]), 4))
                         item.child(i).setData(3, 0, round((values[2]), 4))
-                        item.child(i).row.checkbox.setDisabled(False)
+                        if values[2] != 0:
+                            item.child(i).row.checkbox.setDisabled(False)
+                            item.child(i).row.connected = False
+                        if displayable.displayable.failed:
+                            item.setStyleSheet("::section{Background-color: #FF3232}")
                     for j in range(item.child(i).childCount()):
-                        if displayable.name == item.child(i).child(j).name:
-                            values = [displayable.ram_peak, displayable.cpu_peak, displayable.runtime_plot.y_values[0]]
+                        if displayable.displayable.name == item.child(i).child(j).name:
+                            values = [displayable.displayable.ram_peak, displayable.displayable.cpu_peak,
+                                      displayable.displayable.runtime_plot.y_values[0]]
                             item.child(i).child(j).setData(1, 0, round((values[0]), 4))
                             item.child(i).child(j).setData(2, 0, round((values[1]), 4))
                             item.child(i).child(j).setData(3, 0, round((values[2]), 4))
-                            item.child(i).child(j).row.checkbox.setDisabled(False)
+                            if values[2] != 0:
+                                item.child(i).child(j).row.checkbox.setDisabled(False)
+                                item.child(i).row.connected = False
+                            if displayable.displayable.failed:
+                                item.setStyleSheet("::section{Background-color: #FF3232}")
+        for disp in displayable.get_sub_disp():
+            self.add_active_data(disp)
 
     def start_active_measurement(self, name):
         self.active_started = True
@@ -120,7 +134,8 @@ class TreeWidget(QTreeWidget):
         row_count: int = 1
         self.in_row_loop = True
         for row in self.rows:
-            if row.displayable.ram_plot.name != "":
+            if row.displayable.runtime_plot.y_values[0] != 0:
+                print(row.displayable.name)
                 if row_count == last_checkbox:
                     self.in_row_loop = False
                 row_count += 1
@@ -146,7 +161,7 @@ class TreeWidget(QTreeWidget):
         row_count: int = 1
         self.in_row_loop = True
         for row in self.rows:
-            if row.displayable.ram_plot.name != "":
+            if row.displayable.runtime_plot.y_values[0] != 0:
                 if real_lower_limit <= row_count <= real_upper_limit:
                     if row_count == real_upper_limit:
                         self.in_row_loop = False
@@ -201,4 +216,3 @@ class TreeWidget(QTreeWidget):
                 while parent:
                     self.expandItem(parent)
                     parent = parent.parent()
-

@@ -1,6 +1,7 @@
 import threading
 import multiprocessing
 import time
+from multiprocessing import Queue
 from typing import List, Self
 
 from multiprocessing.synchronize import Event as SyncEvent
@@ -15,6 +16,8 @@ from src.fetcher.FetcherInterface import FetcherInterface
 from src.fetcher.process_fetcher.Threads.ActiveDataCollectionThread import ActiveDataCollectionThread
 from src.fetcher.process_fetcher.process_observer.metrics_observer.DataObserver import DataObserver
 from src.model.Model import Model
+from src.model.core.CFile import CFile
+from src.model.core.CFileReadViewInterface import CFileReadViewInterface
 from src.model.core.SourceFile import SourceFile
 from src.fetcher.process_fetcher.Threads.ProcessFindingThread import ProcessFindingThread
 from src.fetcher.process_fetcher.Threads.ProcessCollectorThread import ProcessCollectorThread
@@ -39,11 +42,14 @@ class ActiveDataFetcher(FetcherInterface):
         self.__model = model
         self.__model_lock = model_lock
         self.__model.wait_for_project()
+        self.__header_error_queue: Queue = Queue()
         with self.__model_lock:
             self.__source_file: SourceFile = model.get_sourcefile_by_name(source_file_name)
 
         self.__compiling_tool: BuilderInterface = CompilingTool(curr_project_dir=model.current_project.working_dir,
-                                                                source_file=self.__source_file, path=build_dir_path)
+                                                                source_file=self.__source_file,
+                                                                header_error_queue=self.__header_error_queue,
+                                                                path=build_dir_path)
 
         self.__save_path = save_path
 
@@ -73,6 +79,15 @@ class ActiveDataFetcher(FetcherInterface):
         """Main method of the active data fetcher. Returns True if this method should be called again."""
         self.__building_event.set()
         while self.__building_event.is_set():
+            if not self.__header_error_queue.empty():
+                header = self.__header_error_queue.get()
+                print("[ActiveDataThread]   trying to find" + header)
+                model_header = self.get_header(header, self.__source_file)
+                if model_header is not None:
+                    print("[ActiveDataThread]   made true" + header)
+                    model_header.error = True
+                else:
+                    print("[ActiveDataThread]   did not find" + header)
             for finder in self.__process_finder_list:
                 finder.set_work(None)
 
@@ -118,6 +133,13 @@ class ActiveDataFetcher(FetcherInterface):
             self.__shutdown_event)
         self.__building_thread.start()
         return self
+
+    def get_header(self, name: str, cfile: CFileReadViewInterface) -> CFileReadViewInterface:
+        if cfile.get_name() == name:
+            return cfile
+        for header in cfile.get_headers():
+            self.get_header(name, header)
+
 
     def __exit__(self, exc_type, exc_val, traceback) -> bool:
         # required threads should be stopped here

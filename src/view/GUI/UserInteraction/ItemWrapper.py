@@ -13,3 +13,9 @@ class ItemWrapper(QTreeWidgetItem):
     def set_row(self, row: TableRow):
         self.row = row
 
+    def setStyleSheet(self, style: str):
+        print("[itemWrapper]   should make red")
+        self.setStyleSheet(style)
+
+
+
