@@ -28,27 +28,20 @@ class MenuBar:
         self.style_icon = qta.icon("ei.ban-circle")
 
         self.load_file_button: QPushButton = QPushButton("Load file")
-        self.load_file_button.setStyleSheet("background-color: #61b3bf;")
+        #self.load_file_button.setStyleSheet("background-color: #61b3bf;")
         self.load_file_button.clicked.connect(lambda: self.show_input_dialog())
 
         self.pause_resume_button: QPushButton = QPushButton("Restart")
         self.pause_resume_button.clicked.connect(lambda: self.restart_event.set())
-        self.pause_resume_button.setStyleSheet("background-color: #61b3bf;")
+        #self.pause_resume_button.setStyleSheet("background-color: #61b3bf;")
 
         self.cancel_button: QPushButton = QPushButton("Cancel")
         self.cancel_button.setIcon(self.cancel_icon)
-        self.cancel_button.setStyleSheet("background-color: #61b3bf;")
+        #self.cancel_button.setStyleSheet("background-color: #61b3bf;")
         self.cancel_button.clicked.connect(lambda: self.cancel_event.set())
 
-        self.small_cancel_button: QPushButton = QPushButton()
-        self.small_cancel_button.setIcon(self.cancel_icon)
-        self.small_cancel_button.setStyleSheet("background-color: #61b3bf;")
-        self.small_cancel_button.clicked.connect(lambda: self.cancel_event.set())
-
         self.switch_style_box: QComboBox = QComboBox()
-        #self.switch_style_box.itemIcon(self.style_icon)
-        self.switch_style_box.setStyleSheet("background-color: #61b3bf;")
-        self.switch_style_box.addItems(["Dark Mode", "Light Mode", "Pink Mode"])
+        #self.switch_style_box.setStyleSheet("background-color: #61b3bf;")
 
         self.scroll_bar = QScrollArea()
         self.scroll_bar.setWidgetResizable(True)

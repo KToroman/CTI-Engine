@@ -49,7 +49,7 @@ def setupUI(mainWindow, active_mode_queue):
     mainWindow.sidebar = QWidget(mainWindow.centralwidget)
     mainWindow.sidebar.setMinimumSize(QSize(140, 0))
     mainWindow.sidebar.setMaximumSize(QSize(400, 16777215))
-    mainWindow.sidebar.setStyleSheet(u"background-color: rgb(61, 61, 61);")
+    #mainWindow.sidebar.setStyleSheet(u"background-color: rgb(61, 61, 61);")
     mainWindow.verticalLayout_3 = QVBoxLayout(mainWindow.sidebar)
     mainWindow.verticalLayout_3.setSpacing(0)
     mainWindow.verticalLayout_3.setContentsMargins(3, 3, 3, 3)

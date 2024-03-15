@@ -54,8 +54,6 @@ class GraphWidget(QWidget):
             if line.get_label() == plot.name:
                 line.remove()
                 self.lines.remove(line)
-                #self.plot_graph()
-                #self.canvas.draw()
                 break
 
     def plot_graph(self):

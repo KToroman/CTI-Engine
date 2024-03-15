@@ -5,26 +5,20 @@ import os
 import random
 import time
 
-from PyQt5.QtCore import pyqtSignal
-from threading import Thread, Lock
 from PyQt5.QtCore import pyqtSignal, QThreadPool
 from typing import List
 from multiprocessing import Queue, Event
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon, QIntValidator
-from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QWidget,
-                             QStackedWidget, QApplication, QHBoxLayout, QSplitter, QCheckBox, QSpinBox)
-from src.model.Model import Model
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import (QMainWindow, QStackedWidget, QApplication, QCheckBox, QSpinBox)
 from src.model.core.ProjectReadViewInterface import ProjectReadViewInterface
-from src.view.GUI.PlotRunnable import PlotRunnable
-from src.view.GUI.AddRunnable import AddRunnable
+from src.view.GUI.Threading.PlotRunnable import PlotRunnable
+from src.view.GUI.Threading.AddRunnable import AddRunnable
 from src.view.GUI.Graph.BarWidget import BarWidget
 from src.view.GUI.Graph.GraphWidget import GraphWidget
 from src.view.GUI.MainWindowMeta import MainWindowMeta
-from src.view.GUI.RemoveRunnable import RemoveRunnable
+from src.view.GUI.Threading.RemoveRunnable import RemoveRunnable
 from src.view.GUI.UserInteraction.MenuBar import MenuBar
-from src.view.GUI.UserInteraction.TableWidget import TableWidget
 from src.view.GUI.UserInteraction.Displayable import Displayable
 from src.view.GUI.UserInteraction.MetricBar import MetricBar
 from src.model.ModelReadViewInterface import ModelReadViewInterface
@@ -35,7 +29,6 @@ from src.view.GUI.Visuals.StatusBar import StatusBar
 from src.model.core.StatusSettings import StatusSettings
 from src.view.UIInterface import UIInterface
 from src.view.GUI.Visuals.ErrorWindow import ErrorWindow
-from src.view.AppRequestsInterface import AppRequestsInterface
 import src.view.GUI.Visuals.GuiDesign as gd
 from src.view.GUI.UserInteraction.TreeWidget import TreeWidget
 
@@ -99,8 +92,8 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         logo_path = os.path.join(images_folder, "CTIEngineLogo.png")
         icon: QIcon = QIcon(logo_path)
         self.setWindowIcon(icon)
-        self.setStyleSheet("background-color: #ECEFF1;")
-        self.stylesheets = {"Dark Mode": "src/view/GUI/Stylesheets/StylesheetDark.qss", "Light Mode": " "}
+        #self.setStyleSheet("background-color: #ECEFF1;")
+        self.stylesheets = {}
 
         """colors from cti engine logo:
         #237277
@@ -119,6 +112,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.status_bar: StatusBar = StatusBar()
 
         gd.setupUI(self, active_mode_queue)
+        self.load_stylesheets()
         self.menu_bar.switch_style_box.currentIndexChanged.connect(lambda: self.set_stylesheet())
         self.setup_resource_connections()
 
@@ -126,10 +120,24 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.show()
         self.__q_application.exec()
 
+    def load_stylesheets(self):
+        stylesheets_dir = "/common/homes/all/udixi_schneider/Documents/git/cti-engine-prototype/src/view/GUI/Stylesheets"
+        for stylesheet in os.listdir(stylesheets_dir):
+            if stylesheet.endswith(".qss"):
+                with open(os.path.join(stylesheets_dir, stylesheet), "r") as file:
+                    style_name = os.path.splitext(stylesheet)[0]
+                    print("[MW]    loaded stylesheet: " + style_name)
+                    self.stylesheets[style_name] = file.read()
+                    self.menu_bar.switch_style_box.addItem(style_name)
+        self.set_stylesheet()
+
     def set_stylesheet(self):
         selected_style = self.menu_bar.switch_style_box.currentText()
         print(selected_style)
-        self.__q_application.setStyleSheet(self.stylesheets[selected_style])
+        try:
+            self.__q_application.setStyleSheet(self.stylesheets[selected_style])
+        except:
+            print("upsi")
 
     def visualize(self):
         print("visualize")
