@@ -28,19 +28,15 @@ class MenuBar:
         self.restart_event = restart_event
 
         self.load_file_button: QPushButton = QPushButton("Load file")
-        #self.load_file_button.setStyleSheet("background-color: #61b3bf;")
         self.load_file_button.clicked.connect(lambda: self.__show_input_dialog())
 
         self.pause_resume_button: QPushButton = QPushButton("Restart")
         self.pause_resume_button.clicked.connect(lambda: self.restart_event.set())
-        #self.pause_resume_button.setStyleSheet("background-color: #61b3bf;")
 
         self.cancel_button: QPushButton = QPushButton("Cancel")
-        #self.cancel_button.setStyleSheet("background-color: #61b3bf;")
         self.cancel_button.clicked.connect(lambda: self.cancel_event.set())
 
         self.switch_style_box: QComboBox = QComboBox()
-        #self.switch_style_box.setStyleSheet("background-color: #61b3bf;")
 
         self.scroll_bar: QScrollArea = QScrollArea()
 
@@ -50,7 +46,6 @@ class MenuBar:
         self.scroll_bar.setWidget(self.scroll_widget)
 
         self.scroll_button = QPushButton("All Projects")
-        self.scroll_button.setStyleSheet("background-color: #61b3bf;")
         self.scroll_button.setCheckable(True)
         self.scroll_button.toggled.connect(lambda: self.__toggle_scrollbar())
 

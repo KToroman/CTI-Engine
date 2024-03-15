@@ -23,6 +23,10 @@ QSpinBox {
     background-color: #3d3d3d;
 }
 
+QScrollArea {
+    background-color: #3d3d3d;
+}
+
 QLineEdit {
     color: #CCCCCC;
     background-color: #3d3d3d;
