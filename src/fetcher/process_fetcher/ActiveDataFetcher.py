@@ -38,8 +38,10 @@ class ActiveDataFetcher(FetcherInterface):
                  ) -> None:
         self.__model = model
         self.__model_lock = model_lock
-        self.__source_file: SourceFile = model.get_sourcefile_by_name(
-            source_file_name)
+        self.__model.wait_for_project()
+        with self.__model_lock:
+            self.__source_file: SourceFile = model.get_sourcefile_by_name(source_file_name)
+
         self.__compiling_tool: BuilderInterface = CompilingTool(curr_project_dir=model.current_project.working_dir,
                                                                 source_file=self.__source_file, path=build_dir_path
                                                                 )

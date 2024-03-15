@@ -10,18 +10,18 @@ from PyQt5.QtWidgets import QPushButton, QInputDialog, QTextEdit, QScrollArea, Q
 import qtawesome as qta
 
 from src.view.AppRequestsInterface import AppRequestsInterface
+from src.view.GUI.UserInteraction.ProjectNameButtonWrapper import ProjectNameButton
 
 
 class MenuBar:
-    def __init__(self, load_path_queue: Queue, cancel_event: SyncEvent, restart_event: SyncEvent, project_queue: Queue, visualize_event: pyqtSignal):
+    def __init__(self, load_path_queue: Queue, cancel_event: SyncEvent, restart_event: SyncEvent, project_queue: Queue,
+                 visualize_event: pyqtSignal):
 
         self.__project_queue = project_queue
         self.__visualize_event = visualize_event
 
         self.load_path_queue = load_path_queue
-        self.cancel_event = cancel_event#qss="/common/homes/all/udixi_schneider/Documents/git/cti-engine-prototype/src/view/GUI/Stylesheets/StylesheetDark.qss"
-        #with open(qss, "r") as fh:
-            #self.__q_application.setStyleSheet(fh.read())
+        self.cancel_event = cancel_event
         self.restart_event = restart_event
 
         self.cancel_icon = qta.icon("ei.ban-circle")
@@ -31,17 +31,9 @@ class MenuBar:
         self.load_file_button.setStyleSheet("background-color: #61b3bf;")
         self.load_file_button.clicked.connect(lambda: self.show_input_dialog())
 
-        self.small_load_file_button: QPushButton = QPushButton()
-        self.small_load_file_button.setStyleSheet("background-color: #61b3bf;")
-        self.small_load_file_button.clicked.connect(lambda: self.show_input_dialog())
-
         self.pause_resume_button: QPushButton = QPushButton("Restart")
         self.pause_resume_button.clicked.connect(lambda: self.restart_event.set())
         self.pause_resume_button.setStyleSheet("background-color: #61b3bf;")
-
-        self.small_pause_resume_button: QPushButton = QPushButton("icon")
-        self.small_pause_resume_button.clicked.connect(lambda: self.restart_event.set())
-        self.small_pause_resume_button.setStyleSheet("background-color: #61b3bf;")
 
         self.cancel_button: QPushButton = QPushButton("Cancel")
         self.cancel_button.setIcon(self.cancel_icon)
@@ -78,17 +70,9 @@ class MenuBar:
         self.project_buttons: List[QPushButton] = []
 
     def show_input_dialog(self):
-        text, ok = QInputDialog.getText(None, "File input", 'Enter file name:')
+        text, ok = QInputDialog.getText(self.scroll_widget, "File input", 'Enter file name:')
         if ok:
             self.load_path_queue.put(text)
-
-
-
-    def show_project_name_input(self, name: str):
-        text, ok = QInputDialog.getText(None, "Load Project", "Load the following project?", text=name)
-        if ok:
-            self.__project_queue.put(name)
-            self.__visualize_event.emit()
 
     def toggle_scrollbar(self):
         # Überprüfen, ob die Scrollbar angezeigt wird oder nicht, und umschalten
@@ -100,6 +84,8 @@ class MenuBar:
         # Das Widget neu zeichnen, um die Änderungen anzuzeigen
         self.scroll_bar.update()
 
+
+
     def update_scrollbar(self, project_names: List[str]):
         if self.scroll_layout.count() > 0:
             for i in range(self.scroll_layout.count()):
@@ -110,38 +96,20 @@ class MenuBar:
                 if widget is not None:
                     widget.deleteLater()
         for name in project_names:
-            print(name)
             if name.split(" ").__len__() > 2:
                 show_name = name.split(" ")[0] + " " + name.split(" ")[-1]
             else:
                 show_name = name.split(" ")[0]
 
-            new_button = ProjectNameButton(show_name, name, self.__project_queue, self.__visualize_event)
+            new_button = ProjectNameButton(self.project_buttons, show_name, name, self.__project_queue,
+                                           self.__visualize_event)
             self.scroll_layout.addWidget(new_button)
             self.project_buttons.append(new_button)
+        if len(self.project_buttons) != 0:
+            button = self.scroll_layout.itemAt(self.scroll_layout.count() - 1).widget()
+            button.setStyleSheet("background-color: #00FF00")
 
-    def test(self, text):
-        print(text)
 
 
-class ProjectNameButton(QPushButton):
-    def __init__(self, show_name, project_name, project_queue, visualize_event, *__args):
-        super().__init__(*__args)
-        self.show_name = show_name
-        self.project_name = project_name
-        self.__project_queue = project_queue
-        self.__visualize_event = visualize_event
-        self.setText(show_name)
-        self.clicked.connect(lambda: self.show_project_name_input(project_name))
 
-    def show_project_name_input(self, name: str):
-        text, ok = QInputDialog.getText(None, "Load Project", "Load the following project?", text=name)
-        if ok:
-            self.__project_queue.put(name)
-            self.__visualize_event.emit()
 
-    def show_project_name_input(self, name: str):
-        text, ok = QInputDialog.getText(None, "Load Project", "Load the following project?", text=name)
-        if ok:
-            self.__project_queue.put(name)
-            self.__visualize_event.emit()

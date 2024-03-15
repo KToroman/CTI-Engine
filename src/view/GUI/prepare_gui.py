@@ -1,21 +1,19 @@
 from multiprocessing import Queue
 import sys
-from threading import Event
+from multiprocessing import Event
+from multiprocessing.synchronize import Event as SyncEvent
 
-from PyQt5.QtCore import pyqtSignal
+
 from PyQt5.QtWidgets import QApplication
 
-from src.fetcher.file_fetcher.FileLoader import FileLoader
 from src.model.Model import Model
 from src.view.GUI.MainWindow import MainWindow
-from src.view.GUI.UserInteraction.Displayable import Displayable
-from src.view.AppRequestsInterface import AppRequestsInterface
 from src.view.UIInterface import UIInterface
 
 
-def prepare_gui(shutdown_event: Event, status_queue: Queue,
+def prepare_gui(shutdown_event: SyncEvent, status_queue: Queue,
                 project_queue: Queue, error_queue: Queue, load_path_queue: Queue,
-                active_mode_queue: Queue, cancel_event: Event, restart_event: Event, model: Model) -> UIInterface:
+                active_mode_queue: Queue, cancel_event: SyncEvent, restart_event: SyncEvent, model: Model) -> UIInterface:
     q_application = QApplication(sys.argv)
     main_window = MainWindow(q_application=q_application, project_queue=project_queue,
                              status_queue=status_queue, restart_event=restart_event,

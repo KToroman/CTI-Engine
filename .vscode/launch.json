@@ -12,6 +12,13 @@
             "justMyCode": true
         },
         {
+            "name": "current file, correct import",
+            "type": "python",
+            "request": "launch",
+            "module": "src",
+            "justMyCode": true
+        },
+        {
             "name": "load",
             "args": [
                 "load",
