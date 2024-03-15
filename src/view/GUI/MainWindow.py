@@ -147,31 +147,6 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.show()
         self.__q_application.exec()
 
-    """def load_stylesheets(self):
-        styles_dir = "/common/homes/all/udixi_schneider/Documents/git/cti-engine-prototype/src/view/GUI/Stylesheets"  # Pfad zu Ihrem Stylesheet-Verzeichnis
-        for mode in os.listdir(styles_dir):
-            if os.path.isdir(os.path.join(styles_dir, mode)):
-                self.menu_bar.switch_style_box.addItem(mode)
-                mode_path = os.path.join(styles_dir, mode)
-                mode_styles = {}
-                for file_name in os.listdir(mode_path):
-                    if file_name.endswith(".qss"):
-                        with open(os.path.join(mode_path, file_name), "r") as file:
-                            widget_name = os.path.splitext(file_name)[0]
-                            print(widget_name)
-                            mode_styles[widget_name] = file.read()
-                self.stylesheets[mode] = mode_styles
-        print(self.stylesheets)
-        self.set_stylesheet()
-
-    def set_stylesheet(self):
-        selected_mode = self.menu_bar.switch_style_box.currentText()
-        for widget_name, stylesheet in self.stylesheets[selected_mode].items():
-            print(self.widgets)
-            widget = self.widgets.get(widget_name)
-            if widget:
-                widget.setStyleSheet(stylesheet)"""
-
     def load_stylesheets(self):
         stylesheets_dir = "/common/homes/all/udixi_schneider/Documents/git/cti-engine-prototype/src/view/GUI/Stylesheets"
         for stylesheet in os.listdir(stylesheets_dir):
@@ -185,6 +160,9 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     def set_stylesheet(self):
         selected_style = self.menu_bar.switch_style_box.currentText()
         self.setStyleSheet(self.stylesheets[selected_style])
+        self.ram_graph_widget.set_stylesheet(selected_style)
+        self.cpu_graph_widget.set_stylesheet(selected_style)
+        self.bar_chart_widget.set_stylesheet(selected_style)
 
     def visualize(self):
         """displays the data contained in that model to the user."""
@@ -221,7 +199,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.upper_limit.setMaximum(file_count)
         # Update other Widgets
         self.__setup_connections()
-        self.status_bar.update_status(StatusSettings.FINISHED)
+        self.status_bar.update_status(StatusSettings.FINISHED, project.get_project_name())
         self.menu_bar.project_buttons[len(self.menu_bar.project_buttons) - 1].setStyleSheet("background-color: #00FF00")
 
     def __visualize_active(self, project: ProjectReadViewInterface):

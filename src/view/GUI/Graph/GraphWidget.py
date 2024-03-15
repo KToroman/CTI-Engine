@@ -28,9 +28,7 @@ class GraphWidget(QWidget):
         # Add title and labels for axes
         self.ax.set_xlabel(self.X_AXIS)
         self.ax.set_ylabel(axis_label)
-        self.figure.set_facecolor("#3d3d3d")
-        self.figure.patch.set_linewidth(2)
-        self.ax.set_facecolor("#aaaaaa")
+
         # Add layout
         self.canvas = FigureCanvas(self.figure)
         self.layout = QVBoxLayout()
@@ -69,3 +67,17 @@ class GraphWidget(QWidget):
         self.plot_clicked = event.artist.get_label().__str__()
         self.click_signal.emit()
 
+    def set_stylesheet(self, style: str):
+        if style == "Dark Mode":
+            self.figure.set_facecolor("#252526")
+            self.ax.set_facecolor("#3d3d3d")
+            self.ax.tick_params(colors="#CCCCCC")  # Farbe der Zahlen an der x-Achse
+            self.ax.xaxis.label.set_color("#CCCCCC")  # Farbe der x-Achsenbeschriftung
+            self.ax.yaxis.label.set_color("#CCCCCC")  # Farbe der y-Achsenbeschriftung
+        if style == "Light Mode":
+            self.figure.set_facecolor("#FFFFFF")
+            self.ax.set_facecolor("#FFFFFF")
+            self.ax.tick_params(colors="#000000")  # Farbe der Zahlen an der x-Achse
+            self.ax.xaxis.label.set_color("#000000")  # Farbe der x-Achsenbeschriftung
+            self.ax.yaxis.label.set_color("#000000")  # Farbe der y-Achsenbeschriftung
+            self.canvas.draw()
