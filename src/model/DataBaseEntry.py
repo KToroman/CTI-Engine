@@ -8,17 +8,17 @@ class DataBaseEntry:
     def __init__(
         self,
         source_file: str,
-        header: Optional[str],
+        header: str,
         timestamp: Optional[float],
         metrics: Optional[List[Metric]],
     ):
         self.source_file: str = source_file
-        self.header: Optional[str] = header
+        self.header: str = header
         self.timestamp: Optional[float] = timestamp
         self.metrics: Optional[List[Metric]] = metrics
 
     def extract_data_entry(self) -> Optional[DataEntry]:
-        if self.header is not None:
+        if self.header != "":
             path = self.header
         else:
             path: str = self.source_file
