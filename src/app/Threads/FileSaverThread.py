@@ -14,11 +14,11 @@ from src.saving.SaveInterface import SaveInterface
 class FileSaverThread:
     """Manages the thread which saves projects from model"""
 
-    def __init__(self, shutdown_event: SyncEvent, model: Model, data_fetcher: SaveInterface, model_lock: SyncLock,
+    def __init__(self, shutdown_event: SyncEvent, model: Model, saver: SaveInterface, model_lock: SyncLock,
                  finished_project: SyncEvent, work_queue: Queue):
         self.__thread: Thread
         self.__shutdown = shutdown_event
-        self.__data_fetcher = data_fetcher
+        self.__saver = saver
 
         self.__work_queue = work_queue
 
@@ -44,7 +44,7 @@ class FileSaverThread:
             self.__remove_work()
             with self.__model_lock:
                 project = deepcopy(self.__model.get_project_by_name(work))
-                self.__data_fetcher.save_project(project=project)
+                self.__saver.save_project(project=project)
 
     def add_work(self, project_name: str):
         """this methode adds a project to the worklist for the saver thread"""

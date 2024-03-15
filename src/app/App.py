@@ -18,6 +18,7 @@ from src.fetcher.process_fetcher.PassiveDataFetcher import PassiveDataFetcher
 from src.app.Threads.GUICommunicationManager import GUICommunicationManager
 from src.model.Model import Model
 from src.saving.SaveInterface import SaveInterface
+from src.saving.SaveToDatabase import SaveToDatabase
 from src.saving.SaveToJSON import SaveToJSON
 
 from src.view.AppRequestsInterface import AppRequestsInterface
@@ -65,7 +66,7 @@ class App(AppRequestsInterface):
         self.config: Configuration = Configuration.load(App.__get_config_path())
 
         # Saving
-        self.saver: SaveInterface = SaveToJSON(self.config.saves_path)
+        self.saver: SaveInterface = SaveToDatabase(self.config.saves_path)
 
         # Passive Fetching:
         self.__passive_data_fetcher: PassiveDataFetcher = PassiveDataFetcher(self.__model, self.__model_lock,
