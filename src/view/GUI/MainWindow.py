@@ -118,7 +118,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.status_bar: StatusBar = StatusBar()
 
         gd.setupUI(self, active_mode_queue)
-        self.menu_bar.switch_style_box.currentIndexChanged.connect(self.set_stylesheet())
+        self.menu_bar.switch_style_box.currentIndexChanged.connect(lambda: self.set_stylesheet())
         self.setup_resource_connections()
 
     def execute(self):
@@ -127,8 +127,8 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
     def set_stylesheet(self):
         selected_style = self.menu_bar.switch_style_box.currentText()
-        with open(selected_style, "r") as fh:
-            self.__q_application.setStyleSheet(fh.read())
+        print(selected_style)
+        self.__q_application.setStyleSheet(self.stylesheets[selected_style])
 
     def visualize(self):
         print("visualize")
