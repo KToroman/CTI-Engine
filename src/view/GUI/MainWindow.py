@@ -197,7 +197,14 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     def update_statusbar(self):
         """Receives a status string, changes the UI's status string accordingly."""
         status: StatusBar = self.status_queue.get()
-        self.status_bar.update_status(status)
+        if status.value[0] == "measuring":
+            self.status_bar.update_status(status, self.__model.get_current_project_name())
+        elif status.value[0] == "active measuring":
+            self.status_bar.update_status(status, self.current_table.insertion_point.split(".o")[0].split("/")[-1])
+        elif status.value[0] == "loading file":
+            self.status_bar.update_status(status, self.menu_bar.load_path_name)
+        else:
+            self.status_bar.update_status(status, "")
 
     def __get_hierarchy(self, cfile: CFileReadViewInterface, active_row: str) -> CFileReadViewInterface:
         """Finds cfile which started active mode."""
@@ -308,4 +315,3 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     def __update_project_list(self):
         """updates the list displayed in the sidebar, changing the color according to the currently shown project"""
         self.menu_bar.update_scrollbar(self.__model.get_all_project_names())
-

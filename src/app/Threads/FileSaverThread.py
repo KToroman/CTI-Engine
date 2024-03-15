@@ -35,27 +35,15 @@ class FileSaverThread:
         index_counter = 0
         while not self.__shutdown.is_set():
             if not self.__work_queue.empty():
-                with self.__work_list_lock:
-                    self.__work_list.append(self.__work_queue.get())
-            work = self.__get_work(index_counter)
-            if work == "none":
+                project = self.__work_queue.get()
+            else:
                 continue
-            index_counter += 1
-            self.__remove_work()
-            with self.__model_lock:
-                project = deepcopy(self.__model.get_project_by_name(work))
-                self.__data_fetcher.save_project(project=project)
+            self.__data_fetcher.save_project(project=project)
 
     def add_work(self, project_name: str):
         """this methode adds a project to the worklist for the saver thread"""
         with self.__work_list_lock:
             self.__work_list.append(project_name)
-
-    def __get_curr_model_dir(self, project_dir: str) -> bool:
-        with self.__model_lock:
-            if project_dir == self.__model.get_current_working_directory():
-                return True
-            return False
 
     def __remove_work(self):
         if self.__finished_project.is_set():
