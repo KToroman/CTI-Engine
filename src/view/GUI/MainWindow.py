@@ -306,7 +306,6 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     def update_visibility(self, displayable: Displayable):
         """Shows or hides plots of given displayable."""
         visibility: bool = False
-        print(len(self.__visible_plots))
         for visible_displayable in self.__visible_plots:
             if visible_displayable.name == displayable.name:
                 visibility = True

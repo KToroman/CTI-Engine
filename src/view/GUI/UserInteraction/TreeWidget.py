@@ -135,7 +135,6 @@ class TreeWidget(QTreeWidget):
         self.in_row_loop = True
         for row in self.rows:
             if row.displayable.runtime_plot.y_values[0] != 0:
-                print(row.displayable.name)
                 if row_count == last_checkbox:
                     self.in_row_loop = False
                 row_count += 1
@@ -155,6 +154,9 @@ class TreeWidget(QTreeWidget):
         """Receives two limits and selects checkboxes of rows inbetween them."""
         real_lower_limit: int = min(lower_limit, upper_limit)
         real_upper_limit: int = max(lower_limit, upper_limit)
+        if real_upper_limit == real_lower_limit == 0:
+            self.toggle_all_rows()
+            return
         last_checkbox: int = self.__find_last_checkbox()
         if real_upper_limit > last_checkbox:
             real_upper_limit = last_checkbox
@@ -184,7 +186,7 @@ class TreeWidget(QTreeWidget):
     def __find_last_checkbox(self) -> int:
         last_checkbox: int = 0
         for row in self.rows:
-            if row.displayable.ram_plot.name != "":
+            if row.displayable.runtime_plot.y_values[0] != 0:
                 try:
                     row.checkbox.isWidgetType()
                     last_checkbox += 1
