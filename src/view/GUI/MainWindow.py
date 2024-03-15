@@ -36,7 +36,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     WINDOWSIZE1: int = 800
     WINDOWSIZE2: int = 600
     WINDOWTITLE: str = "CTI Engine"
-    SELECT_ALL: str = "Select all"
+    SELECT_ALL: str = "select all"
     RAM_Y_AXIS: str = "RAM (in mb)"
     CPU_Y_AXIS: str = "CPU (in %)"
 
@@ -72,7 +72,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.setWindowTitle(self.WINDOWTITLE)
         self.resize(self.WINDOWSIZE1, self.WINDOWSIZE2)
 
-        self.select_all_checkbox = QCheckBox("select all")
+        self.select_all_checkbox = QCheckBox(self.SELECT_ALL)
         self.upper_limit = QSpinBox()
         self.lower_limit = QSpinBox()
 
@@ -126,21 +126,15 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
             if stylesheet.endswith(".qss"):
                 with open(os.path.join(stylesheets_dir, stylesheet), "r") as file:
                     style_name = os.path.splitext(stylesheet)[0]
-                    print("[MW]    loaded stylesheet: " + style_name)
                     self.stylesheets[style_name] = file.read()
                     self.menu_bar.switch_style_box.addItem(style_name)
         self.set_stylesheet()
 
     def set_stylesheet(self):
         selected_style = self.menu_bar.switch_style_box.currentText()
-        print(selected_style)
-        try:
-            self.__q_application.setStyleSheet(self.stylesheets[selected_style])
-        except:
-            print("upsi")
+        self.__q_application.setStyleSheet(self.stylesheets[selected_style])
 
     def visualize(self):
-        print("visualize")
         """displays the data contained in that Model to the user."""
         project_name: str = self.project_queue.get()
         project = self.__model.get_project_by_name(project_name)
