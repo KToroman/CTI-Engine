@@ -38,3 +38,6 @@ class Project(ProjectReadViewInterface):
         cfiles_view: List[CFileReadViewInterface] = list()
         cfiles_view.extend(self.source_files)
         return cfiles_view
+
+    def __str__(self) -> str:
+        return f"<Project '{self.name}' with dir '{self.working_dir}'>"

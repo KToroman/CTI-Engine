@@ -1,60 +1,67 @@
-from multiprocessing import Queue
-from threading import Thread, Lock
+import time
+from multiprocessing import Queue, Process
+from threading import Thread
 from multiprocessing.synchronize import Event as SyncEvent
 
+from src.app.Threads.HierarchyProcess import HierarchyProcess
 from src.fetcher.hierarchy_fetcher.HierarchyFetcher import HierarchyFetcher
+from src.model.Model import Model
+from src.model.core.Project import Project
+from src.model.core.SourceFile import SourceFile
+from multiprocessing.synchronize import Lock as SyncLock
 
 
 class HierarchyThread:
-    def __init__(self, shutdown_event: SyncEvent, data_fetcher: HierarchyFetcher, error_queue: Queue, work_queue: Queue,
-                 hierarchy_fetching_event: SyncEvent, fetching_hierarchy: SyncEvent):
+    def __init__(self, shutdown_event: SyncEvent, fetching_hierarchy: SyncEvent, source_file_queue: Queue,
+                 model: Model, model_lock: SyncLock, hierarchy_process: HierarchyProcess, hierarchy_work_queue: Queue,
+                 process_shutdown: SyncEvent):
 
         self.__thread: Thread
         self.__shutdown = shutdown_event
-        self.__data_fetcher = data_fetcher
-        self.__work_queue = work_queue
-        self.__error_queue = error_queue
         self.__current_work: str = ""
-        self.__hierarchy_fetching_event = hierarchy_fetching_event
         self.__fetching_hierarchy = fetching_hierarchy
+        self.source_file_queue = source_file_queue
+        self.__model = model
+        self.__model_lock = model_lock
+        self.__process = hierarchy_process
+        self.__hierarchy_work_queue = hierarchy_work_queue
+        self.__process_shutdown = process_shutdown
 
-    def __run(self):
-        repeat: bool = False
+    def __run_thread(self):
+        current_project: str = ""
         while not self.__shutdown.is_set():
-            if (not self.__work_queue.empty()) or repeat:
-                try:
-                    if self.__current_work == "":
-                        self.__current_work = self.__work_queue.get()
-
-                    if not self.__hierarchy_fetching_event.is_set():
-                        self.__data_fetcher.set_semaphore(self.__current_work)
-                        print("[HierarchyThread]    work deleted: " + self.__current_work)
-                        self.__current_work = ""
-                        repeat = False
-                        self.__fetching_hierarchy.clear()
-                        continue
+            if not self.__hierarchy_work_queue.empty():
+                if not self.__process.is_alive():
+                    self.__process.start()
+            if not self.source_file_queue.empty():
+                data = self.source_file_queue.get()
+                if self.__current_work == "":
+                    self.__current_work = data.path
                     self.__fetching_hierarchy.set()
-                    self.__data_fetcher.project_name = self.__current_work
-                    repeat = self.__data_fetcher.update_project()
-                    if repeat:
-                        continue
-                except FileNotFoundError as e:
-                    self.__error_queue.put(FileNotFoundError("could not find the compile-commands.json file"))
-                    print(Fore.RED + "[HierarchyThread]   could not find the compile-commands.json file for project: " +
-                          Fore.BLUE + self.__current_work + Fore.RESET)
-                    repeat = False
+                    continue
+                if data.path == "fin":
+                    self.__model.get_semaphore_by_name(self.__current_work).hierarchy_fetcher_set()
+                    self.__current_work = ""
+                    self.__fetching_hierarchy.clear()
 
-                print("[HierarchyThread]    work deleted: " + self.__current_work)
-                self.__current_work = ""
-                repeat = False
-                self.__hierarchy_fetching_event.clear()
+                    self.__process_shutdown.set()
+                    self.__process.stop()
+
+                    continue
+                time.sleep(0.01)
+                with self.__model_lock:
+                    source_file = self.__model.get_project_by_name(self.__current_work).get_sourcefile(data.path)
+                    source_file.headers = data.headers
+                    source_file.compile_command = data.compile_command
+                    source_file.error = data.error
 
     def start(self):
         print("[HierarchyThread]    started")
-        self.__thread = Thread(target=self.__run)
+        self.__thread = Thread(target=self.__run_thread)
         self.__thread.start()
 
     def stop(self):
-        self.__data_fetcher.__del__()
+        self.__process_shutdown.set()
+        self.__process.stop()
         self.__thread.join()
         print("[HierarchyThread]  stopped")

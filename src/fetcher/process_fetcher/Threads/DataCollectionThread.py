@@ -7,6 +7,7 @@ from multiprocessing.synchronize import Event as SyncEvent
 from multiprocessing.synchronize import Lock as SyncLock
 
 import psutil
+from colorama import Fore
 from psutil import NoSuchProcess
 
 from src.fetcher.process_fetcher.process_observer.metrics_observer.DataObserver import DataObserver
@@ -33,19 +34,11 @@ class DataCollectionThread:
         self.time_till_false: float = 0
 
     def _run(self):
-        while not self._shutdown.is_set():
+        while self._active_event.is_set() and (not self._shutdown.is_set()):
             for process in self._current_processes:
-
-                if not self._active_event.is_set():
-                    self._current_processes.clear()
-                    with self._process_list_lock:
-                        self._process_list.clear()
-                    continue
-
                 try:
                     if process.is_running():
                         self._make_entry(self._data_observer.observe(process))
-                        time.sleep(0.001)
                     else:
                         with self._process_list_lock:
                             self._process_list.remove(process)
@@ -57,6 +50,10 @@ class DataCollectionThread:
                     self._current_processes.remove(process)
                     self._is_full = False
                     continue
+
+        self._current_processes.clear()
+        with self._process_list_lock:
+            self._process_list.clear()
 
     def add_work(self, process: psutil.Process):
         if len(self._current_processes) < self._process_count:
@@ -79,9 +76,10 @@ class DataCollectionThread:
         return self._is_full
 
     def _add_data_entry(self, data_entry: DataEntry):
+        time.sleep(0.01)
         with self._model_lock:
             self._model.insert_datapoint(data_entry)
-        self.time_till_false = time.time() + 20
+            self.time_till_false = time.time() + 35
 
     def _make_entry(self, process_point: ProcessPoint) -> None:
         try:

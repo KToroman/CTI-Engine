@@ -53,11 +53,8 @@ class CompilingTool(BuilderInterface):
             proc.check_returncode()
         except CalledProcessError:
             header.error = True
-            print(f"\033[93mError found in file: \n {header.path}\033[0m")
-        print("Header built sucessfully")
 
     def __compile(self, file_name: Path) -> CompletedProcess:
-        print(f"compiling header: {file_name}")
         args: list[str] = self.__file_builder.get_compile_command(file_name)
 
         proc: CompletedProcess = subprocess.run(args=args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

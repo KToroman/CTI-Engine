@@ -1,12 +1,8 @@
-import time
 from multiprocessing import Queue
 from typing import List
-import time
 
-from PyQt5.QtCore import QThreadPool, pyqtSignal, QModelIndex, Qt
-from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QInputDialog, QWidget, QHBoxLayout, QHeaderView, \
-    QTreeWidget, QTreeWidgetItem, QCheckBox, QPushButton
+from PyQt5.QtCore import QThreadPool, Qt
+from PyQt5.QtWidgets import QInputDialog, QWidget, QHBoxLayout, QHeaderView, QTreeWidget, QLineEdit
 
 from src.view.GUI.Graph.Plot import Plot
 from src.view.GUI.UserInteraction.Displayable import Displayable
@@ -30,11 +26,8 @@ class TreeWidget(QTreeWidget):
         self.items: List[ItemWrapper] = []
         self.setHeaderLabels([self.COLUMN_1_LABEL, self.COLUMN_2_LABEL,
                               self.COLUMN_3_LABEL, self.COLUMN_4_LABEL])
-        self.setStyleSheet("::section{Background-color: #4095a1}")
-        self.header().setStyleSheet("::section{Background-color: #4095a1}")
         self.header().setStyleSheet("::section{Background-color: #4095a1}")
         self.insertion_point: str = ""
-        self.insertion_row: TableRow
         self.active_started: bool = False
         self.all_selected: bool = False
         self.in_row_loop: bool = False
@@ -47,8 +40,9 @@ class TreeWidget(QTreeWidget):
         self.sortByColumn(0, Qt.AscendingOrder)
 
     def insert_values(self, displayables: List[Displayable]):
+        """insert values for the given data points, that are being saved in displayable objects"""
         for displayable in displayables:
-            item = ItemWrapper(displayable.name, self)
+            item: ItemWrapper = ItemWrapper(displayable.name, self)
             self.__create_row(item, displayable)
             for header in displayable.headers:
                 sub_item = ItemWrapper(header, item)
@@ -57,7 +51,8 @@ class TreeWidget(QTreeWidget):
                     subsub_item = ItemWrapper(subheader, sub_item)
                     self.fill_subrow(subsub_item, subheader)
 
-    def __create_row(self, item, displayable):
+    def __create_row(self, item: ItemWrapper, displayable: Displayable):
+        """configures the row that will be displayed in the table"""
         row = TableRow(displayable)
         cell_widget = QWidget()
         layout = QHBoxLayout(cell_widget)
@@ -68,7 +63,7 @@ class TreeWidget(QTreeWidget):
         item.setData(1, 0, round((values[0]), 4))
         item.setData(2, 0, round((values[1]), 4))
         item.setData(3, 0, round((values[2]), 4))
-        row.name_button.clicked.connect(lambda: self.show_input_dialog_active(row.displayable.name))
+        row.name_button.clicked.connect(lambda: self.__show_input_dialog_active(row.displayable.name))
         self.rows.append(row)
         item.set_row(row)
         self.items.append(item)
@@ -98,17 +93,19 @@ class TreeWidget(QTreeWidget):
                             item.child(i).child(j).row.checkbox.setDisabled(False)
 
     def start_active_measurement(self, name):
+        """entry point for an active measurement."""
         self.active_started = True
         self.insertion_point: str = name
         self.active_mode_queue.put((name))
-        self.active_started = True
 
-    def show_input_dialog_active(self, name):
+    def __show_input_dialog_active(self, name):
+        """shows an input window, where the user can see and edit the path for the active measurement"""
         text, ok = QInputDialog.getText(None, "Active measurement", 'Start active measurement with following file?: ',
                                         text=name)
         if ok: self.start_active_measurement(text)
 
     def highlight_row(self, name: str):
+        """select the row for the given input string to highlight it in the table"""
         for row in self.rows:
             if row.displayable.name == name:
                 self.setCurrentItem(self.items[self.rows.index(row)])
@@ -177,24 +174,16 @@ class TreeWidget(QTreeWidget):
                     pass
         return last_checkbox
 
-    def clear_tree(self):
-        for row in self.rows:
-            row.checkbox.disconnect()
-            row.checkbox.deleteLater()
-            row.name_button.disconnect()
-            row.name_button.deleteLater()
-        self.rows.clear()
-        self.items.clear()
-        self.clear()
-
-    def search_item(self, main_window):
-        search_text = main_window.line_edit.text().strip()
+    def search_item(self, line_edit: QLineEdit):
+        """searches the table for a user input in order to select and highlight the found items"""
+        search_text = line_edit.text().strip()
         if search_text:
             self.clearSelection()
             items = []
             for text in self.items:
                 if search_text in text.row.name_button.text():
                     items.append(text)
+            # highlight found items and expand them if they are subrows
             for item in items:
                 item.setSelected(True)
                 parent = item.parent()

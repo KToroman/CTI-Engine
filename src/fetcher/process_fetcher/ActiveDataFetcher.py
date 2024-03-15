@@ -31,10 +31,10 @@ class ActiveDataFetcher(FetcherInterface):
                  save_path: str,
                  hierarchy_queue: multiprocessing.Queue,
                  model_lock: SyncLock,
-                 fetcher_count: int = 2,
-                 fetcher_process_count: int = 15,
-                 process_collector_count: int = 2,
-                 process_finder_count: int = 2,
+                 fetcher_count: int = 5,
+                 fetcher_process_count: int = 10,
+                 process_collector_count: int = 20,
+                 process_finder_count: int = 15,
                  ) -> None:
         self.__model = model
         self.__model_lock = model_lock
@@ -43,8 +43,7 @@ class ActiveDataFetcher(FetcherInterface):
             self.__source_file: SourceFile = model.get_sourcefile_by_name(source_file_name)
 
         self.__compiling_tool: BuilderInterface = CompilingTool(curr_project_dir=model.current_project.working_dir,
-                                                                source_file=self.__source_file, path=build_dir_path
-                                                                )
+                                                                source_file=self.__source_file, path=build_dir_path)
 
         self.__save_path = save_path
 
@@ -72,11 +71,10 @@ class ActiveDataFetcher(FetcherInterface):
 
     def update_project(self) -> bool:
         """Main method of the active data fetcher. Returns True if this method should be called again."""
-        # TODO intended sequence: set start_builing event -> call fetcher to fetch -> when done_builing event is set, stop fetcher and return
         self.__building_event.set()
         while self.__building_event.is_set():
             for finder in self.__process_finder_list:
-                finder.set_work()
+                finder.set_work(None)
 
         if self.__finished_event.is_set():
             return False
@@ -91,13 +89,11 @@ class ActiveDataFetcher(FetcherInterface):
         self.__grep_command_queue = multiprocessing.Queue()
         process_list: List[psutil.Process] = list()
         process_list_lock: SyncLock = multiprocessing.Lock()
-        self.__building_thread = BuilderThread(
-            self.__building_event, self.__compiling_tool, self.__grep_command_queue, self.__finished_event)
-        self.__building_thread.start()
 
         for i in range(self.__data_collector_count):
             fetcher = ActiveDataCollectionThread(process_list, process_list_lock, self.__model, self.__model_lock,
-                                                 DataObserver(), self.__fetcher_process_count, self.__shutdown_event, self.__source_file, self.__active_event)
+                                                 DataObserver(), self.__fetcher_process_count, self.__shutdown_event,
+                                                 self.__source_file, self.__active_event)
             self.__data_collector_list.append(fetcher)
             fetcher.start()
 
@@ -106,21 +102,25 @@ class ActiveDataFetcher(FetcherInterface):
                                                               self.__model_lock,
                                                               False, self.__data_collector_list, self.__saver_queue,
                                                               self.__hierarchy_queue,
-                                                              self.__save_path, self.__shutdown_event, None, None, None, self.__active_event)
+                                                              self.__save_path, self.__shutdown_event,
+                                                              None, None, None, self.__active_event)
             self.__process_collector_list.append(process_collector_thread)
             process_collector_thread.start()
 
         for i in range(self.__process_finder_count):
             finder = ProcessFindingThread(
-                self.__shutdown_event, self.__process_collector_list, self.__active_event)
+                self.__shutdown_event, self.__process_collector_list, self.__active_event, active_fetching=True)
             self.__process_finder_list.append(finder)
             finder.start()
-            time.sleep(0.5)
+
+        self.__building_thread = BuilderThread(
+            self.__building_event, self.__compiling_tool, self.__grep_command_queue, self.__finished_event,
+            self.__shutdown_event)
+        self.__building_thread.start()
         return self
 
     def __exit__(self, exc_type, exc_val, traceback) -> bool:
         # required threads should be stopped here
-        self.__building_thread.stop()
         self.__shutdown_event.set()
         for thread in self.__process_finder_list:
             thread.stop()
@@ -128,4 +128,5 @@ class ActiveDataFetcher(FetcherInterface):
             thread.stop()
         for thread in self.__data_collector_list:
             thread.stop()
+        self.__building_thread.stop()
         return False
