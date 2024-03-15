@@ -1,0 +1,38 @@
+QMainWindow {
+    background-color: #252526;
+}
+
+QPushButton {
+    background-color: #4095a1;
+}
+
+QWidget QLabel {
+    color: #CCCCCC;
+}
+
+QCheckBox::indicator {
+    color: #CCCCCC;
+    background-color: #3d3d3d;
+}
+
+QSpinBox {
+    color: #CCCCCC;
+    background-color: #3d3d3d;
+}
+
+QLineEdit {
+    color: #CCCCCC;
+    background-color: #3d3d3d;
+}
+
+QTreeWidget {
+    background-color: #3d3d3d;
+}
+
+QTreeWidget QScrollBar {
+    background-color: #3d3d3d;
+}
+
+QWidget#GraphWidget {
+    background-color: #3d3d3d;
+}

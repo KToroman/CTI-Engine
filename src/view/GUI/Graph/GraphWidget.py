@@ -28,6 +28,9 @@ class GraphWidget(QWidget):
         # Add title and labels for axes
         self.ax.set_xlabel(self.X_AXIS)
         self.ax.set_ylabel(axis_label)
+        self.figure.set_facecolor("#3d3d3d")
+        self.figure.patch.set_linewidth(2)
+        self.ax.set_facecolor("#aaaaaa")
         # Add layout
         self.canvas = FigureCanvas(self.figure)
         self.layout = QVBoxLayout()

@@ -93,7 +93,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
                                          self.visualize_signal, self.index_queue, self.change_table_signal)
         self.metric_bar: MetricBar = MetricBar()
 
-        self.setup_resource_connections()
+        self.__setup_resource_connections()
 
         images_folder = os.path.join(os.path.dirname(__file__), "Images")
         logo_path = os.path.join(images_folder, "CTIEngineLogo.png")
@@ -139,15 +139,15 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.load_stylesheets()
         self.menu_bar.switch_style_box.currentIndexChanged.connect(lambda: self.set_stylesheet())
         gd.setup_ui(self)
-        self.widgets = {"__q_application": self.__q_application, "current_table": self.current_table,
-                        "sidebar": gd.mainwindow.sidemenu}
+        """self.widgets = {"__q_application": self.__q_application, "current_table": self.current_table,
+                        "sidebar": self.sidebar}"""
 
 
     def execute(self):
         self.show()
         self.__q_application.exec()
 
-    def load_stylesheets(self):
+    """def load_stylesheets(self):
         styles_dir = "/common/homes/all/udixi_schneider/Documents/git/cti-engine-prototype/src/view/GUI/Stylesheets"  # Pfad zu Ihrem Stylesheet-Verzeichnis
         for mode in os.listdir(styles_dir):
             if os.path.isdir(os.path.join(styles_dir, mode)):
@@ -167,11 +167,12 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     def set_stylesheet(self):
         selected_mode = self.menu_bar.switch_style_box.currentText()
         for widget_name, stylesheet in self.stylesheets[selected_mode].items():
+            print(self.widgets)
             widget = self.widgets.get(widget_name)
             if widget:
-                widget.setStyleSheet(stylesheet)
+                widget.setStyleSheet(stylesheet)"""
 
-    """def load_stylesheets(self):
+    def load_stylesheets(self):
         stylesheets_dir = "/common/homes/all/udixi_schneider/Documents/git/cti-engine-prototype/src/view/GUI/Stylesheets"
         for stylesheet in os.listdir(stylesheets_dir):
             if stylesheet.endswith(".qss"):
@@ -183,7 +184,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
     def set_stylesheet(self):
         selected_style = self.menu_bar.switch_style_box.currentText()
-        self.__q_application.setStyleSheet(self.stylesheets[selected_style])"""
+        self.setStyleSheet(self.stylesheets[selected_style])
 
     def visualize(self):
         """displays the data contained in that model to the user."""
@@ -399,3 +400,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     def __update_project_list(self):
         """updates the list displayed in the sidebar, changing the color according to the currently shown project"""
         self.menu_bar.update_scrollbar(self.__model.get_all_project_names())
+
+    def closeEvent(self, event):
+        self.shutdown_event.set()
+        event.accept()

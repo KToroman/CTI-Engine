@@ -64,6 +64,8 @@ def setup_ui(main_window):
     main_window.sidebar_layout.addLayout(main_window.horizontalLayout)
     main_window.verticalSpacer = QSpacerItem(20, 700, QSizePolicy.Maximum, QSizePolicy.Expanding)
     main_window.sidebar_layout.addItem(main_window.verticalSpacer)
+    main_window.switch_style_box = main_window.menu_bar.switch_style_box
+    main_window.sidebar_layout.addWidget(main_window.switch_style_box)
     main_window.main_layout.addWidget(main_window.sidebar, 0, Qt.AlignLeft)
 
     # configuring the upper bar

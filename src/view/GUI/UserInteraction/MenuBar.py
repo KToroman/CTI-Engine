@@ -36,8 +36,6 @@ class MenuBar:
         #self.pause_resume_button.setStyleSheet("background-color: #61b3bf;")
 
         self.cancel_button: QPushButton = QPushButton("Cancel")
-        self.cancel_button.setStyleSheet("background-color: #61b3bf;")
-        self.cancel_button.setIcon(self.cancel_icon)
         #self.cancel_button.setStyleSheet("background-color: #61b3bf;")
         self.cancel_button.clicked.connect(lambda: self.cancel_event.set())
 
