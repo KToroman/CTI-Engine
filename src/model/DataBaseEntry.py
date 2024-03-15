@@ -9,19 +9,18 @@ class DataBaseEntry:
         self,
         source_file: str,
         header: str,
+        subheader: str,
         timestamp: Optional[float],
         metrics: Optional[List[Metric]],
     ):
         self.source_file: str = source_file
         self.header: str = header
+        self.subheader: str = subheader
         self.timestamp: Optional[float] = timestamp
         self.metrics: Optional[List[Metric]] = metrics
 
     def extract_data_entry(self) -> Optional[DataEntry]:
-        if self.header != "":
-            path = self.header
-        else:
-            path: str = self.source_file
+        path: str = self.source_file + "\n" + self.header + "\n" + self.subheader
         if self.timestamp is None or self.metrics is None:
             return None
         else:
