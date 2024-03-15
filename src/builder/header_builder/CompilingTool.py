@@ -55,7 +55,7 @@ class CompilingTool(BuilderInterface):
         try:
             proc.check_returncode()
         except CalledProcessError:
-            print("[Failed]     " + header.get_headers())
+            print("[Failed]     " + header.get_name())
             self.__header_error_queue.put(header.get_name())
 
     def __compile(self, file_name: Path) -> CompletedProcess:

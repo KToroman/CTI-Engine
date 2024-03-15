@@ -150,12 +150,14 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
             self.__visualize_passive(project)
 
     def __visualize_passive(self, project: ProjectReadViewInterface):
+        print("[MW]    in visualize passive")
+        tima = time.time()
         self.__connect_new_table()
         """Visualizes data from passive mode."""
         # Select spot for Displayables to be inserted into
         # self.current_table.clear_tree()
         self.current_table.insertion_point = project.get_project_name()
-
+        print("[MW]    now going through cfiles")
         # Update TableWidget for each cfile
         cfile_list: List[CFileReadViewInterface] = project.get_cfiles()
         file_count: int = 1
@@ -163,7 +165,10 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         for cfile in cfile_list:
             file_count += 1
             displayable_list.append(self.__create_displayable(cfile, 0))
+        print("[MW]    all displayables created " + (time.time()-tima).__str__())
+        timo = time.time()
         self.current_table.insert_values(displayable_list)
+        print("[MW]    insert values finished " + (time.time() - timo).__str__())
         self.lower_limit.setMaximum(file_count)
         self.upper_limit.setMaximum(file_count)
         # Update other Widgets

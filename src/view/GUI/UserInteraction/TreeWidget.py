@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QInputDialog, QWidge
     QTreeWidget, QTreeWidgetItem, QCheckBox, QPushButton
 
 from src.view.GUI.Graph.Plot import Plot
+from src.view.GUI.Threading.InsertValuesWorker import InsertValuesWorker
 from src.view.GUI.UserInteraction.Displayable import Displayable
 from src.view.GUI.UserInteraction.DisplayableHolder import DisplayableHolder
 from src.view.GUI.UserInteraction.ItemWrapper import ItemWrapper
@@ -49,7 +50,9 @@ class TreeWidget(QTreeWidget):
 
     def insert_values(self, displayables: List[DisplayableHolder]):
         for disp in displayables:
-            self.insert_data(disp, self)
+            #self.insert_data(disp, self)
+            insert_values_worker: InsertValuesWorker = InsertValuesWorker(displayable_holder=disp, thread_pool=self.thread_pool, parent= self)
+            self.thread_pool.start(insert_values_worker)
 
     def insert_data(self, displayable_holder: DisplayableHolder, parent):
         if not displayable_holder.get_sub_disp():

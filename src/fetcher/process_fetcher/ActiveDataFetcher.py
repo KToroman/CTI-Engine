@@ -135,7 +135,7 @@ class ActiveDataFetcher(FetcherInterface):
         return self
 
     def get_header(self, name: str, cfile: CFileReadViewInterface) -> CFileReadViewInterface:
-        if cfile.get_name() == name:
+        if name == cfile.get_name():
             return cfile
         for header in cfile.get_headers():
             self.get_header(name, header)
