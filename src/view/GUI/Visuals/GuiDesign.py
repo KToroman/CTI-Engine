@@ -1,190 +1,150 @@
 from PyQt5.QtCore import QSize, Qt, QMetaObject
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QWidget, QSizePolicy, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QSpacerItem,
-                             QSplitter, QCheckBox)
+                             QSplitter)
 
 import qtawesome as qta
 
 
-def setupUI(mainWindow):
-    mainWindow.resize(800, 615)
+def setup_ui(main_window):
+    """Sets up all layouts and sizes for the main window so the widgets fit in nicely"""
+    main_window.centralwidget = main_window.central_widget
+    main_window.sidebar = QWidget(main_window.centralwidget)
+    main_window.widget_3 = QWidget(main_window.centralwidget)
+    main_window.upper_bar = QWidget(main_window.widget_3)
+    # Layouts
+    main_window.main_layout = QHBoxLayout(main_window.centralwidget)
+    main_window.sidebar_layout = QVBoxLayout(main_window.sidebar)
+    main_window.main_horizontal_layout = QVBoxLayout(main_window.widget_3)
+    main_window.upper_bar_layout = QVBoxLayout(main_window.upper_bar)
+    main_window.upper_bar_tool_layout = QHBoxLayout()
+    main_window.upper_bar_horizontal = QHBoxLayout()
+
+    main_window.horizontalLayout = QHBoxLayout()
+    main_window.sidebar_button_layout = QVBoxLayout()
+
+    main_window.resize(800, 615)
     sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
     sizePolicy.setHorizontalStretch(0)
     sizePolicy.setVerticalStretch(0)
-    sizePolicy.setHeightForWidth(mainWindow.sizePolicy().hasHeightForWidth())
-    mainWindow.setSizePolicy(sizePolicy)
-    mainWindow.centralwidget = QWidget(mainWindow)
-    mainWindow.horizontalLayout_4 = QHBoxLayout(mainWindow.centralwidget)
-    mainWindow.horizontalLayout_4.setSpacing(5)
-    mainWindow.horizontalLayout_4.setContentsMargins(0, 0, 10, 0)
-
-    mainWindow.verticalLayout_4 = QVBoxLayout()
-    mainWindow.verticalLayout_4.setSpacing(0)
-    mainWindow.verticalLayout_4.setContentsMargins(3, 3, 3, 3)
-    mainWindow.horizontalLayout_2 = QHBoxLayout()
-    mainWindow.horizontalLayout_2.setSpacing(0)
-    mainWindow.verticalLayout_2 = QVBoxLayout()
-    mainWindow.verticalLayout_2.setSpacing(10)
-
-
-    icon_label = QLabel()
-    icon_label.setAlignment(Qt.AlignHCenter)
-
-    icon_label.setPixmap(QIcon('src/view/GUI/Images/CTIEngineLogo.png').pixmap(24, 24))
-    mainWindow.verticalLayout_2.addWidget(icon_label)
-
-
-
-    mainWindow.horizontalLayout_2.addLayout(mainWindow.verticalLayout_2)
-
-    mainWindow.verticalLayout_4.addLayout(mainWindow.horizontalLayout_2)
-
-    mainWindow.verticalSpacer_2 = QSpacerItem(20, 495, QSizePolicy.Minimum, QSizePolicy.Expanding)
-    mainWindow.horizontalSpacer_3 = QSpacerItem(30, 20, QSizePolicy.Minimum)
-
-    mainWindow.verticalLayout_4.addItem(mainWindow.verticalSpacer_2)
-
-
-    mainWindow.sidebar = QWidget(mainWindow.centralwidget)
-    mainWindow.sidebar.setMinimumSize(QSize(140, 0))
-    mainWindow.sidebar.setMaximumSize(QSize(400, 16777215))
-    mainWindow.sidebar.setStyleSheet(u"background-color: rgb(61, 61, 61);")
-    mainWindow.verticalLayout_3 = QVBoxLayout(mainWindow.sidebar)
-    mainWindow.verticalLayout_3.setSpacing(0)
-    mainWindow.verticalLayout_3.setContentsMargins(3, 3, 3, 3)
-    mainWindow.horizontalLayout = QHBoxLayout()
-    mainWindow.horizontalLayout.setSpacing(0)
-    mainWindow.verticalLayout = QVBoxLayout()
-    mainWindow.verticalLayout.setSpacing(10)
-    mainWindow.label = QLabel(mainWindow.sidebar)
-
-    mainWindow.verticalLayout.addWidget(mainWindow.label)
+    sizePolicy.setHeightForWidth(main_window.sizePolicy().hasHeightForWidth())
+    main_window.setSizePolicy(sizePolicy)
+    main_window.main_layout.setSpacing(5)
+    main_window.main_layout.setContentsMargins(0, 0, 0, 0)
+    main_window.verticalSpacer_2 = QSpacerItem(20, 495, QSizePolicy.Minimum, QSizePolicy.Expanding)
+    main_window.horizontalSpacer_3 = QSpacerItem(30, 20, QSizePolicy.Minimum)
+    #configuring sidebar
+    main_window.sidebar.setMinimumSize(QSize(140, 0))
+    main_window.sidebar.setMaximumSize(QSize(400, 16777215))
+    main_window.sidebar_layout.setSpacing(0)
+    main_window.sidebar_layout.setContentsMargins(3, 3, 3, 3)
+    main_window.horizontalLayout.setSpacing(10)
+    main_window.sidebar_button_layout.setSpacing(10)
+    main_window.label = QLabel(main_window.sidebar)
+    main_window.sidebar_button_layout.addWidget(main_window.label)
     icon_label2 = QLabel()
     icon_label2.setAlignment(Qt.AlignHCenter)
     icon_label2.setPixmap(QIcon('src/view/GUI/Images/CTIEngineLogo.png').pixmap(40, 40))
-    mainWindow.verticalLayout.addWidget(icon_label2)
+    main_window.sidebar_button_layout.addWidget(icon_label2)
+    main_window.load_button = main_window.menu_bar.load_file_button
+    main_window.sidebar_button_layout.addWidget(main_window.load_button)
+    main_window.cancel_button = main_window.menu_bar.cancel_button
+    main_window.sidebar_button_layout.addWidget(main_window.cancel_button)
+    main_window.pause_button = main_window.menu_bar.pause_resume_button
+    main_window.sidebar_button_layout.addWidget(main_window.pause_button)
+    main_window.project_scroll_button = main_window.menu_bar.scroll_button
+    main_window.scroll_bar = main_window.menu_bar.scroll_bar
+    main_window.scroll_bar.setWidgetResizable(True)
+    main_window.scroll_bar.setHidden(True)
+    main_window.scroll_bar.setMaximumSize(135, 500)
+    main_window.scroll_bar.setMinimumHeight(200)
+    main_window.sidebar_button_layout.addWidget(main_window.project_scroll_button)
+    main_window.sidebar_button_layout.addWidget(main_window.scroll_bar)
+    main_window.horizontalLayout.addLayout(main_window.sidebar_button_layout)
+    main_window.sidebar_layout.addLayout(main_window.horizontalLayout)
+    main_window.verticalSpacer = QSpacerItem(20, 700, QSizePolicy.Maximum, QSizePolicy.Expanding)
+    main_window.sidebar_layout.addItem(main_window.verticalSpacer)
+    main_window.main_layout.addWidget(main_window.sidebar, 0, Qt.AlignLeft)
 
+    # configuring the upper bar
+    main_window.main_horizontal_layout.setSpacing(10)
+    main_window.main_horizontal_layout.setContentsMargins(0, 0, 0, 0)
+    main_window.upper_bar.setMinimumWidth(900)
+    main_window.upper_bar.setMaximumSize(QSize(1500, 50))
+    main_window.upper_bar_layout.setSpacing(0)
+    main_window.upper_bar_layout.setContentsMargins(0, 0, 0, 0)
+    main_window.upper_bar_tool_layout.setSpacing(10)
+    main_window.menu_button = QPushButton(main_window.upper_bar)
+    main_window.menu_button.setMaximumSize(30, 30)
+    main_window.menu_button.setCheckable(True)
+    main_window.small_spacer = QSpacerItem(4, 0, QSizePolicy.Minimum)
+    main_window.upper_bar_tool_layout.addItem(main_window.small_spacer)
+    main_window.upper_bar_tool_layout.addWidget(main_window.menu_button)
+    main_window.ram_button = main_window.metric_bar.ram_button
+    main_window.upper_bar_tool_layout.addWidget(main_window.ram_button)
+    main_window.cpu_button = main_window.metric_bar.cpu_button
+    main_window.upper_bar_tool_layout.addWidget(main_window.cpu_button)
+    main_window.runtime_button = main_window.metric_bar.runtime_button
+    main_window.upper_bar_tool_layout.addWidget(main_window.runtime_button)
+    main_window.upper_bar_tool_layout.addWidget(main_window.status_bar)
+    main_window.upper_bar_tool_layout.addItem(main_window.horizontalSpacer_3)
+    main_window.upper_bar_horizontal.addWidget(main_window.line_edit)
+    main_window.line_edit.setPlaceholderText("Search...")
+    main_window.upper_bar_horizontal.addWidget(main_window.search_button)
+    main_window.upper_bar_horizontal.addWidget(main_window.upper_limit)
+    main_window.upper_bar_horizontal.addWidget(main_window.lower_limit)
+    main_window.upper_limit.setMaximumWidth(70)
+    main_window.lower_limit.setMaximumWidth(70)
+    main_window.select_all_checkbox.setMaximumWidth(80)
+    main_window.upper_bar_horizontal.addWidget(main_window.select_all_checkbox)
+    main_window.upper_bar_tool_layout.addLayout(main_window.upper_bar_horizontal, Qt.AlignRight)
+    main_window.upper_bar_layout.addLayout(main_window.upper_bar_tool_layout)
+    main_window.main_horizontal_layout.addWidget(main_window.upper_bar)
+    # configuring the center (graphical widgets)
+    main_window.splitter = QSplitter(main_window.widget_3)
+    main_window.splitter.setOrientation(Qt.Horizontal)
+    main_window.stacked_widget.addWidget(main_window.ram_graph_widget)
+    main_window.page_2 = QWidget()
+    main_window.stacked_widget.addWidget(main_window.cpu_graph_widget)
+    main_window.page_3 = QWidget()
+    main_window.stacked_widget.addWidget(main_window.bar_chart_widget)
+    main_window.splitter.addWidget(main_window.stacked_widget)
+    main_window.splitter.addWidget(main_window.stacked_table_widget)
+    main_window.main_horizontal_layout.addWidget(main_window.splitter)
+    main_window.main_layout.addWidget(main_window.widget_3)
+    main_window.setCentralWidget(main_window.centralwidget)
+    QWidget.setTabOrder(main_window.pause_button, main_window.cancel_button)
+    QWidget.setTabOrder(main_window.cancel_button, main_window.load_button)
 
-    mainWindow.load_button = mainWindow.menu_bar.load_file_button
+    QWidget.setTabOrder(main_window.menu_button, main_window.ram_button)
+    QWidget.setTabOrder(main_window.ram_button, main_window.cpu_button)
+    QWidget.setTabOrder(main_window.cpu_button, main_window.runtime_button)
+    QWidget.setTabOrder(main_window.runtime_button, main_window.current_table)
 
-    mainWindow.verticalLayout.addWidget(mainWindow.load_button)
+    main_window.sidebar.setHidden(True)
+    main_window.menu_button.toggled.connect(main_window.sidebar.setVisible)
 
-    mainWindow.cancel_button = mainWindow.menu_bar.cancel_button
-
-    mainWindow.verticalLayout.addWidget(mainWindow.cancel_button)
-
-    mainWindow.pause_button = mainWindow.menu_bar.pause_resume_button
-
-    mainWindow.verticalLayout.addWidget(mainWindow.pause_button)
-
-    mainWindow.project_scroll_button = mainWindow.menu_bar.scroll_button
-    mainWindow.scroll_bar = mainWindow.menu_bar.scroll_bar
-    mainWindow.verticalLayout.addWidget(mainWindow.project_scroll_button)
-    mainWindow.verticalLayout.addWidget(mainWindow.scroll_bar)
-
-    mainWindow.horizontalLayout.addLayout(mainWindow.verticalLayout)
-
-    mainWindow.verticalLayout_3.addLayout(mainWindow.horizontalLayout)
-
-    mainWindow.verticalSpacer = QSpacerItem(20, 700, QSizePolicy.Maximum, QSizePolicy.Expanding)
-
-    mainWindow.verticalLayout_3.addItem(mainWindow.verticalSpacer)
-
-    mainWindow.horizontalLayout_4.addWidget(mainWindow.sidebar, 0, Qt.AlignLeft)
-
-    mainWindow.widget_3 = QWidget(mainWindow.centralwidget)
-    mainWindow.verticalLayout_6 = QVBoxLayout(mainWindow.widget_3)
-    mainWindow.verticalLayout_6.setSpacing(0)
-    mainWindow.verticalLayout_6.setContentsMargins(0, 0, 0, 0)
-    mainWindow.upper_bar = QWidget(mainWindow.widget_3)
-    mainWindow.upper_bar.setMinimumWidth(900)
-    mainWindow.upper_bar.setMaximumSize(QSize(1500, 50))
-    mainWindow.verticalLayout_5 = QVBoxLayout(mainWindow.upper_bar)
-    mainWindow.verticalLayout_5.setSpacing(0)
-    mainWindow.verticalLayout_5.setContentsMargins(0, 0, 0, 0)
-    mainWindow.horizontalLayout_3 = QHBoxLayout()
-    mainWindow.horizontalLayout_3.setSpacing(10)
-
-    mainWindow.menu_button = QPushButton(mainWindow.upper_bar)
-    mainWindow.menu_button.setMaximumSize(30, 30)
-    mainWindow.menu_button.setCheckable(True)
-    mainWindow.small_spacer = QSpacerItem(4, 0, QSizePolicy.Minimum)
-    mainWindow.horizontalLayout_3.addItem(mainWindow.small_spacer)
-    mainWindow.horizontalLayout_3.addWidget(mainWindow.menu_button)
-
-    mainWindow.ram_button = mainWindow.metric_bar.ram_button
-
-    mainWindow.horizontalLayout_3.addWidget(mainWindow.ram_button)
-
-    mainWindow.cpu_button = mainWindow.metric_bar.cpu_button
-
-    mainWindow.horizontalLayout_3.addWidget(mainWindow.cpu_button)
-
-    mainWindow.runtime_button = mainWindow.metric_bar.runtime_button
-
-    mainWindow.horizontalLayout_3.addWidget(mainWindow.runtime_button)
-    mainWindow.horizontalLayout_3.addWidget(mainWindow.status_bar)
-    mainWindow.horizontalLayout_3.addItem(mainWindow.horizontalSpacer_3)
-
-    mainWindow.horizontalLayout_5 = QHBoxLayout()
-    mainWindow.horizontalLayout_5.addWidget(mainWindow.line_edit)
-    mainWindow.line_edit.setPlaceholderText("Search...")
-    search_icon = qta.icon("fa.search")
-    mainWindow.search_button.setIcon(search_icon)
-    mainWindow.horizontalLayout_5.addWidget(mainWindow.search_button)
-
-    mainWindow.horizontalLayout_5.addWidget(mainWindow.upper_limit)
-    mainWindow.horizontalLayout_5.addWidget(mainWindow.lower_limit)
-    mainWindow.upper_limit.setMaximumWidth(70)
-    mainWindow.lower_limit.setMaximumWidth(70)
-    mainWindow.select_all_checkbox.setMaximumWidth(80)
-    mainWindow.horizontalLayout_5.addWidget(mainWindow.select_all_checkbox)
-
-    mainWindow.horizontalLayout_3.addLayout(mainWindow.horizontalLayout_5, Qt.AlignRight)
-
-    mainWindow.verticalLayout_5.addLayout(mainWindow.horizontalLayout_3)
-
-    mainWindow.verticalLayout_6.addWidget(mainWindow.upper_bar)
-
-    mainWindow.splitter = QSplitter(mainWindow.widget_3)
-    mainWindow.splitter.setOrientation(Qt.Horizontal)
-
-    mainWindow.stacked_widget.addWidget(mainWindow.ram_graph_widget)
-    mainWindow.page_2 = QWidget()
-    mainWindow.stacked_widget.addWidget(mainWindow.cpu_graph_widget)
-    mainWindow.page_3 = QWidget()
-    mainWindow.stacked_widget.addWidget(mainWindow.bar_chart_widget)
-    mainWindow.splitter.addWidget(mainWindow.stacked_widget)
-
-    mainWindow.splitter.addWidget(mainWindow.stacked_table_widget)
-
-    mainWindow.verticalLayout_6.addWidget(mainWindow.splitter)
-
-    mainWindow.horizontalLayout_4.addWidget(mainWindow.widget_3)
-
-    mainWindow.setCentralWidget(mainWindow.centralwidget)
-    QWidget.setTabOrder(mainWindow.pause_button, mainWindow.cancel_button)
-    QWidget.setTabOrder(mainWindow.cancel_button, mainWindow.load_button)
-
-    QWidget.setTabOrder(mainWindow.menu_button, mainWindow.ram_button)
-    QWidget.setTabOrder(mainWindow.ram_button, mainWindow.cpu_button)
-    QWidget.setTabOrder(mainWindow.cpu_button, mainWindow.runtime_button)
-    QWidget.setTabOrder(mainWindow.runtime_button, mainWindow.current_table)
-
-    mainWindow.sidebar.setHidden(True)
-    mainWindow.menu_button.toggled.connect(mainWindow.sidebar.setVisible)
-
-    QMetaObject.connectSlotsByName(mainWindow)
-
+    QMetaObject.connectSlotsByName(main_window)
+    # add icons and stylistic details
     resume_icon = qta.icon("msc.debug-restart")
-    mainWindow.pause_button.setIcon(resume_icon)
+    main_window.pause_button.setIcon(resume_icon)
     load_icon = qta.icon("fa.file")
-    mainWindow.load_button.setIcon(load_icon)
+    main_window.load_button.setIcon(load_icon)
     resume_icon = qta.icon("msc.debug-restart")
-    mainWindow.pause_button.setIcon(resume_icon)
+    main_window.pause_button.setIcon(resume_icon)
     icon = qta.icon("ei.align-justify")
-    mainWindow.menu_button.setIcon(icon)
-    # setupUi
+    main_window.menu_button.setIcon(icon)
+
+    cancel_icon = qta.icon("ei.ban-circle")
+    main_window.cancel_button.setIcon(cancel_icon)
+    menu_icon = qta.icon("ei.align-justify")
+    main_window.project_scroll_button.setIcon(menu_icon)
+    search_icon = qta.icon("fa.search")
+    main_window.search_button.setIcon(search_icon)
+
+    main_window.current_table.setStyleSheet("::section{Background-color: #4095a1}")
+    main_window.sidebar.setStyleSheet(u"background-color: rgb(61, 61, 61);")
+
 
 
 

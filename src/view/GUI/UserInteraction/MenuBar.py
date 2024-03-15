@@ -1,15 +1,9 @@
-from typing import List
-
-from PyQt5.QtCore import Qt
 from multiprocessing import Queue
 from multiprocessing.synchronize import Event as SyncEvent
 from typing import List
 
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtWidgets import QPushButton, QInputDialog, QTextEdit, QScrollArea, QWidget, QVBoxLayout
-import qtawesome as qta
-
-from src.view.AppRequestsInterface import AppRequestsInterface
+from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtWidgets import QPushButton, QInputDialog, QScrollArea, QWidget, QVBoxLayout
 from src.view.GUI.UserInteraction.ProjectNameButtonWrapper import ProjectNameButton
 
 
@@ -27,57 +21,51 @@ class MenuBar:
         self.cancel_event = cancel_event
         self.restart_event = restart_event
 
-        self.cancel_icon = qta.icon("ei.ban-circle")
-
         self.load_file_button: QPushButton = QPushButton("Load file")
         self.load_file_button.setStyleSheet("background-color: #61b3bf;")
-        self.load_file_button.clicked.connect(lambda: self.show_input_dialog())
+        self.load_file_button.clicked.connect(lambda: self.__show_input_dialog())
 
         self.pause_resume_button: QPushButton = QPushButton("Restart")
         self.pause_resume_button.clicked.connect(lambda: self.restart_event.set())
         self.pause_resume_button.setStyleSheet("background-color: #61b3bf;")
 
         self.cancel_button: QPushButton = QPushButton("Cancel")
-        self.cancel_button.setIcon(self.cancel_icon)
         self.cancel_button.setStyleSheet("background-color: #61b3bf;")
         self.cancel_button.clicked.connect(lambda: self.cancel_event.set())
 
-        self.scroll_bar = QScrollArea()
-        self.scroll_bar.setWidgetResizable(True)
-        self.scroll_bar.setHidden(True)
-        self.scroll_bar.setMaximumSize(135, 500)
-        self.scroll_bar.setMinimumHeight(200)
-        self.scroll_widget = QWidget()
-        self.scroll_layout = QVBoxLayout(self.scroll_widget)
+        self.scroll_bar: QScrollArea = QScrollArea()
+
+        self.scroll_widget: QWidget = QWidget()
+        self.scroll_layout: QVBoxLayout = QVBoxLayout(self.scroll_widget)
         self.scroll_layout.setSpacing(2)
         self.scroll_bar.setWidget(self.scroll_widget)
 
-        self.icon = qta.icon("ei.align-justify")
         self.scroll_button = QPushButton("All Projects")
-        self.scroll_button.setIcon(self.icon)
         self.scroll_button.setStyleSheet("background-color: #61b3bf;")
         self.scroll_button.setCheckable(True)
-        self.scroll_button.toggled.connect(lambda: self.toggle_scrollbar())
+        self.scroll_button.toggled.connect(lambda: self.__toggle_scrollbar())
 
         self.project_buttons: List[QPushButton] = []
 
 
-    def show_input_dialog(self):
+    def __show_input_dialog(self):
+        """opens an input dialog to enter a path of a project"""
         text, ok = QInputDialog.getText(self.scroll_widget, "File input", 'Enter file name:')
         if ok:
             self.load_path_queue.put(text)
 
-    def toggle_scrollbar(self):
-        # Überprüfen, ob die Scrollbar angezeigt wird oder nicht, und umschalten
+    def __toggle_scrollbar(self):
+        """change the visibility of the scroll area located in the menu bar"""
         if self.scroll_bar.isHidden():
             self.scroll_bar.setHidden(False)
         else:
             self.scroll_bar.setHidden(True)
-
-        # Das Widget neu zeichnen, um die Änderungen anzuzeigen
         self.scroll_bar.update()
 
-    def update_scrollbar(self, project_names: List[str], project_name: str):
+    def update_scrollbar(self, project_names: List[str]):
+        """updates the scroll area when a new project is about to be visualized so all loaded projects are
+            correctly displayed in the scroll area"""
+        #delete and disconnect the existing buttons in the scroll area
         if self.scroll_layout.count() > 0:
             for i in range(self.scroll_layout.count()):
                 self.scroll_layout.itemAt(i).widget().disconnect()
@@ -88,12 +76,13 @@ class MenuBar:
                     self.project_buttons.remove(widget)
                     widget.deleteLater()
                     pass
+        # split the displayed name to only the last part
         for name in project_names:
             if name.split(" ").__len__() > 2:
                 show_name = name.split(" ")[0] + " " + name.split(" ")[-1]
             else:
                 show_name = name.split(" ")[0]
-
+            # put new buttons in
             new_button = ProjectNameButton(self.project_buttons, show_name, name, self.__project_queue,
                                            self.__visualize_event, self.index_queue, self.change_table_signal)
             self.scroll_layout.addWidget(new_button)
