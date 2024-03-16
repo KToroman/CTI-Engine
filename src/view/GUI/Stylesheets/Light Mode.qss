@@ -1,5 +1,5 @@
 QMainWindow {
-    background-color: white;
+    background-color: #202020;
 }
 
 QPushButton {
@@ -15,7 +15,7 @@ QCheckBox::indicator {
 }
 
 QCheckBox {
-    color: #CCCCCC;
+    color: #FFFFFF;
 }
 
 QSpinBox {

@@ -1,9 +1,11 @@
 QMainWindow {
-    background-color: #252526;
+    background-color: #181818;
 }
 
 QPushButton {
-    background-color: #4095a1;
+    background-color: lightcyan;
+
+
 }
 
 QWidget QLabel {
