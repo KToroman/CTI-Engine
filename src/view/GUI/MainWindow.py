@@ -1,4 +1,7 @@
 import colorsys
+
+import os
+
 import random
 from PyQt5.QtCore import pyqtSignal, QThreadPool
 from typing import List
@@ -6,13 +9,16 @@ from multiprocessing import Queue, Event
 
 from PyQt5.QtWidgets import (QMainWindow, QStackedWidget, QApplication, QCheckBox, QSpinBox, QLineEdit, QPushButton,
                              QWidget)
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import (QMainWindow, QStackedWidget, QApplication, QCheckBox, QSpinBox, QLineEdit,
+                             QPushButton)
 from src.model.core.ProjectReadViewInterface import ProjectReadViewInterface
-from src.view.GUI.PlotRunnable import PlotRunnable
-from src.view.GUI.AddRunnable import AddRunnable
+from src.view.GUI.Threading.PlotRunnable import PlotRunnable
+from src.view.GUI.Threading.AddRunnable import AddRunnable
 from src.view.GUI.Graph.BarWidget import BarWidget
 from src.view.GUI.Graph.GraphWidget import GraphWidget
 from src.view.GUI.MainWindowMeta import MainWindowMeta
-from src.view.GUI.RemoveRunnable import RemoveRunnable
+from src.view.GUI.Threading.RemoveRunnable import RemoveRunnable
 from src.view.GUI.UserInteraction.MenuBar import MenuBar
 from src.view.GUI.UserInteraction.Displayable import Displayable
 from src.view.GUI.UserInteraction.MetricBar import MetricBar
@@ -32,10 +38,9 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     WINDOWSIZE1: int = 800
     WINDOWSIZE2: int = 600
     WINDOWTITLE: str = "CTI Engine"
-    SELECT_ALL: str = "Select all"
+    SELECT_ALL: str = "select all"
     RAM_Y_AXIS: str = "RAM (in mb)"
     CPU_Y_AXIS: str = "CPU (in %)"
-    SELECT_ALL: str = "select all"
 
     error_signal: pyqtSignal = pyqtSignal()
     visualize_signal: pyqtSignal = pyqtSignal()
@@ -66,11 +71,30 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.change_table_signal.connect(lambda: self.toggle_table_vis(self.index_queue.get()))
         self.status_signal.connect(lambda: self.update_statusbar())
 
+        self.thread_pool: QThreadPool = QThreadPool.globalInstance()
+        self.thread_pool.setMaxThreadCount(10)
+
+        self.setWindowTitle(self.WINDOWTITLE)
+        self.resize(self.WINDOWSIZE1, self.WINDOWSIZE2)
+
+        self.select_all_checkbox = QCheckBox(self.SELECT_ALL)
+        self.upper_limit = QSpinBox()
+        self.lower_limit = QSpinBox()
+
         # setting up main components
         self.current_table: TreeWidget = TreeWidget(self.active_mode_queue)
         self.menu_bar: MenuBar = MenuBar(load_path_queue, cancel_event, restart_event, self.project_queue,
                                          self.visualize_signal, self.index_queue, self.change_table_signal)
         self.metric_bar: MetricBar = MetricBar()
+
+        self.__setup_resource_connections()
+
+        images_folder = os.path.join(os.path.dirname(__file__), "Images")
+        logo_path = os.path.join(images_folder, "CTIEngineLogo.png")
+        icon: QIcon = QIcon(logo_path)
+        self.setWindowIcon(icon)
+        self.stylesheets = {}
+
         self.ram_graph_widget: GraphWidget = GraphWidget(self.RAM_Y_AXIS)
         self.cpu_graph_widget: GraphWidget = GraphWidget(self.CPU_Y_AXIS)
         self.bar_chart_widget: BarWidget = BarWidget()
@@ -83,6 +107,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.stacked_table_widget: QStackedWidget = QStackedWidget()
         self.search_button: QPushButton = QPushButton()
         self.sidebar: QWidget = QWidget(self.central_widget)
+        self.menu_bar.switch_style_box.currentIndexChanged.connect(lambda: self.set_stylesheet())
 
         # initialize lists and variables
         self.__q_application: QApplication = q_application
@@ -97,11 +122,30 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         # call instantiation methods
         self.__setup_resource_connections()
         self.__connect_new_table()
+        self.load_stylesheets()
         gd.setup_ui(self)
+
 
     def execute(self):
         self.show()
         self.__q_application.exec()
+
+    def load_stylesheets(self):
+        stylesheets_dir = "/common/homes/all/udixi_schneider/Documents/git/cti-engine-prototype/src/view/GUI/Stylesheets"
+        for stylesheet in os.listdir(stylesheets_dir):
+            if stylesheet.endswith(".qss"):
+                with open(os.path.join(stylesheets_dir, stylesheet), "r") as file:
+                    style_name = os.path.splitext(stylesheet)[0]
+                    self.stylesheets[style_name] = file.read()
+                    self.menu_bar.switch_style_box.addItem(style_name)
+        self.set_stylesheet()
+
+    def set_stylesheet(self):
+        selected_style = self.menu_bar.switch_style_box.currentText()
+        self.setStyleSheet(self.stylesheets[selected_style])
+        self.ram_graph_widget.set_stylesheet(selected_style)
+        self.cpu_graph_widget.set_stylesheet(selected_style)
+        self.bar_chart_widget.set_stylesheet(selected_style)
 
     def visualize(self):
         """displays the data contained in that model to the user."""
@@ -138,7 +182,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.upper_limit.setMaximum(file_count)
         # Update other Widgets
         self.__setup_connections()
-        self.status_bar.update_status(StatusSettings.FINISHED)
+        self.status_bar.update_status(StatusSettings.FINISHED, project.get_project_name())
         self.menu_bar.project_buttons[len(self.menu_bar.project_buttons) - 1].setStyleSheet("background-color: #00FF00")
 
     def __visualize_active(self, project: ProjectReadViewInterface):
@@ -159,6 +203,8 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         for cfile in cfile_list:
             self.current_table.add_active_data(self.__create_displayable(cfile))
         # Update other Widgets
+        for row in self.current_table.rows:
+            row.connected = False
         self.__setup_connections()
         self.status_bar.update_status(StatusSettings.FINISHED)
 
@@ -315,3 +361,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     def __update_project_list(self):
         """updates the list displayed in the sidebar, changing the color according to the currently shown project"""
         self.menu_bar.update_scrollbar(self.__model.get_all_project_names())
+
+    def closeEvent(self, event):
+        self.shutdown_event.set()
+        event.accept()
