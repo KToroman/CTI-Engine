@@ -43,29 +43,19 @@ class BarWidget(QWidget):
         self.values.append(plot.y_values[0])
         self.colors.append(plot.color)
 
-        # Update chart
-        #self.__plot_bar_chart()
-
     def remove_bar(self, plot: Plot):
         """Removes bar from bar chart."""
         self.categories.remove(plot.name)
         self.values.remove(plot.y_values[0])
         self.colors.remove(plot.color)
 
-        # Update chart
-        #self.__plot_bar_chart()
-
     def plot_bar_chart(self):
         """(Re)draws bar chart."""
 
         # Remove previous axes labels
         self.figure.clear()
-        #self.figure.set_facecolor("#61b3bf")
         # Create subplot for bar chart
         self.ax = self.figure.add_subplot(111)
-        print("VALUES LISTE: " + len(self.values).__str__())
-        print("COLORS LISTE: " + len(self.colors).__str__())
-        print("CATEGORIES LISTE: " + len(self.categories).__str__())
         # Create bar chart
         bars = self.ax.bar(self.categories, self.values, color=self.colors, label=self.categories)
         self.ax.set_xticks([])
@@ -84,3 +74,18 @@ class BarWidget(QWidget):
         """Reacts to click on bar."""
         self.bar_clicked = event.artist.get_label().__str__()
         self.click_signal.emit()
+
+    def set_stylesheet(self, style: str):
+        if style == "Dark Mode":
+            self.figure.set_facecolor("#252526")
+            self.ax.set_facecolor("#3d3d3d")
+            self.ax.tick_params(colors="#CCCCCC")  # Farbe der Zahlen an der x-Achse
+            self.ax.xaxis.label.set_color("#CCCCCC")  # Farbe der x-Achsenbeschriftung
+            self.ax.yaxis.label.set_color("#CCCCCC")  # Farbe der y-Achsenbeschriftung
+        if style == "Light Mode":
+            self.figure.set_facecolor("#FFFFFF")
+            self.ax.set_facecolor("#FFFFFF")
+            self.ax.tick_params(colors="#000000")  # Farbe der Zahlen an der x-Achse
+            self.ax.xaxis.label.set_color("#000000")  # Farbe der x-Achsenbeschriftung
+            self.ax.yaxis.label.set_color("#000000")  # Farbe der y-Achsenbeschriftung
+        self.canvas.draw()
