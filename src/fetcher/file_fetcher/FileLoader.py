@@ -47,13 +47,16 @@ class FileLoader(FetcherInterface):
                 self.__model.current_project = project
             self.__project_queue.put(project.name)
             self.__visualize_signal.emit()
+            print("[FileLoader]     visualize signal emitted")
             self.__db.close()
             return False
         raise FileNotFoundError("Couldn't find any saved projects on the given path")
 
     def __insert_values(self, project: Project):
         for key, value in self.__db.items():
+            print("next entry")
             self.__add_to_project(key, value, project)
+        print("[FileLoader]     added all items in database")
 
     def __add_to_project(self, key: str, value: Tuple, project: Project):
         paths: List[str] = key.split("\n")
@@ -97,11 +100,15 @@ class FileLoader(FetcherInterface):
             new_header = Header(path=path, parent=parent, hierarchy_level=hierarchy)
             parent.headers.append(new_header)
             self.__all_cfiles.update({path: new_header})
+            print("[FileLoader]     found new header to save")
+
             return new_header
         else:
             new_sourcefile: SourceFile = SourceFile(path)
             project.source_files.append(new_sourcefile)
             self.__all_cfiles.update({path: new_sourcefile})
+            print("[FileLoader]     found new sourcefile to save")
+
             return new_sourcefile
 
     def __add_parent(self, parent_path: str, hierarchy: int, project: Project) -> CFile:
