@@ -168,5 +168,5 @@ class App(AppRequestsInterface):
     @classmethod
     def __get_config_path(cls) -> str:
         path: str = ""
-        path += join(os.getcwd().split("cti-engine-prototype")[0], "cti-engine-prototype", "config/ConfigFile.json")
+        path = "./config/ConfigFile.json"
         return path

@@ -5,10 +5,10 @@ from multiprocessing import Queue
 from typing import List
 import time
 
-from PyQt5.QtCore import QThreadPool, pyqtSignal, QModelIndex, Qt, QThread
+from PyQt5.QtCore import pyqtSignal, QModelIndex, Qt, QThread, QThreadPool, QRunnable
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QInputDialog, QWidget, QHBoxLayout, QHeaderView, \
-    QTreeWidget, QTreeWidgetItem, QCheckBox, QPushButton
+    QTreeWidget, QTreeWidgetItem, QCheckBox, QPushButton, QVBoxLayout
 
 from src.view.GUI.Graph.Plot import Plot
 from src.view.GUI.Threading.InsertValuesWorker import InsertValuesWorker
@@ -55,60 +55,71 @@ class TreeWidget(QTreeWidget):
         self.sortByColumn(0, Qt.AscendingOrder)
         self.table_list: List[QTreeWidget] = list()
 
-    def insert_values(self, displayables: List[DisplayableHolder]):
-        self.__shutdown.clear()
-        thread_list = list()
-        for i in range(15):
-            thread = threading.Thread(target=self.run)
-            thread_list.append(thread)
-            thread.start()
-        print("worker added")
-        for disp in displayables:
-            self.work_queue.put(disp)
-            # self.insert_data(disp, self)
-        print("all disps added")
-        self.__shutdown.set()
-        for thread in thread_list:
-            print("closing thread")
-            print("runnign threas" + threading.active_count().__str__())
-            thread.join()
-        print("all thread closed")
-        print("fin all")
+    class CreateRow(QRunnable):
+        def __init__(self, parent, item: ItemWrapper, row: TableRow, cell_widget: QWidget, layout: QHBoxLayout) -> None:
+            self.__item: ItemWrapper = item
+            self.__row: TableRow = row
+            self.__cell_widget: QWidget = cell_widget
+            self.__layout: QHBoxLayout = layout
+            self.__parent: TreeWidget = parent
+            super().__init__()
 
-    def run(self):
-        table = QTreeWidget()
-        while not (self.__shutdown.is_set() and self.work_queue.empty()):
-            if not self.work_queue.empty():
-                self.insert_data(self.work_queue.get(), self)
-        self.table_list.append(table)
+        def run(self):
+            pass
+            self.__parent.create_row(self.__item, self.__row.displayable,self.__row ,self.__cell_widget, self.__layout)
+
+    def insert_values(self, displayables: List[DisplayableHolder]):
+        print("before inserting values")
+        print(len(displayables))
+        for displayable in displayables:
+
+            self.insert_data(displayable, self)
+        print("after inserting values")
 
     def insert_data(self, displayable_holder: DisplayableHolder, parent):
         if not displayable_holder.get_sub_disp():
+
             item = ItemWrapper(displayable_holder.displayable.name, parent)
-            self.__create_row(item, displayable_holder.displayable)
+            row = TableRow(displayable_holder.displayable)
+            cell_widget = QWidget()
+            layout = QHBoxLayout(cell_widget)
+            row.name_button.clicked.connect(lambda: self.show_input_dialog_active(row.displayable.name))
+
+            layout.addWidget(row.checkbox)
+            layout.addWidget(row.name_button)
+            self.setItemWidget(item, 0, cell_widget)
+            self.thread_pool.start(self.CreateRow(self, item, row, cell_widget, layout))
+
+
             return
         item = ItemWrapper(displayable_holder.displayable.name, parent)
-        self.__create_row(item, displayable_holder.displayable)
-        for h in displayable_holder.get_sub_disp():
-            self.insert_data(h, item)
-
-    def __create_row(self, item, displayable):
-        row = TableRow(displayable)
+        row = TableRow(displayable_holder.displayable)
         cell_widget = QWidget()
         layout = QHBoxLayout(cell_widget)
+        row.name_button.clicked.connect(lambda: self.show_input_dialog_active(row.displayable.name))
+
+
         layout.addWidget(row.checkbox)
         layout.addWidget(row.name_button)
         self.setItemWidget(item, 0, cell_widget)
+        self.thread_pool.start(self.CreateRow(self, item, row, cell_widget, layout))
+
+
+        for h in displayable_holder.get_sub_disp():
+            self.insert_data(h, item)
+
+    def create_row(self, item: ItemWrapper, displayable: Displayable, row: TableRow, cell_widget: QWidget, layout: QHBoxLayout):
+        print("creating row")
         values = [displayable.ram_peak, displayable.cpu_peak, displayable.runtime_plot.y_values[0]]
+        print("check0")
         item.setData(1, 0, round((values[0]), 4))
         item.setData(2, 0, round((values[1]), 4))
         item.setData(3, 0, round((values[2]), 4))
-        row.name_button.clicked.connect(lambda: self.show_input_dialog_active(row.displayable.name))
+        print("check1")
         item.set_row(row)
         if values[2] == 0:
             item.row.checkbox.setDisabled(True)
-        if displayable.failed:
-            item.setStyleSheet("::section{Background-color: #FF3232}")
+        print("check2")
         self.items.append(item)
         self.rows.append(row)
 
