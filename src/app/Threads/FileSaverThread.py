@@ -44,8 +44,8 @@ class FileSaverThread:
                 continue
             work_list_index += 1
             self.__remove_work()
-            print("[FileSaverThread]    now starting to save changes to project: " + work)
-            self.__saver.save_project(project_name=work)
+            print("[FileSaverThread]    now starting to save changes to project: " + work[1])
+            self.__saver.save_project(project_name=work[1])
             time.sleep(10)
 
     def add_work(self, project_name: str):
@@ -57,7 +57,7 @@ class FileSaverThread:
         if self.__finished_project.is_set():
             self.__finished_project.clear()
             work = self.__work_list.pop(0)
-            print("[FileSaverThread]    work deleted: " + work)
+            #print("[FileSaverThread]    work deleted: " + work[1])
 
     def __get_work(self, index: int) -> Optional[str]:
         if self.__work_list:

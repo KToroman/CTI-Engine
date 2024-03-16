@@ -38,21 +38,22 @@ class FileLoader(FetcherInterface):
 
     def update_project(self) -> bool:
         if self.__is_valid_path():
+            self.__db = Rdict(self.__path)
             project: Project = self.__create_project()
+            print("[FileLoader]     created new project")
             self.__insert_values(project)
             with self.__model_lock:
                 self.__model.add_project(project, None)
                 self.__model.current_project = project
             self.__project_queue.put(project.name)
             self.__visualize_signal.emit()
+            self.__db.close()
             return False
         raise FileNotFoundError("Couldn't find any saved projects on the given path")
 
     def __insert_values(self, project: Project):
-        db: Rdict = Rdict(self.__path)
-        for key, value in db.items():
+        for key, value in self.__db.items():
             self.__add_to_project(key, value, project)
-        db.close()
 
     def __add_to_project(self, key: str, value: Tuple, project: Project):
         paths: List[str] = key.split("\n")
