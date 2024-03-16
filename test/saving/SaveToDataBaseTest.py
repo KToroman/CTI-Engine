@@ -1,31 +1,34 @@
-from multiprocessing import Lock
+from multiprocessing import Lock, Queue
 from typing import List, Tuple
-
+from unittest.mock import MagicMock
+from PyQt5.QtCore import pyqtSignal
+from qtpy import QT5
 from rocksdict import Rdict
+from src.fetcher.file_fetcher.FileLoader import FileLoader
 from src.model.DataBaseEntry import DataBaseEntry
 from src.model.Model import Model
 from src.model.core.Metric import Metric
 from src.model.core.MetricName import MetricName
 from src.model.core.Project import Project
 from src.saving.SaveToDatabase import SaveToDatabase
+import pytest
 
-
+path = "saves/project_name/project_name_DataBase"
 def test_db():
-    path = "DataBaseTest"
     model = Model()
     saver = SaveToDatabase("saves", Lock(), model)
     saver.__saves_path = "saves"
-    saves_path = saver.__saves_path
     delta: List[DataBaseEntry] = list()
     metrics: List[Metric] = [Metric(40, MetricName.RAM), Metric(300, MetricName.CPU)]
-    delta.append(DataBaseEntry("testfile", "", "", 0.6, metrics))
+    delta.append(DataBaseEntry("testfile", "parent", 0.6, metrics, 0))
     project: Project = Project(path, "project_name", "")
     model.add_project(project, None)
     project.delta_entries = delta
     saver.save_project(project.name)
     saves_path = saver.__saves_path
-    db = Rdict("saves/project_name/project_name_DataBase")
-    value: Tuple[float, List[Metric]] = db["testfile" + "\n" + ""]  # type: ignore
+    db = Rdict(path)
+    value: Tuple[float, List[Metric]] = db["testfile" + "\n" + "parent" + "\n" + "0"]  # type: ignore
+    
     assert value[0] == 0.6
     print(f"correct timestamp = {value[0]} was saved")
     first_metric: Metric = value[1][0]
@@ -35,6 +38,19 @@ def test_db():
     db.close()
     print("[basic save test]    passed")
 
+class SignalMock():
+    def emit(self):
+        print("signal emitted")
+
+def test_loading():
+    model = Model()
+    model_lock = Lock()
+    signal_mock = SignalMock()
+    loader = FileLoader(path, model=model, model_lock=model_lock, visualize_signal=signal_mock, project_queue=Queue())
+    loader.__path = path
+    assert not loader.update_project()
+    print(model.projects[0].name)
+    assert model.projects[0].name == "saves/project_name/project_name"
 
 def test_split():
     key_str: str = "source_file\nparent\n"
@@ -48,5 +64,6 @@ def test_split():
 if __name__ == "__main__":
     print("[SaveToDataBaseTest]     starting tests")
     test_db()
+    test_loading()
     test_split()
     print("[SaveToDataBaseTest]     concluded tests")

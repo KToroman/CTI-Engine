@@ -52,6 +52,7 @@ class SaveToDatabase(SaveInterface):
         print(f"opened Database: {self.__data_base_path}")
         for entry in delta:
             key = f"{entry.path}\n{entry.parent}\n{entry.hierarchy_level}"
+            print(key)
             value = (entry.timestamp, entry.metrics)
             db[key] = value
         db.close()

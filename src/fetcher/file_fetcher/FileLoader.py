@@ -1,11 +1,9 @@
 import os
 from multiprocessing import Manager, Queue
-from os.path import isfile, join
 from multiprocessing.synchronize import Lock as SyncLock
 from typing import Dict, List, Optional, Tuple
 
 
-import jsonpickle
 from rocksdict import Rdict
 
 from src.exceptions.CFileNotFoundError import CFileNotFoundError
@@ -131,19 +129,5 @@ class FileLoader(FetcherInterface):
         project = Project("", project_name, self.__path)
         return project
 
-    def __read_file(self) -> str:
-        reader = open(self.__path, "r")
-        file_string: str = reader.read()
-        reader.close()
-        return file_string
-
     def __is_valid_path(self) -> bool:
         return os.path.isdir(self.__path)
-
-    def __search_json(self) -> bool:
-        for file in os.listdir(self.__path):
-            if "json" in file:
-                if isfile(join(self.__path, file)):
-                    self.__path = join(self.__path, file)
-                    return True
-        return False
