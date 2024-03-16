@@ -1,7 +1,7 @@
-
 import time
 from typing import List, Optional
 from src.model.DataBaseEntry import DataBaseEntry
+from src.model.core.CFile import CFile
 from src.model.core.CFileReadViewInterface import CFileReadViewInterface
 from src.model.core.DataEntry import DataEntry
 from src.model.core.FileDictionary import FileDictionary
@@ -36,8 +36,6 @@ class Project(ProjectReadViewInterface):
     def add_to_delta(
         self, source_file_path: str, header_path: Optional[str], data_entry: DataEntry
     ):
-        if header_path is None:
-            header_path = ""
         self.delta_entries.append(
             DataBaseEntry(
                 source_file_path, header_path, data_entry.timestamp, data_entry.metrics

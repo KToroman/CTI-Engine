@@ -12,18 +12,32 @@ from PyQt5.QtCore import pyqtSignal
 
 from psutil import NoSuchProcess, AccessDenied
 
-from src.fetcher.process_fetcher.Threads.PassiveDataCollectionThread import PassiveDataCollectionThread
+from src.fetcher.process_fetcher.Threads.PassiveDataCollectionThread import (
+    PassiveDataCollectionThread,
+)
 from src.model.Model import Model
 from src.model.core.Project import Project
 from src.model.core.ProjectFinishedSemaphore import ProjectFinishedSemaphore
 
 
 class ProcessCollectorThread:
-    def __init__(self, process_list: list[psutil.Process], process_list_lock: SyncLock, model: Model,
-                 model_lock: SyncLock,
-                 check_for_project: bool, fetcher_list: list[PassiveDataCollectionThread], saver_queue: Queue,
-                 hierarchy_queue: Queue, save_path: str, shutdown: SyncEvent, project_queue: Queue,
-                 finished_event: pyqtSignal, project_finished_event: SyncEvent, active_event: SyncEvent):
+    def __init__(
+        self,
+        process_list: list[psutil.Process],
+        process_list_lock: SyncLock,
+        model: Model,
+        model_lock: SyncLock,
+        check_for_project: bool,
+        fetcher_list: list[PassiveDataCollectionThread],
+        saver_queue: Queue,
+        hierarchy_queue: Queue,
+        save_path: str,
+        shutdown: SyncEvent,
+        project_queue: Queue,
+        finished_event: pyqtSignal,
+        project_finished_event: SyncEvent,
+        active_event: SyncEvent,
+    ):
         self.__thread: Thread
         self.__shutdown = shutdown
         self.__work_queue_lock = Lock()
@@ -121,24 +135,36 @@ class ProcessCollectorThread:
                 return
 
             with self.__model_lock:
-                if (project_name != self.__model.get_current_working_directory() or
-                        not self.__model.project_in_semaphore_list(project_name)):
-                    if self.__model.current_project is not None and self.__model.project_in_semaphore_list(
-                            self.__model.get_current_working_directory()):
-                        with self.__model.get_semaphore_by_name(self.__model.current_project.name).set_lock:
+                if (
+                    project_name != self.__model.get_current_working_directory()
+                    or not self.__model.project_in_semaphore_list(project_name)
+                ):
+                    if (
+                        self.__model.current_project is not None
+                        and self.__model.project_in_semaphore_list(
+                            self.__model.get_current_working_directory()
+                        )
+                    ):
+                        with self.__model.get_semaphore_by_name(
+                            self.__model.current_project.name
+                        ).set_lock:
                             self.__model.get_semaphore_by_name(
-                                self.__model.current_project.name).new_project_set()
+                                self.__model.current_project.name
+                            ).new_project_set()
 
                     name = self.__create_project_name(project_name)
-                    semaphore: ProjectFinishedSemaphore = ProjectFinishedSemaphore(project_name, name,
-                                                                                   self.__project_queue,
-                                                                                   self.__finished_event,
-                                                                                   self.__project_finished_event,
-                                                                                   self.__model.semaphore_list)
+                    semaphore: ProjectFinishedSemaphore = ProjectFinishedSemaphore(
+                        project_name,
+                        name,
+                        self.__project_queue,
+                        self.__finished_event,
+                        self.__project_finished_event,
+                        self.__model.semaphore_list,
+                    )
                     project = Project(project_name, name)
                     self.__model.add_project(project, semaphore)
                     self.__hierarchy_queue.put(project)
-                    self.__saver_queue.put(name)
+                    self.__saver_queue.put((project.delta_entries, project.name))
                 else:
 
                     return
@@ -146,7 +172,8 @@ class ProcessCollectorThread:
             with self.__model_lock:
                 if self.__model.projects.__len__() > 1:
                     print("saving...")
-                    self.__saver_queue.put(self.__model.projects[-2].name)
+                    proj: Project = self.__model.projects[-2]
+                    self.__saver_queue.put((proj.delta_entries, proj.name))
         except NoSuchProcess:
             return
 
@@ -164,11 +191,11 @@ class ProcessCollectorThread:
     def __create_project_name(self, project_name: str) -> str:
         time_date = date.today()
         project_name_split = project_name.split("/")
-        name = project_name_split[- 1]
+        name = project_name_split[-1]
         if name is None or name == "":
-            name = project_name_split[- 2]
+            name = project_name_split[-2]
 
-        name = (name + "_" + time_date.__str__())
+        name = name + "_" + time_date.__str__()
         if os.path.exists(join(self.__save_path, name)):
             for i in range(1, 10):
                 name_temp = f"{name}_{i}"
