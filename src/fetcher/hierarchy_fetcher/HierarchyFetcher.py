@@ -180,17 +180,25 @@ class HierarchyFetcher(FetcherInterface):
         line_depth: int = self.__get_depth(line)
         path: str = self.__get_path_from_line(line)
         if not hierarchy:
-            new_header: Header = self.__append_header_to_file(source_file, path)
+            new_header: Header = self.__append_header_to_file(
+                line_depth, source_file, path
+            )
             hierarchy.append((new_header, line_depth))
         elif line_depth > hierarchy[-1][1]:
-            new_header: Header = self.__append_header_to_file(hierarchy[-1][0], path)
+            new_header: Header = self.__append_header_to_file(
+                line_depth, hierarchy[-1][0], path
+            )
             hierarchy.append((new_header, line_depth))
         else:
             hierarchy.pop()
             self.__append_header_recursive(line, hierarchy, source_file)
 
-    def __append_header_to_file(self, cfile: CFile, new_header_path: str) -> Header:
-        new_header = Header(new_header_path, parent=cfile)
+    def __append_header_to_file(
+        self, hierarchy_level: int, cfile: CFile, new_header_path: str
+    ) -> Header:
+        new_header = Header(
+            new_header_path, parent=cfile, hierarchy_level=hierarchy_level
+        )
         cfile.headers.append(new_header)
         return new_header
 

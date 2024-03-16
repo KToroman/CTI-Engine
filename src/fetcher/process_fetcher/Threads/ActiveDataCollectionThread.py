@@ -32,7 +32,7 @@ class ActiveDataCollectionThread(PassiveDataCollectionThread):
         shutdown: SyncEvent,
         source_file: SourceFile,
         active_event: SyncEvent,
-        saving_queue: Queue
+        saving_queue: Queue,
     ):
         self.__source_file = source_file
         self.__saving_queue: Queue = saving_queue
@@ -50,7 +50,8 @@ class ActiveDataCollectionThread(PassiveDataCollectionThread):
     def __add_data_entry(self, data_entry: DataEntry):
         with self.__model_lock:
             self.__model.insert_datapoint_header(
-                data_entry=data_entry, source_file_path=self.__source_file.path
+                data_entry=data_entry,
+                source_file_path=self.__source_file.path,
             )
 
     def __make_entry(self, process_point: ProcessPoint) -> None:

@@ -33,7 +33,9 @@ class Model(ModelReadViewInterface):
             raise ProjectNotFoundException
         cfile: CFile = self.current_project.get_sourcefile(data_point.path)
         cfile.data_entries.append(data_point)
-        self.current_project.add_to_delta(cfile.path, "", "", data_point)
+        self.current_project.add_to_delta(
+            path=cfile.path, parent_path="", data_entry=data_point, hierarchy_level=0
+        )
 
     def insert_datapoint_header(self, source_file_path: str, data_entry: DataEntry):
         path = source_file_path + data_entry.path
@@ -44,10 +46,10 @@ class Model(ModelReadViewInterface):
         if self.current_project is None:
             raise ProjectNotFoundException
         self.current_project.add_to_delta(
-            source_file_path=source_file_path,
-            header_path=header.path,
+            path=header.path,
             parent_path=header.parent.path,
-            data_entry=data_entry
+            data_entry=data_entry,
+            hierarchy_level=header.hierarchy_level,
         )
 
     def project_in_semaphore_list(self, project_dir: str):

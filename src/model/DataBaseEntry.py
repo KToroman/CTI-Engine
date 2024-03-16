@@ -7,24 +7,15 @@ from src.model.core.Metric import Metric
 class DataBaseEntry:
     def __init__(
         self,
-        source_file: str,
-        header: str,
+        path: str,
         parent: str,
         timestamp: Optional[float],
         metrics: Optional[List[Metric]],
+        hierarchy_level: int,
     ):
-        self.source_file: str = source_file
-        self.header: str = header
-        self.parent: str = header
+        self.path: str = path
+        self.parent: str = parent
         self.timestamp: Optional[float] = timestamp
         self.metrics: Optional[List[Metric]] = metrics
-
-    def extract_data_entry(self) -> Optional[DataEntry]:
-        path: str = self.source_file + "\n" + self.header
-        if self.timestamp is None or self.metrics is None:
-            return None
-        else:
-            data_entry: DataEntry = DataEntry(
-                path=path, timestamp=self.timestamp, metrics=self.metrics
-            )
-            return data_entry
+        assert hierarchy_level <= 3 and hierarchy_level >= 0
+        self.hierarchy_level: int = hierarchy_level

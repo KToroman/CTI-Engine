@@ -51,7 +51,7 @@ class SaveToDatabase(SaveInterface):
         db: Rdict = Rdict(self.__data_base_path)
         print(f"opened Database: {self.__data_base_path}")
         for entry in delta:
-            key = entry.source_file + "\n" + entry.header
+            key = f"{entry.path}\n{entry.parent}\n{entry.hierarchy_level}"
             value = (entry.timestamp, entry.metrics)
             db[key] = value
         db.close()
