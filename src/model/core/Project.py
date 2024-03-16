@@ -34,11 +34,11 @@ class Project(ProjectReadViewInterface):
         return source_file
 
     def add_to_delta(
-        self, source_file_path: str, header_path: Optional[str], data_entry: DataEntry
+        self, source_file_path: str, parent_path: str, header_path: str, data_entry: DataEntry
     ):
         self.delta_entries.append(
             DataBaseEntry(
-                source_file_path, header_path, data_entry.timestamp, data_entry.metrics
+                source_file_path, header_path, parent_path, data_entry.timestamp, data_entry.metrics
             )
         )
 

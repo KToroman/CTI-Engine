@@ -1,6 +1,7 @@
 import os.path
 from multiprocessing import Event, Queue
 from typing import Dict, List, Optional, cast
+from src.exceptions.CFileNotFoundError import CFileNotFoundError
 from src.exceptions.SemaphoreNotFoundException import SemaphoreNotFoundException
 from src.exceptions.ProjectNotFoundException import ProjectNotFoundException
 
@@ -32,19 +33,21 @@ class Model(ModelReadViewInterface):
             raise ProjectNotFoundException
         cfile: CFile = self.current_project.get_sourcefile(data_point.path)
         cfile.data_entries.append(data_point)
-        self.current_project.add_to_delta(cfile.path, None, data_point)
+        self.current_project.add_to_delta(cfile.path, "", "", data_point)
 
     def insert_datapoint_header(self, source_file_path: str, data_entry: DataEntry):
         path = source_file_path + data_entry.path
-        header = self.headers.get(path, Header(path))
-        self.headers.update({path: header})
+        header = self.headers.get(path, None)
+        if header is None:
+            raise CFileNotFoundError
         header.data_entries.append(data_entry)
         if self.current_project is None:
             raise ProjectNotFoundException
         self.current_project.add_to_delta(
             source_file_path=source_file_path,
             header_path=header.path,
-            data_entry=data_entry,
+            parent_path=header.parent.path,
+            data_entry=data_entry
         )
 
     def project_in_semaphore_list(self, project_dir: str):
