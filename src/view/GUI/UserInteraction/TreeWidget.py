@@ -5,7 +5,7 @@ from multiprocessing import Queue
 from typing import List
 import time
 
-from PyQt5.QtCore import pyqtSignal, QModelIndex, Qt, QThread, QThreadPool, QRunnable
+from PyQt5.QtCore import pyqtSignal, QModelIndex, Qt, QThread, QThreadPool, QRunnable, QObject
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QInputDialog, QWidget, QHBoxLayout, QHeaderView, \
     QTreeWidget, QTreeWidgetItem, QCheckBox, QPushButton, QVBoxLayout
@@ -260,3 +260,31 @@ class TreeWidget(QTreeWidget):
                 while parent:
                     self.expandItem(parent)
                     parent = parent.parent()
+
+
+class CreateTreeWidgetObject(QObject):
+
+    finished: pyqtSignal = pyqtSignal()
+    def __init__(self, tree_widget: TreeWidget, displayables: list[DisplayableHolder]):
+        super().__init__()
+        self.tree_widget: TreeWidget = tree_widget
+        self.displayables: list[DisplayableHolder] = displayables
+
+    def run(self):
+        print("running thread")
+        self.tree_widget.insert_values(self.displayables)
+        self.finished.emit()
+
+OBJ_THREAD: QThread = QThread()
+
+def get_new_Treewidget(main_window, active_mode_queue: Queue, displayables: list[DisplayableHolder]) -> TreeWidget:
+    global OBJ_THREAD
+    tree_widget: TreeWidget = TreeWidget(active_mode_queue)
+    create_tree_widget = CreateTreeWidgetObject(tree_widget, displayables)
+    create_tree_widget.moveToThread(OBJ_THREAD)
+    create_tree_widget.finished.connect(OBJ_THREAD.quit)
+    OBJ_THREAD.started.connect(lambda: create_tree_widget.run())
+    OBJ_THREAD.finished.connect(lambda: main_window.connect_table(tree_widget))
+    OBJ_THREAD.start()
+    return tree_widget
+

@@ -38,7 +38,7 @@ from src.view.UIInterface import UIInterface
 from src.view.GUI.Visuals.ErrorWindow import ErrorWindow
 from src.view.AppRequestsInterface import AppRequestsInterface
 import src.view.GUI.Visuals.GuiDesign as gd
-from src.view.GUI.UserInteraction.TreeWidget import TreeWidget
+from src.view.GUI.UserInteraction.TreeWidget import TreeWidget, get_new_Treewidget
 
 
 class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
@@ -152,11 +152,10 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     def __visualize_passive(self, project: ProjectReadViewInterface):
         print("[MW]    in visualize passive")
         tima = time.time()
-        self.__connect_new_table()
+        #self.__connect_new_table()
         """Visualizes data from passive mode."""
         # Select spot for Displayables to be inserted into
         # self.current_table.clear_tree()
-        self.current_table.insertion_point = project.get_project_name()
         print("[MW]    now going through cfiles")
         # Update TableWidget for each cfile
         cfile_list: List[CFileReadViewInterface] = project.get_cfiles()
@@ -167,7 +166,8 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
             displayable_list.append(self.__create_displayable(cfile, 0))
         print("[MW]    all displayables created " + (time.time()-tima).__str__())
         timo = time.time()
-        self.current_table.insert_values(displayable_list)
+        get_new_Treewidget(self, self.active_mode_queue, displayable_list)
+        self.current_table.insertion_point = project.get_project_name()
         print("[MW]    insert values finished " + (time.time() - timo).__str__())
         self.lower_limit.setMaximum(file_count)
         self.upper_limit.setMaximum(file_count)
@@ -198,8 +198,11 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         print("updated")
 
     def __connect_new_table(self):
+        self.connect_table(TreeWidget(self.active_mode_queue))
+
+    def connect_table(self, table: TreeWidget):
         print("connect")
-        self.current_table: TreeWidget = TreeWidget(self.active_mode_queue)
+        self.current_table: TreeWidget = table
         self.stacked_table_widget.addWidget(self.current_table)
         self.all_tables.append(self.current_table)
         self.select_all_checkbox.disconnect()
