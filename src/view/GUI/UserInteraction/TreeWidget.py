@@ -1,9 +1,11 @@
+import multiprocessing
+import threading
 import time
 from multiprocessing import Queue
 from typing import List
 import time
 
-from PyQt5.QtCore import QThreadPool, pyqtSignal, QModelIndex, Qt
+from PyQt5.QtCore import QThreadPool, pyqtSignal, QModelIndex, Qt, QThread
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QInputDialog, QWidget, QHBoxLayout, QHeaderView, \
     QTreeWidget, QTreeWidgetItem, QCheckBox, QPushButton
@@ -14,6 +16,7 @@ from src.view.GUI.UserInteraction.Displayable import Displayable
 from src.view.GUI.UserInteraction.DisplayableHolder import DisplayableHolder
 from src.view.GUI.UserInteraction.ItemWrapper import ItemWrapper
 from src.view.GUI.UserInteraction.TableRow import TableRow
+from multiprocessing.synchronize import Event as SyncEvent
 
 
 class TreeWidget(QTreeWidget):
@@ -41,18 +44,43 @@ class TreeWidget(QTreeWidget):
         self.all_selected: bool = False
         self.in_row_loop: bool = False
 
+        self.__shutdown: SyncEvent = multiprocessing.Event()
+        self.work_queue: Queue = Queue()
+
         self.thread_pool: QThreadPool = QThreadPool.globalInstance()
 
         self.header().setSectionResizeMode(0, QHeaderView.ResizeToContents)
         self.displayed_project: str = ""
         self.setSortingEnabled(True)
         self.sortByColumn(0, Qt.AscendingOrder)
+        self.table_list: List[QTreeWidget] = list()
 
     def insert_values(self, displayables: List[DisplayableHolder]):
+        self.__shutdown.clear()
+        thread_list = list()
+        for i in range(15):
+            thread = threading.Thread(target=self.run)
+            thread_list.append(thread)
+            thread.start()
+        print("worker added")
         for disp in displayables:
-            #self.insert_data(disp, self)
-            insert_values_worker: InsertValuesWorker = InsertValuesWorker(displayable_holder=disp, thread_pool=self.thread_pool, parent= self)
-            self.thread_pool.start(insert_values_worker)
+            self.work_queue.put(disp)
+            # self.insert_data(disp, self)
+        print("all disps added")
+        self.__shutdown.set()
+        for thread in thread_list:
+            print("closing thread")
+            print("runnign threas" + threading.active_count().__str__())
+            thread.join()
+        print("all thread closed")
+        print("fin all")
+
+    def run(self):
+        table = QTreeWidget()
+        while not (self.__shutdown.is_set() and self.work_queue.empty()):
+            if not self.work_queue.empty():
+                self.insert_data(self.work_queue.get(), self)
+        self.table_list.append(table)
 
     def insert_data(self, displayable_holder: DisplayableHolder, parent):
         if not displayable_holder.get_sub_disp():
