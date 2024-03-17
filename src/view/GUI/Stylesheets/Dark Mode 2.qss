@@ -1,5 +1,5 @@
 QMainWindow {
-    background-color: #3f4361;
+    background-color: #18191A;
 }
 
 QPushButton {
@@ -9,7 +9,7 @@ QPushButton {
 }
 
 QWidget QLabel {
-    color: #CCCCCC;
+    color: #E4E6EB;
 }
 
 QCheckBox::indicator {
@@ -17,7 +17,7 @@ QCheckBox::indicator {
 }
 
 QCheckBox {
-    color: #CCCCCC;
+    color: #E4E6EB;
 }
 
 QSpinBox {
@@ -30,7 +30,7 @@ QScrollArea {
 }
 
 QLineEdit {
-    color: #CCCCCC;
+    color: #E4E6EB;
     background-color: #3d3d3d;
 }
 
@@ -43,11 +43,6 @@ QTreeWidget QScrollBar {
 }
 
 QTreeWidget QPushButton {
-    background-color: #3d3d3d;
-    color: #CCCCCC;
-}
-
-QTreeView::header::section {
     background-color: #3d3d3d;
     color: #CCCCCC;
 }

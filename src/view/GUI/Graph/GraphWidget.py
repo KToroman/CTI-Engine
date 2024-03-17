@@ -3,6 +3,7 @@
 from typing import List
 
 from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtGui import QIcon
 from matplotlib import pyplot as plt
 from PyQt5.QtWidgets import QVBoxLayout, QWidget
 from matplotlib.backend_bases import PickEvent
@@ -74,10 +75,18 @@ class GraphWidget(QWidget):
             self.ax.tick_params(colors="#FFFFFF")  # Farbe der Zahlen an der x-Achse
             self.ax.xaxis.label.set_color("#FFFFFF")  # Farbe der x-Achsenbeschriftung
             self.ax.yaxis.label.set_color("#FFFFFF")  # Farbe der y-Achsenbeschriftung
+
+        if style == "Dark Mode 2":
+            self.figure.set_facecolor("#18191A")
+            self.ax.set_facecolor("#3d3d3d")
+            self.ax.tick_params(colors="#E4E6EB")  # Farbe der Zahlen an der x-Achse
+            self.ax.xaxis.label.set_color("#E4E6EB")  # Farbe der x-Achsenbeschriftung
+            self.ax.yaxis.label.set_color("#E4E6EB")
         if style == "Light Mode":
             self.figure.set_facecolor("#FFFFFF")
             self.ax.set_facecolor("#FFFFFF")
             self.ax.tick_params(colors="#000000")  # Farbe der Zahlen an der x-Achse
             self.ax.xaxis.label.set_color("#000000")  # Farbe der x-Achsenbeschriftung
             self.ax.yaxis.label.set_color("#000000")  # Farbe der y-Achsenbeschriftung
+
         self.canvas.draw()
