@@ -4,7 +4,6 @@ from queue import Queue
 from unittest.mock import MagicMock, patch
 
 import pytest
-import pytestqt
 from PyQt5.QtCore import QSize
 from PyQt5.QtWidgets import QPushButton, QInputDialog, QAbstractButton
 

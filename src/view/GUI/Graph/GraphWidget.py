@@ -69,22 +69,23 @@ class GraphWidget(QWidget):
         self.click_signal.emit()
 
     def set_stylesheet(self, style: str):
-        if style == "Dark Mode":
+        if style == "Dark Mode Purple":
             self.figure.set_facecolor("#3f4361")
             self.ax.set_facecolor("#292c43")
-            self.ax.tick_params(colors="#FFFFFF")  # Farbe der Zahlen an der x-Achse
-            self.ax.xaxis.label.set_color("#FFFFFF")  # Farbe der x-Achsenbeschriftung
-            self.ax.yaxis.label.set_color("#FFFFFF")  # Farbe der y-Achsenbeschriftung
+            self.ax.tick_params(colors="#B0B3B8")  # Farbe der Zahlen an der x-Achse
+            self.ax.xaxis.label.set_color("#E4E6EB")  # Farbe der x-Achsenbeschriftung
+            self.ax.yaxis.label.set_color("#E4E6EB")  # Farbe der y-Achsenbeschriftung
 
-        if style == "Dark Mode 2":
+        if style == "Dark Mode" or style == "Basic":
             self.figure.set_facecolor("#18191A")
-            self.ax.set_facecolor("#3d3d3d")
-            self.ax.tick_params(colors="#E4E6EB")  # Farbe der Zahlen an der x-Achse
+            self.ax.set_facecolor("#242526")
+            self.ax.tick_params(colors="#B0B3B8")  # Farbe der Zahlen an der x-Achse
             self.ax.xaxis.label.set_color("#E4E6EB")  # Farbe der x-Achsenbeschriftung
             self.ax.yaxis.label.set_color("#E4E6EB")
+
         if style == "Light Mode":
-            self.figure.set_facecolor("#FFFFFF")
-            self.ax.set_facecolor("#FFFFFF")
+            self.figure.set_facecolor("#D4D9EB")
+            self.ax.set_facecolor("#E4E6EB")
             self.ax.tick_params(colors="#000000")  # Farbe der Zahlen an der x-Achse
             self.ax.xaxis.label.set_color("#000000")  # Farbe der x-Achsenbeschriftung
             self.ax.yaxis.label.set_color("#000000")  # Farbe der y-Achsenbeschriftung

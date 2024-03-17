@@ -150,7 +150,7 @@ def setup_ui(main_window):
     search_icon = qta.icon("fa.search")
     main_window.search_button.setIcon(search_icon)
 
-    main_window.current_table.setStyleSheet("::section{Background-color: #4095a1}")
+    #main_window.current_table.setStyleSheet("::section{Background-color: #4095a1}")
     main_window.sidebar.setStyleSheet(u"background-color: #252526")
 
 

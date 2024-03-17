@@ -3,7 +3,7 @@ QMainWindow {
 }
 
 QPushButton {
-    background-color: #23868B;
+    background-color: #252526;
     font: bold 14px;
 
 }
@@ -54,12 +54,12 @@ QTreeWidget QScrollBar {
 
 QTreeWidget QPushButton {
     background-color: #3A3B3C;
-    color: #B0B3B8;
+    color: #E4E6EB;
 }
 
 QTreeWidget::item {
     background-color: #3A3B3C; /* Hintergrundfarbe der Items */
-    color: #B0B3B8; /* Textfarbe der Items */
+    color: #E4E6EB; /* Textfarbe der Items */
 }
 
 QTreeWidget::item {
@@ -67,7 +67,7 @@ QTreeWidget::item {
 }
 
 QTreeWidget QHeaderView {
-    background-color: #23868B;
+    background-color: #252526;
     font: bold 14px;
 }
 

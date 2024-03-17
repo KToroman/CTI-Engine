@@ -1,5 +1,5 @@
 QMainWindow {
-    background-color: #18191A;
+    background-color: #3f4361;
 }
 
 QPushButton {
@@ -9,15 +9,21 @@ QPushButton {
 }
 
 QWidget QLabel {
-    color: #E4E6EB;
+    color: #CCCCCC;
 }
 
 QCheckBox::indicator {
     background-color: #3d3d3d;
+    border: 1px solid #18191A;
 }
 
 QCheckBox {
-    color: #E4E6EB;
+    color: #CCCCCC;
+}
+
+QCheckBox::indicator:checked {
+    background-color: #3A3B3C;
+    border: 1px solid #476eed;
 }
 
 QSpinBox {
@@ -30,7 +36,7 @@ QScrollArea {
 }
 
 QLineEdit {
-    color: #E4E6EB;
+    color: #CCCCCC;
     background-color: #3d3d3d;
 }
 
@@ -47,6 +53,11 @@ QTreeWidget QPushButton {
     color: #CCCCCC;
 }
 
+QTreeView::header::section {
+    background-color: #3d3d3d;
+    color: #CCCCCC;
+}
+
 QTreeWidget::item {
     background-color: #3f4361; /* Hintergrundfarbe der Items */
     color: #CCCCCC; /* Textfarbe der Items */
@@ -56,11 +67,10 @@ QTreeWidget::item {
     border: 0.5px solid #252526; /* Umrandung der Items */
 }
 
-
-
 QTreeWidget QHeaderView {
-    background-color: #f9b433;
-     font: bold 14px;
+    background-color: #18191A;
+    color: #CCCCCC;
+    font: bold 14px;
 }
 
 QWidget#GraphWidget {

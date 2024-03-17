@@ -76,20 +76,27 @@ class BarWidget(QWidget):
         self.click_signal.emit()
 
     def set_stylesheet(self, style: str):
+        if style == "Dark Mode Purple":
+            self.figure.set_facecolor("#3f4361")
+            self.ax.set_facecolor("#292c43")
+            self.ax.tick_params(colors="#B0B3B8")  # Farbe der Zahlen an der x-Achse
+            self.ax.xaxis.label.set_color("#E4E6EB")  # Farbe der x-Achsenbeschriftung
+            self.ax.yaxis.label.set_color("#E4E6EB")  # Farbe der y-Achsenbeschriftung
+
         if style == "Dark Mode":
-            self.figure.set_facecolor("#252526")
-            self.ax.set_facecolor("#3d3d3d")
-            self.ax.tick_params(colors="#CCCCCC")  # Farbe der Zahlen an der x-Achse
-            self.ax.xaxis.label.set_color("#CCCCCC")  # Farbe der x-Achsenbeschriftung
-            self.ax.yaxis.label.set_color("#CCCCCC")  # Farbe der y-Achsenbeschriftung
+            self.figure.set_facecolor("#18191A")
+            self.ax.set_facecolor("#242526")
+            self.ax.tick_params(colors="#B0B3B8")  # Farbe der Zahlen an der x-Achse
+            self.ax.xaxis.label.set_color("#E4E6EB")  # Farbe der x-Achsenbeschriftung
+            self.ax.yaxis.label.set_color("#E4E6EB")
 
         if style == "Light Mode":
-            self.figure.set_facecolor("#FFFFFF")
+            self.figure.set_facecolor("#DEE4E7")
             self.ax.set_facecolor("#FFFFFF")
             self.ax.tick_params(colors="#000000")  # Farbe der Zahlen an der x-Achse
             self.ax.xaxis.label.set_color("#000000")  # Farbe der x-Achsenbeschriftung
             self.ax.yaxis.label.set_color("#000000")  # Farbe der y-Achsenbeschriftung
-        self.canvas.draw()
+
 
 """        if style == "Dark Mode":
             self.figure.set_facecolor("#252526")

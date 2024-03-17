@@ -44,9 +44,9 @@ def run(gui: bool, load_file: str, active: str):
 
     # exec
     try:
-        #app.start()
+        app.start()
         ui.execute()
-        #app.stop()
+        app.stop()
     except KeyboardInterrupt:
         print("\033[91mKeyboard Interrupt, shutting down...\033[0m")
         shutdown_event.set()

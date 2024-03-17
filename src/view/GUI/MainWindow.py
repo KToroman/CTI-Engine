@@ -12,6 +12,7 @@ from PyQt5.QtWidgets import (QMainWindow, QStackedWidget, QApplication, QCheckBo
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QMainWindow, QStackedWidget, QApplication, QCheckBox, QSpinBox, QLineEdit,
                              QPushButton)
+
 from src.model.core.ProjectReadViewInterface import ProjectReadViewInterface
 from src.view.GUI.Threading.PlotRunnable import PlotRunnable
 from src.view.GUI.Threading.AddRunnable import AddRunnable
