@@ -8,7 +8,7 @@ import time
 from PyQt5.QtCore import pyqtSignal, QModelIndex, Qt, QThread, QThreadPool, QRunnable, QObject
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QInputDialog, QWidget, QHBoxLayout, QHeaderView, \
-    QTreeWidget, QTreeWidgetItem, QCheckBox, QPushButton, QVBoxLayout
+    QTreeWidget, QTreeWidgetItem, QCheckBox, QPushButton, QVBoxLayout, QApplication
 
 from src.view.GUI.Graph.Plot import Plot
 from src.view.GUI.Threading.InsertValuesWorker import InsertValuesWorker
@@ -66,7 +66,7 @@ class TreeWidget(QTreeWidget):
 
         def run(self):
             pass
-            self.__parent.create_row(self.__item, self.__row.displayable,self.__row ,self.__cell_widget, self.__layout)
+            self.__parent.create_row(self.__item, self.__row.displayable, self.__row , self.__cell_widget, self.__layout)
 
     def insert_values(self, displayables: List[DisplayableHolder]):
         print("before inserting values")
@@ -262,29 +262,38 @@ class TreeWidget(QTreeWidget):
                     parent = parent.parent()
 
 
-class CreateTreeWidgetObject(QObject):
+class TreeWidgetWrapper(QObject):
 
-    finished: pyqtSignal = pyqtSignal()
-    def __init__(self, tree_widget: TreeWidget, displayables: list[DisplayableHolder]):
+    visualiseSignal = pyqtSignal()
+    finished = pyqtSignal()
+
+    def __init__(self, active_mode_queue: Queue, input_queue: Queue, return_queue):
         super().__init__()
-        self.tree_widget: TreeWidget = tree_widget
-        self.displayables: list[DisplayableHolder] = displayables
+        self.tree_widget = TreeWidget(active_mode_queue)
+        self.return_queue = return_queue
+        self.input_queue: Queue[list[DisplayableHolder]] = input_queue
+        self.visualiseSignal.connect(self.visualise)
 
-    def run(self):
-        print("running thread")
-        self.tree_widget.insert_values(self.displayables)
+    def visualise(self):
+        print(f"running on {str(QThread.currentThread())}")
+        displayables = self.input_queue.get()
+        self.tree_widget.insert_values(displayables)
+        self.return_queue.put(self.tree_widget)
         self.finished.emit()
 
-OBJ_THREAD: QThread = QThread()
 
-def get_new_Treewidget(main_window, active_mode_queue: Queue, displayables: list[DisplayableHolder]) -> TreeWidget:
-    global OBJ_THREAD
-    tree_widget: TreeWidget = TreeWidget(active_mode_queue)
-    create_tree_widget = CreateTreeWidgetObject(tree_widget, displayables)
-    create_tree_widget.moveToThread(OBJ_THREAD)
-    create_tree_widget.finished.connect(OBJ_THREAD.quit)
-    OBJ_THREAD.started.connect(lambda: create_tree_widget.run())
-    OBJ_THREAD.finished.connect(lambda: main_window.connect_table(tree_widget))
-    OBJ_THREAD.start()
-    return tree_widget
+QTHREAD = QThread()
+
+
+def get_new_tree_widget(active_mode_queue: Queue, displayables: list[DisplayableHolder], return_queue, callback):
+    global QTHREAD
+    print(f"QTHREAD: {str(QTHREAD)}; MAINTHREAD: {str(QApplication.instance().thread())}")
+    print(f"outer runing on {str(QThread.currentThread())}")
+    input_queue: Queue[list[DisplayableHolder]] = Queue()
+    tree_widget_wrapper = TreeWidgetWrapper(active_mode_queue, input_queue, return_queue)
+    input_queue.put(displayables)
+    tree_widget_wrapper.moveToThread(QTHREAD)
+    tree_widget_wrapper.finished.connect(callback)
+    QTHREAD.start()
+    tree_widget_wrapper.visualiseSignal.emit()
 

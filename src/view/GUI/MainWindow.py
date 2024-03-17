@@ -10,6 +10,7 @@ from threading import Thread, Lock
 from PyQt5.QtCore import pyqtSignal, QThreadPool
 from typing import List
 from multiprocessing import Queue, Event
+import queue
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QIntValidator
@@ -38,7 +39,7 @@ from src.view.UIInterface import UIInterface
 from src.view.GUI.Visuals.ErrorWindow import ErrorWindow
 from src.view.AppRequestsInterface import AppRequestsInterface
 import src.view.GUI.Visuals.GuiDesign as gd
-from src.view.GUI.UserInteraction.TreeWidget import TreeWidget, get_new_Treewidget
+from src.view.GUI.UserInteraction.TreeWidget import TreeWidget, get_new_tree_widget
 
 
 class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
@@ -166,7 +167,12 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
             displayable_list.append(self.__create_displayable(cfile, 0))
         print("[MW]    all displayables created " + (time.time()-tima).__str__())
         timo = time.time()
-        get_new_Treewidget(self, self.active_mode_queue, displayable_list)
+
+        self.___return_queue: queue.Queue[TreeWidget] = queue.Queue()
+        get_new_tree_widget(self.active_mode_queue, displayable_list, self.___return_queue, self.connect_table_from_queue)
+
+
+
         self.current_table.insertion_point = project.get_project_name()
         print("[MW]    insert values finished " + (time.time() - timo).__str__())
         self.lower_limit.setMaximum(file_count)
@@ -196,6 +202,10 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.setup_connections()
         self.status_bar.update_status(StatusSettings.FINISHED, project.get_project_name())
         print("updated")
+
+    def connect_table_from_queue(self):
+        tree_widget: TreeWidget = self.___return_queue.get()
+        self.connect_table(tree_widget)
 
     def __connect_new_table(self):
         self.connect_table(TreeWidget(self.active_mode_queue))
