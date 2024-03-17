@@ -82,6 +82,7 @@ class BarWidget(QWidget):
             self.ax.tick_params(colors="#CCCCCC")  # Farbe der Zahlen an der x-Achse
             self.ax.xaxis.label.set_color("#CCCCCC")  # Farbe der x-Achsenbeschriftung
             self.ax.yaxis.label.set_color("#CCCCCC")  # Farbe der y-Achsenbeschriftung
+
         if style == "Light Mode":
             self.figure.set_facecolor("#FFFFFF")
             self.ax.set_facecolor("#FFFFFF")
@@ -89,3 +90,10 @@ class BarWidget(QWidget):
             self.ax.xaxis.label.set_color("#000000")  # Farbe der x-Achsenbeschriftung
             self.ax.yaxis.label.set_color("#000000")  # Farbe der y-Achsenbeschriftung
         self.canvas.draw()
+
+"""        if style == "Dark Mode":
+            self.figure.set_facecolor("#252526")
+            self.ax.set_facecolor("#3d3d3d")
+            self.ax.tick_params(colors="#CCCCCC")  # Farbe der Zahlen an der x-Achse
+            self.ax.xaxis.label.set_color("#CCCCCC")  # Farbe der x-Achsenbeschriftung
+            self.ax.yaxis.label.set_color("#CCCCCC")  # Farbe der y-Achsenbeschriftung"""

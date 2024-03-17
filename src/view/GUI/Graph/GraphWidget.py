@@ -69,11 +69,11 @@ class GraphWidget(QWidget):
 
     def set_stylesheet(self, style: str):
         if style == "Dark Mode":
-            self.figure.set_facecolor("#252526")
-            self.ax.set_facecolor("#3d3d3d")
-            self.ax.tick_params(colors="#CCCCCC")  # Farbe der Zahlen an der x-Achse
-            self.ax.xaxis.label.set_color("#CCCCCC")  # Farbe der x-Achsenbeschriftung
-            self.ax.yaxis.label.set_color("#CCCCCC")  # Farbe der y-Achsenbeschriftung
+            self.figure.set_facecolor("#3f4361")
+            self.ax.set_facecolor("#292c43")
+            self.ax.tick_params(colors="#FFFFFF")  # Farbe der Zahlen an der x-Achse
+            self.ax.xaxis.label.set_color("#FFFFFF")  # Farbe der x-Achsenbeschriftung
+            self.ax.yaxis.label.set_color("#FFFFFF")  # Farbe der y-Achsenbeschriftung
         if style == "Light Mode":
             self.figure.set_facecolor("#FFFFFF")
             self.ax.set_facecolor("#FFFFFF")

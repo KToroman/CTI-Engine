@@ -1,10 +1,10 @@
 QMainWindow {
-    background-color: #181818;
+    background-color: #3f4361;
 }
 
 QPushButton {
-    background-color: lightcyan;
-
+    background-color: #476eed;
+    font: bold 14px;
 
 }
 
@@ -35,7 +35,7 @@ QLineEdit {
 }
 
 QTreeWidget {
-    background-color: #3d3d3d;
+    background-color: #52576c;
 }
 
 QTreeWidget QScrollBar {
@@ -48,7 +48,7 @@ QTreeWidget QPushButton {
 }
 
 QTreeWidget::item {
-    background-color: #3d3d3d; /* Hintergrundfarbe der Items */
+    background-color: #3f4361; /* Hintergrundfarbe der Items */
     color: #CCCCCC; /* Textfarbe der Items */
 }
 
@@ -56,6 +56,14 @@ QTreeWidget::item {
     border: 0.5px solid #252526; /* Umrandung der Items */
 }
 
+
+
+QTreeWidget QHeaderView {
+    background-color: #f9b433;
+     font: bold 14px;
+}
+
 QWidget#GraphWidget {
     background-color: #3d3d3d;
 }
+

@@ -26,7 +26,7 @@ class TreeWidget(QTreeWidget):
         self.items: List[ItemWrapper] = []
         self.setHeaderLabels([self.COLUMN_1_LABEL, self.COLUMN_2_LABEL,
                               self.COLUMN_3_LABEL, self.COLUMN_4_LABEL])
-        self.header().setStyleSheet("::section{Background-color: #4095a1}")
+        self.header().setStyleSheet("::section{background-color: #292c43; color: #CCCCCC}")
         self.insertion_point: str = ""
         self.active_started: bool = False
         self.all_selected: bool = False
