@@ -1,13 +1,10 @@
 import sys
 from multiprocessing import Queue, Event
 from multiprocessing.synchronize import Event as SyncEvent
-
 import pytest
 from PyQt5.QtWidgets import QApplication
-
 from src.model.Model import Model
 from src.model.ModelReadViewInterface import ModelReadViewInterface
-from src.view.gui.AddRunnable import AddRunnable
 from src.view.gui.graph.BarWidget import BarWidget
 from src.view.gui.graph.GraphWidget import GraphWidget
 from src.view.gui.graph.Plot import Plot
