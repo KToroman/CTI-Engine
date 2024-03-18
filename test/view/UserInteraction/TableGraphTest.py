@@ -1,5 +1,6 @@
 import sys
 from multiprocessing import Queue, Event
+from multiprocessing.synchronize import Event as SyncEvent
 
 import pytest
 from PyQt5.QtWidgets import QApplication
@@ -27,15 +28,15 @@ def tree_widget():
 
 
 @pytest.fixture
-def graph_widget():
+def graph_widget() -> GraphWidget:
     return GraphWidget("Y Axis Label")
 
 
 @pytest.fixture
-def main_window(app, tree_widget, graph_widget):
-    shutdown_event: Event = Event()
-    cancel_event: Event = Event()
-    restart_event: Event = Event()
+def main_window(app, tree_widget, graph_widget) -> MainWindow:
+    shutdown_event: SyncEvent = Event()
+    cancel_event: SyncEvent = Event()
+    restart_event: SyncEvent = Event()
     status_queue: Queue = Queue()
     project_queue: Queue = Queue()
     error_queue: Queue = Queue()
@@ -77,7 +78,6 @@ def test_click_checkbox_shows_graph(app, main_window):
     main_window.setup_connections()
     for row in main_window.current_table.rows:
         row.checkbox.setChecked(True)
-    assert True
     assert len(main_window.ram_graph_widget.lines) == len(main_window.current_table.rows)
 
 
@@ -102,3 +102,5 @@ def test_click_checkbox_shows_graph(app, main_window):
     clicked_graph = main_window.ram_graph_widget.plot_clicked
     selected_row = main_window.current_table.selectionModel().currentIndex().row()
     assert selected_row == clicked_graph"""
+if __name__ == "__main__":
+    test_click_checkbox_shows_graph(app, main_window)
