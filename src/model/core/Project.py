@@ -25,7 +25,7 @@ class Project(ProjectReadViewInterface):
         self.project_time = time.time() - 0.5
         time_stamp = str(self.project_time).split(".")
         time_stamp_str = f"{time_stamp[0]}_{time_stamp[1]}"
-        self.path_to_save = f"{path_to_save}/{self.working_dir}/{time_stamp_str}"
+        self.path_to_save = f"{path_to_save}/{self.working_dir}/CTI_Engine_{time_stamp_str}"
         self.delta_entries: List[DataBaseEntry] = list()
 
     def get_sourcefile(self, name: str) -> SourceFile:
@@ -52,7 +52,7 @@ class Project(ProjectReadViewInterface):
         return self.project_time
 
     def get_project_name(self) -> str:
-        return self.working_dir
+        return self.name
 
     def get_cfiles(self) -> List[CFileReadViewInterface]:
         cfiles_view: List[CFileReadViewInterface] = list()

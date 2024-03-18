@@ -149,11 +149,13 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.bar_chart_widget.set_stylesheet(selected_style)
 
     def visualize(self):
+        print(f"[MainWindow]    visualizing...")
         """displays the data contained in that model to the user."""
         self.select_all_checkbox.setChecked(True)
         self.select_all_checkbox.setChecked(False)
 
         project_name: str = self.project_queue.get()
+        print(f"[MainWindow]    project visualizing: {project_name}")
         project = self.__model.get_project_by_name(project_name)
         self.project_time = project.get_project_time()
         self.displayed_project: str = project_name
@@ -207,7 +209,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         for row in self.current_table.rows:
             row.connected = False
         self.__setup_connections()
-        self.status_bar.update_status(StatusSettings.FINISHED)
+        self.status_bar.update_status(StatusSettings.FINISHED, self.current_table.insertion_point)
 
     def __connect_new_table(self):
         """creates a new table for each loaded project and saves them in a list. That way the already loaded projects
