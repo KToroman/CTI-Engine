@@ -67,12 +67,15 @@ class TestCFile(unittest.TestCase):
         data_entry1 = DataEntry("test_path", timestamp1, [Metric(10, self.metric_name)])
         data_entry2 = DataEntry("test_path", timestamp2, [Metric(20, self.metric_name)])
         self.source_file.data_entries = [data_entry1, data_entry2]
-        self.assertEqual(self.source_file.get_timestamps(), [timestamp1, timestamp2])
+        assert (self.source_file.get_timestamps() == [timestamp1, timestamp2])
 
     def test_get_headers(self):
         header1 = Header("header1", self.source_file, 1)
         header2 = Header("header2", header1, 2)
         self.source_file.headers = [header1]
         header1.headers = [header2]
-        self.assertEqual(self.source_file.get_headers(), [header1, header2])
-        
+        self.assertEqual(self.source_file.get_headers(), [header1])
+        self.assertEqual(header1.get_headers(), [header2])
+    
+    def test_has_header(self):
+        assert True

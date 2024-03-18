@@ -67,4 +67,3 @@ def test_load_wrong_json():
     except:
         assert True
     os.remove("test_config_wrong")
-
