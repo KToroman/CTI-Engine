@@ -77,6 +77,7 @@ def test_click_checkbox_shows_graph(app, main_window):
     main_window.setup_connections()
     for row in main_window.current_table.rows:
         row.checkbox.setChecked(True)
+    assert True
     assert len(main_window.ram_graph_widget.lines) == len(main_window.current_table.rows)
 
 
