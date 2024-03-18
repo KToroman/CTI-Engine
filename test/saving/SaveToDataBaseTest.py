@@ -7,6 +7,7 @@ from rocksdict import Rdict
 from src.fetcher.file_fetcher.FileLoader import FileLoader
 from src.model.DataBaseEntry import DataBaseEntry
 from src.model.Model import Model
+from src.model.core.Header import Header
 from src.model.core.Metric import Metric
 from src.model.core.MetricName import MetricName
 from src.model.core.Project import Project
