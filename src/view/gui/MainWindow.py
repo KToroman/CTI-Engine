@@ -138,7 +138,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.lower_limit.setMaximum(file_count)
         self.upper_limit.setMaximum(file_count)
         # Update other Widgets
-        self.setup_connections()
+        self.__setup_connections()
         self.status_bar.update_status(StatusSettings.FINISHED, "")
         self.menu_bar.project_buttons[len(self.menu_bar.project_buttons) - 1].setStyleSheet("background-color: #00FF00")
 
@@ -160,7 +160,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         for cfile in cfile_list:
             self.current_table.add_active_data(self.__create_displayable(cfile))
         # Update other Widgets
-        self.setup_connections()
+        self.__setup_connections()
         self.status_bar.update_status(StatusSettings.FINISHED)
 
     def __connect_new_table(self):
@@ -265,7 +265,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
         return random_color_hex
 
-    def setup_connections(self):
+    def __setup_connections(self):
         """Sets up connections between table and graph widgets."""
         for row in self.current_table.rows:
             if not row.connected:
