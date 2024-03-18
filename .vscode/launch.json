@@ -50,6 +50,7 @@
             "env": {
                 "PYTHONPATH": "${workspaceRoot}"
             },
-        }
+        },
+        
     ]
 }

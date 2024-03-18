@@ -70,8 +70,3 @@ def test_load_wrong_json():
         assert True
     os.remove("test_config_wrong")
 
-
-if __name__ == "__main__":
-    test_load_json()
-    test_load_json_with_set_path()
-    test_load_wrong_json()

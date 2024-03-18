@@ -60,7 +60,7 @@ def test_main_window(main_window, tree_widget, graph_widget):
     assert main_window.ram_graph_widget == graph_widget
 
 
-def test_click_checkbox_shows_graph(app, main_window):
+def test_click_checkbox_shows_graph() -> None:
     # Insert Dummy Data
     plot_mock1: Plot = Plot(name="mock_disp1", color="#FFFFFF", x_values=[0, 0], y_values=[0, 0])
     mock_disp1: Displayable = Displayable(name="mock_disp1", ram_plot=plot_mock1, cpu_plot=plot_mock1,
@@ -103,4 +103,4 @@ def test_click_checkbox_shows_graph(app, main_window):
     selected_row = main_window.current_table.selectionModel().currentIndex().row()
     assert selected_row == clicked_graph"""
 if __name__ == "__main__":
-    test_click_checkbox_shows_graph(app, main_window)
+    test_click_checkbox_shows_graph()
