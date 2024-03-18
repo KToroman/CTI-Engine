@@ -29,15 +29,12 @@ class MenuBar:
 
         self.load_file_button: QPushButton = QPushButton("Load file")
         self.load_file_button.clicked.connect(lambda: self.__show_input_dialog())
-        #self.load_file_button.setStyleSheet("background-color: #4095a1;")
 
         self.pause_resume_button: QPushButton = QPushButton("Restart")
         self.pause_resume_button.clicked.connect(lambda: self.restart_event.set())
-        #self.pause_resume_button.setStyleSheet("background-color: #4095a1;")
 
         self.cancel_button: QPushButton = QPushButton("Cancel")
         self.cancel_button.clicked.connect(lambda: self.cancel_event.set())
-        #self.cancel_button.setStyleSheet("background-color: #4095a1;")
 
         self.switch_style_box: QComboBox = QComboBox()
 
@@ -51,7 +48,6 @@ class MenuBar:
         self.scroll_button = QPushButton("All Projects")
         self.scroll_button.setCheckable(True)
         self.scroll_button.toggled.connect(lambda: self.__toggle_scrollbar())
-        #self.scroll_button.setStyleSheet("background-color: #4095a1;")
 
         self.project_buttons: List[QPushButton] = []
 
@@ -96,3 +92,20 @@ class MenuBar:
                                            self.__visualize_event, self.index_queue, self.change_table_signal)
             self.scroll_layout.addWidget(new_button)
             self.project_buttons.append(new_button)
+
+    def set_stylesheet(self, style: str):
+        if style == "Dark Mode Purple":
+            self.load_file_button.setStyleSheet("background-color: #476eed;")
+            self.pause_resume_button.setStyleSheet("background-color: #476eed;")
+            self.cancel_button.setStyleSheet("background-color: #476eed;")
+            self.scroll_button.setStyleSheet("background-color: #476eed;")
+        if style == "Dark Mode" or style == "Basic":
+            self.load_file_button.setStyleSheet("background-color: #23868B;")
+            self.pause_resume_button.setStyleSheet("background-color: #23868B;")
+            self.cancel_button.setStyleSheet("background-color: #23868B;")
+            self.scroll_button.setStyleSheet("background-color: #23868B;")
+        if style == "Light Mode":
+            self.load_file_button.setStyleSheet("background-color: #8D9FD0;")
+            self.pause_resume_button.setStyleSheet("background-color: #8D9FD0;")
+            self.cancel_button.setStyleSheet("background-color: #8D9FD0;")
+            self.scroll_button.setStyleSheet("background-color: #8D9FD0;")

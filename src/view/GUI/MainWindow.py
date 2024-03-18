@@ -147,6 +147,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.ram_graph_widget.set_stylesheet(selected_style)
         self.cpu_graph_widget.set_stylesheet(selected_style)
         self.bar_chart_widget.set_stylesheet(selected_style)
+        self.menu_bar.set_stylesheet(selected_style)
 
     def visualize(self):
         """displays the data contained in that model to the user."""
