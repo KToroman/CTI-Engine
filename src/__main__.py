@@ -87,4 +87,4 @@ if __name__ == "__main__":
     cancel_event = multiprocessing.Event()
     restart_event = multiprocessing.Event()
 
-    run(False)
+    run()
