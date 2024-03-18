@@ -18,6 +18,9 @@ class CommandLineUI(QWidget, UIInterface, metaclass=MainWindowMeta):
         self.qapp = qapp
         self.__error_queue = error_queue
         self.shutdown_event = shutdown_event
+        self.project_queue = Queue()
+        self.status_queue = Queue()
+        self.error_queue = Queue()
         super().__init__()
 
     def deploy_error(self, error: BaseException):
