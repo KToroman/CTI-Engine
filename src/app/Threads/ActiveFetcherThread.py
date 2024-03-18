@@ -75,7 +75,7 @@ class ActiveFetcherThread:
                 return
             self.__saver_queue.put((curr_proj.delta_entries, curr_proj.name))
         print("[ActiveFetcherThread]   finished active")
-        self.__visualise_project_queue.put(curr_proj)
+        self.__visualise_project_queue.put(curr_proj.get_project_name())
         self.__active_measurement_active.clear()
         self.__visualise_signal.emit()
 

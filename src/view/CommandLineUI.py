@@ -1,5 +1,5 @@
 from multiprocessing import Queue, Event
-
+from multiprocessing.synchronize import Event as SyncEvent
 from PyQt5.QtCore import pyqtSignal
 
 from src.model.core.StatusSettings import StatusSettings
@@ -14,10 +14,13 @@ class CommandLineUI(QWidget, UIInterface, metaclass=MainWindowMeta):
     status_signal = pyqtSignal()
     error_signal = pyqtSignal()
 
-    def __init__(self, qapp: QApplication, error_queue: Queue, shutdown_event: Event):
+    def __init__(self, qapp: QApplication, error_queue: Queue, shutdown_event: SyncEvent):
         self.qapp = qapp
         self.__error_queue = error_queue
         self.shutdown_event = shutdown_event
+        self.project_queue = Queue()
+        self.status_queue = Queue()
+        self.error_queue = Queue()
         super().__init__()
 
     def deploy_error(self, error: BaseException):

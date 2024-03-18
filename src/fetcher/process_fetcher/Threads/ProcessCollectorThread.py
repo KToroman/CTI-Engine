@@ -161,7 +161,7 @@ class ProcessCollectorThread:
                         self.__project_finished_event,
                         self.__model.semaphore_list,
                     )
-                    project = Project(project_name, name)
+                    project = Project(project_name, name, self.__save_path)
                     self.__model.add_project(project, semaphore)
                     self.__hierarchy_queue.put(project)
                     self.__saver_queue.put((project.delta_entries, project.name))

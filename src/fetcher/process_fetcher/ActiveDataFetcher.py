@@ -12,6 +12,7 @@ import psutil
 from src.app.Threads.BuilderThread import BuilderThread
 from src.builder.BuilderInterface import BuilderInterface
 from src.builder.header_builder.CompilingTool import CompilingTool
+from src.exceptions.ProjectNotFoundException import ProjectNotFoundException
 from src.fetcher.FetcherInterface import FetcherInterface
 from src.fetcher.process_fetcher.Threads.ActiveDataCollectionThread import (
     ActiveDataCollectionThread,
@@ -56,7 +57,8 @@ class ActiveDataFetcher(FetcherInterface):
             self.__source_file: SourceFile = model.get_sourcefile_by_name(
                 source_file_name
             )
-
+        if model.current_project is None:
+            raise ProjectNotFoundException
         self.__compiling_tool: BuilderInterface = CompilingTool(
             curr_project_dir=model.current_project.working_dir,
             source_file=self.__source_file,
