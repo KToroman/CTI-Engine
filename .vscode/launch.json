@@ -71,6 +71,7 @@
             "env": {
                 "PYTHONPATH": "${workspaceRoot}"
             },
-        }
+        },
+        
     ]
 }

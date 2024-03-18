@@ -109,6 +109,7 @@ class TreeWidget(QTreeWidget):
         for row in self.rows:
             if row.displayable.name == name:
                 self.setCurrentItem(self.items[self.rows.index(row)])
+                self.scrollToItem(self.currentItem())
                 break
 
     def toggle_all_rows(self):
