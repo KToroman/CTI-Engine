@@ -1,5 +1,7 @@
+import os
+
 from PyQt5.QtCore import QSize, Qt, QMetaObject
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import (QWidget, QSizePolicy, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QSpacerItem,
                              QSplitter)
 
@@ -71,7 +73,7 @@ def setup_ui(main_window):
     # configuring the upper bar
     main_window.main_horizontal_layout.setSpacing(10)
     main_window.main_horizontal_layout.setContentsMargins(0, 0, 0, 0)
-    main_window.upper_bar.setMinimumWidth(900)
+    main_window.upper_bar.setMinimumWidth(1000)
     main_window.upper_bar.setMaximumSize(QSize(1500, 50))
     main_window.upper_bar_layout.setSpacing(0)
     main_window.upper_bar_layout.setContentsMargins(0, 0, 0, 0)
@@ -128,9 +130,12 @@ def setup_ui(main_window):
 
     QMetaObject.connectSlotsByName(main_window)
     # add icons and stylistic details
-    resume_icon = qta.icon("msc.debug-restart")
-    main_window.pause_button.setIcon(resume_icon)
+    #resume_icon = qta.icon("msc.debug-restart")
+    images_folder = os.path.join(os.path.dirname(__file__), "Images")
+    pause_icon = os.path.join(images_folder, "icons8-cancel-64.png")
+    main_window.pause_button.setIcon(QIcon(pause_icon))
     load_icon = qta.icon("fa.file")
+    #load_icon = os.path.join(images_folder, "icons8-file-50.png")
     main_window.load_button.setIcon(load_icon)
     resume_icon = qta.icon("msc.debug-restart")
     main_window.pause_button.setIcon(resume_icon)
@@ -139,13 +144,15 @@ def setup_ui(main_window):
 
     cancel_icon = qta.icon("ei.ban-circle")
     main_window.cancel_button.setIcon(cancel_icon)
+
     menu_icon = qta.icon("ei.align-justify")
     main_window.project_scroll_button.setIcon(menu_icon)
     search_icon = qta.icon("fa.search")
     main_window.search_button.setIcon(search_icon)
 
-    main_window.current_table.setStyleSheet("::section{Background-color: #4095a1}")
-    main_window.sidebar.setStyleSheet(u"background-color: rgb(61, 61, 61);")
+    #main_window.current_table.setStyleSheet("::section{Background-color: #4095a1}")
+    main_window.sidebar.setStyleSheet(u"background-color: #252526")
+
 
 
 
