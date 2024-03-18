@@ -282,7 +282,6 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.metric_bar.runtime_button.pressed.connect(lambda: self.stacked_widget.setCurrentIndex(2))
 
     def __update_visibility(self, displayable: Displayable):
-        print("updating visibility")
         """Shows or hides plots of given displayable."""
         visibility: bool = False
         for visible_displayable in self.__visible_plots:
@@ -295,7 +294,6 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
                                                                  displayable=displayable, mutex=self.mutex)
                 self.thread_pool.start(remove_runnable)
         if not visibility:
-            print("ABOUT TO RUNNABLE")
             add_runnable: AddRunnable = AddRunnable(ram_graph=self.ram_graph_widget,
                                                     cpu_graph=self.cpu_graph_widget,
                                                     runtime_graph=self.bar_chart_widget, displayable=displayable,
