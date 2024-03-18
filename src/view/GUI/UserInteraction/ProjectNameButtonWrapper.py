@@ -15,12 +15,12 @@ class ProjectNameButton(QPushButton):
         self.__project_queue = project_queue
         self.__visualize_event = visualize_event
         self.setText(show_name)
-        self.clicked.connect(lambda: self.show_project_name_input(project_name, self.__button_list.index(self)))
         self.button_list = project_buttons
+        self.clicked.connect(lambda: self.__show_project_name_input(self.button_list.index(self)))
         self.index_queue = index_queue
         self.change_table_signal = change_table_signal
 
-    def __show_project_name_input(self, index: str):
+    def __show_project_name_input(self, index: int):
         """opens an input dialog to confirm the project you are about to load"""
         for button in self.button_list:
             button.setStyleSheet("")

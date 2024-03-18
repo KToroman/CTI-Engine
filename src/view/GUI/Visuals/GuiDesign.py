@@ -71,7 +71,7 @@ def setup_ui(main_window):
     # configuring the upper bar
     main_window.main_horizontal_layout.setSpacing(10)
     main_window.main_horizontal_layout.setContentsMargins(0, 0, 0, 0)
-    main_window.upper_bar.setMinimumWidth(900)
+    main_window.upper_bar.setMinimumWidth(1000)
     main_window.upper_bar.setMaximumSize(QSize(1500, 50))
     main_window.upper_bar_layout.setSpacing(0)
     main_window.upper_bar_layout.setContentsMargins(0, 0, 0, 0)

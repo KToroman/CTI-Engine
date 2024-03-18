@@ -131,7 +131,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.__q_application.exec()
 
     def load_stylesheets(self):
-        stylesheets_dir = "/common/homes/all/udixi_schneider/Documents/git/cti-engine-prototype/src/view/GUI/Stylesheets"
+        stylesheets_dir = "/common/homes/all/uyioc_brentel/PyCharm/pycharm-community-2023.3.1/cti-engine-prototype/src/view/GUI/Stylesheets"
         for stylesheet in os.listdir(stylesheets_dir):
             if stylesheet.endswith(".qss"):
                 with open(os.path.join(stylesheets_dir, stylesheet), "r") as file:
