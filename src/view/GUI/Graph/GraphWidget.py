@@ -43,6 +43,7 @@ class GraphWidget(QWidget):
 
     def add_plot(self, plot: Plot):
         """adds plot to graph widget"""
+        print(f"[GraphWidget]   x:{plot.x_values} \ny:{plot.y_values}")
         line, = self.ax.plot(plot.x_values, plot.y_values, label=plot.name, color=plot.color, linewidth=1.5)
         line.set_picker(True)
 

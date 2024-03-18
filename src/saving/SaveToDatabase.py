@@ -19,7 +19,7 @@ class SaveToDatabase(SaveInterface):
         print("initializing")
         self.__current_project_name: str = ""
         self.__saves_path: str = saves_path
-        print("[SaveToDatabase]     "+self.__saves_path)
+        print("[SaveToDatabase]     " + self.__saves_path)
         self.__model_lock = model_lock
         self.__model: Model = model
 

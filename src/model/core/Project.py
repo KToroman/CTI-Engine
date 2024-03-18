@@ -25,7 +25,7 @@ class Project(ProjectReadViewInterface):
         self.project_time = time.time() - 0.5
         time_stamp = str(self.project_time).split(".")
         time_stamp_str = f"{time_stamp[0]}_{time_stamp[1]}"
-        self.path_to_save = f".{path_to_save}/{self.working_dir}/{time_stamp_str}"
+        self.path_to_save = f"{path_to_save}/{self.working_dir}/{time_stamp_str}"
         self.delta_entries: List[DataBaseEntry] = list()
 
     def get_sourcefile(self, name: str) -> SourceFile:

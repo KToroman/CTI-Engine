@@ -32,7 +32,7 @@
             "name": "load",
             "args": [
                 "--load-file",
-                "/common/homes/students/upufw_toroman/PSE/saves/simox_2024-03-18/simox_2024-03-18_DataBase"
+                "/common/homes/students/upufw_toroman/code/simox/1710778293_6881099"
             ],
             "type": "debugpy",
             "request": "launch",
