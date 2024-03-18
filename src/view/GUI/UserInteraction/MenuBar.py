@@ -92,3 +92,20 @@ class MenuBar:
                                            self.__visualize_event, self.index_queue, self.change_table_signal)
             self.scroll_layout.addWidget(new_button)
             self.project_buttons.append(new_button)
+
+    def set_stylesheet(self, style: str):
+        if style == "Dark Mode Purple":
+            self.load_file_button.setStyleSheet("background-color: #476eed;")
+            self.pause_resume_button.setStyleSheet("background-color: #476eed;")
+            self.cancel_button.setStyleSheet("background-color: #476eed;")
+            self.scroll_button.setStyleSheet("background-color: #476eed;")
+        if style == "Dark Mode" or style == "Basic":
+            self.load_file_button.setStyleSheet("background-color: #23868B;")
+            self.pause_resume_button.setStyleSheet("background-color: #23868B;")
+            self.cancel_button.setStyleSheet("background-color: #23868B;")
+            self.scroll_button.setStyleSheet("background-color: #23868B;")
+        if style == "Light Mode":
+            self.load_file_button.setStyleSheet("background-color: #8D9FD0;")
+            self.pause_resume_button.setStyleSheet("background-color: #8D9FD0;")
+            self.cancel_button.setStyleSheet("background-color: #8D9FD0;")
+            self.scroll_button.setStyleSheet("background-color: #8D9FD0;")

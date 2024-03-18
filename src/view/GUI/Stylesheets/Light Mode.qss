@@ -1,59 +1,69 @@
 QMainWindow {
-    background-color: white;
+    background-color: #D4D9EB;
 }
 
 QPushButton {
-    background-color: #4095a1;
+    background-color: #8D9FD0;
+    font: bold 14px;
+
 }
 
 QWidget QLabel {
-    color: black;
+    color: #000000;
 }
 
 QCheckBox::indicator {
-    background-color: #3d3d3d;
+    background-color: #E4E6EB;
+    border: 1px solid #8D9FD0;
+}
+
+QCheckBox::indicator:checked {
+    background-color: #8D9FD0;
+    border: 1px solid #23868B;
 }
 
 QCheckBox {
-    color: #CCCCCC;
+    color: #000000;
 }
 
 QSpinBox {
-    color: #CCCCCC;
-    background-color: #3d3d3d;
+    color: #3A3B3C;
+    background-color: #E4E6EB;
 }
 
 QScrollArea {
-    background-color: #3d3d3d;
+    background-color: #8D9FD0;
 }
 
 QLineEdit {
-    color: #CCCCCC;
-    background-color: #3d3d3d;
+    color: #3A3B3C;
+    background-color: #E4E6EB;
 }
 
 QTreeWidget {
-    background-color: #3d3d3d;
+    background-color: #E4E6EB;
 }
 
 QTreeWidget QScrollBar {
-    background-color: #3d3d3d;
+    background-color: #8D9FD0;
 }
 
 QTreeWidget QPushButton {
-    background-color: #3d3d3d;
-    color: #CCCCCC;
+    background-color: #E4E6EB;
+    color: #000000;
 }
 
 QTreeWidget::item {
-    background-color: #3d3d3d; /* Hintergrundfarbe der Items */
-    color: #CCCCCC; /* Textfarbe der Items */
+    background-color: #E4E6EB; /* Hintergrundfarbe der Items */
+    color: #000000; /* Textfarbe der Items */
 }
 
 QTreeWidget::item {
-    border: 0.5px solid #252526; /* Umrandung der Items */
+    border: 0.5px solid #D4D9EB; /* Umrandung der Items */
 }
 
-QWidget#GraphWidget {
-    background-color: #3d3d3d;
+QTreeWidget QHeaderView {
+    background-color: #8D9FD0;
+    font: bold 14px;
 }
+

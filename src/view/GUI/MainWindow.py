@@ -12,6 +12,7 @@ from PyQt5.QtWidgets import (QMainWindow, QStackedWidget, QApplication, QCheckBo
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QMainWindow, QStackedWidget, QApplication, QCheckBox, QSpinBox, QLineEdit,
                              QPushButton)
+
 from src.model.core.ProjectReadViewInterface import ProjectReadViewInterface
 from src.view.GUI.Threading.PlotRunnable import PlotRunnable
 from src.view.GUI.Threading.AddRunnable import AddRunnable
@@ -131,7 +132,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.__q_application.exec()
 
     def load_stylesheets(self):
-        stylesheets_dir = "/common/homes/all/uyioc_brentel/PyCharm/pycharm-community-2023.3.1/cti-engine-prototype/src/view/GUI/Stylesheets"
+        stylesheets_dir = os.path.join(os.path.dirname(__file__), "Stylesheets")
         for stylesheet in os.listdir(stylesheets_dir):
             if stylesheet.endswith(".qss"):
                 with open(os.path.join(stylesheets_dir, stylesheet), "r") as file:
@@ -146,6 +147,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.ram_graph_widget.set_stylesheet(selected_style)
         self.cpu_graph_widget.set_stylesheet(selected_style)
         self.bar_chart_widget.set_stylesheet(selected_style)
+        self.menu_bar.set_stylesheet(selected_style)
 
     def visualize(self):
         """displays the data contained in that model to the user."""
