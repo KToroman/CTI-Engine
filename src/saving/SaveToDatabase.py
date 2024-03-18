@@ -18,6 +18,7 @@ class SaveToDatabase(SaveInterface):
     def __init__(self, saves_path: str, model_lock: SyncLock, model: Model):
         print("initializing")
         self.__current_project_name: str = ""
+        self.__saves_path_prefix = saves_path
         self.__saves_path: str = saves_path
         print("[SaveToDatabase]     " + self.__saves_path)
         self.__model_lock = model_lock
@@ -37,7 +38,7 @@ class SaveToDatabase(SaveInterface):
 
     def __add_new_project(self, project: Project):
         self.__current_project_name = project.name
-        self.__saves_path = project.path_to_save
+        self.__saves_path = self.__saves_path_prefix + project.path_to_save
         Path(self.__saves_path).mkdir(exist_ok=True, parents=True)
         db: Rdict = Rdict(self.__saves_path)
         db.close()

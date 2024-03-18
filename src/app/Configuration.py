@@ -27,7 +27,7 @@ class Configuration:
                 config.active_build_dir_path = Configuration.__get_cti_folder_path() + "builds"
             if config.saves_path == "None":
                 print("[Configuration]  saves_path is None")
-                config.saves_path = Configuration.__get_cti_folder_path() + "saves"
+                config.saves_path = ""
             return config
 
     @classmethod
