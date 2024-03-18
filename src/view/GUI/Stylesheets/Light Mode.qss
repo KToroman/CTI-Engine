@@ -1,0 +1,69 @@
+QMainWindow {
+    background-color: #D4D9EB;
+}
+
+QPushButton {
+    background-color: #8D9FD0;
+    font: bold 14px;
+
+}
+
+QWidget QLabel {
+    color: #000000;
+}
+
+QCheckBox::indicator {
+    background-color: #E4E6EB;
+    border: 1px solid #8D9FD0;
+}
+
+QCheckBox::indicator:checked {
+    background-color: #8D9FD0;
+    border: 1px solid #23868B;
+}
+
+QCheckBox {
+    color: #000000;
+}
+
+QSpinBox {
+    color: #3A3B3C;
+    background-color: #E4E6EB;
+}
+
+QScrollArea {
+    background-color: #8D9FD0;
+}
+
+QLineEdit {
+    color: #3A3B3C;
+    background-color: #E4E6EB;
+}
+
+QTreeWidget {
+    background-color: #E4E6EB;
+}
+
+QTreeWidget QScrollBar {
+    background-color: #8D9FD0;
+}
+
+QTreeWidget QPushButton {
+    background-color: #E4E6EB;
+    color: #000000;
+}
+
+QTreeWidget::item {
+    background-color: #E4E6EB; /* Hintergrundfarbe der Items */
+    color: #000000; /* Textfarbe der Items */
+}
+
+QTreeWidget::item {
+    border: 0.5px solid #D4D9EB; /* Umrandung der Items */
+}
+
+QTreeWidget QHeaderView {
+    background-color: #8D9FD0;
+    font: bold 14px;
+}
+
