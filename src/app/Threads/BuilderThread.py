@@ -23,7 +23,7 @@ class BuilderThread:
     def __run(self) -> None:
         while not self.__shutdown_event.is_set():
             if self.__building_event.is_set():
-                self.__add_grep_command_to_queue()
+                #self.__add_grep_command_to_queue()
                 finished: bool = not self.__compiling_tool.build()
                 if finished:
                     self.__finished_event.set()

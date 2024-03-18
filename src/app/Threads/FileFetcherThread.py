@@ -1,6 +1,7 @@
 from multiprocessing import Queue, Lock
 from threading import Thread
 from multiprocessing.synchronize import Event as SyncEvent
+from multiprocessing.synchronize import Lock as SyncLock
 
 from PyQt5.QtCore import pyqtSignal
 from src.fetcher.file_fetcher.FileLoader import FileLoader
@@ -8,7 +9,7 @@ from src.model.Model import Model
 
 
 class FileFetcherThread:
-    def __init__(self, error_queue: Queue, model: Model, model_lock: Lock, shutdown: SyncEvent, load_path_queue: Queue,
+    def __init__(self, error_queue: Queue, model: Model, model_lock: SyncLock, shutdown: SyncEvent, load_path_queue: Queue,
                  load_event: SyncEvent, project_queue: Queue, visualize_event: pyqtSignal):
         self.__thread: Thread
         self.__shutdown = shutdown
@@ -26,7 +27,6 @@ class FileFetcherThread:
             work: str
             if not self.__work_queue.empty():
                 self.__load_event.set()
-
                 work = self.__work_queue.get()
             else:
                 continue

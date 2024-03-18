@@ -1,6 +1,6 @@
 import datetime
 import time
-from typing import List, Protocol
+from typing import List, Optional, Protocol
 
 from src.model.core.CFileReadViewInterface import CFileReadViewInterface
 from src.model.core.DataEntry import DataEntry
@@ -10,19 +10,25 @@ from src.model.core.MetricName import MetricName
 class CFile(CFileReadViewInterface, Protocol):
     """Models CFile and is used for representing a tracked CFile in program"""
 
+    data_entries: List[DataEntry]
+    headers: List[CFileReadViewInterface]
+    path: str
+    error: bool
+
     def __init__(self, path: str) -> None:
-        self.data_entries: List[DataEntry] = []
-        self.headers: List[CFileReadViewInterface] = []
-        self.path: str = path
-        self.error: bool = False
+        raise NotImplementedError
 
     def get_name(self) -> str:
         return self.path
 
     def get_total_time(self) -> float:
-        sorted_timestamp_list = sorted(self.data_entries, key=lambda data_entry: data_entry.timestamp)
+        sorted_timestamp_list = sorted(
+            self.data_entries, key=lambda data_entry: data_entry.timestamp
+        )
         if sorted_timestamp_list:
-            return sorted_timestamp_list[-1].timestamp - sorted_timestamp_list[0].timestamp
+            return (
+                sorted_timestamp_list[-1].timestamp - sorted_timestamp_list[0].timestamp
+            )
         return 0
 
     def get_max(self, metric_name: MetricName) -> float:
@@ -37,7 +43,9 @@ class CFile(CFileReadViewInterface, Protocol):
 
     def get_metrics(self, metric_name: MetricName) -> List[float]:
         metric_list: List[float] = list()
-        sorted_timestamp_list = sorted(self.data_entries, key=lambda data_entry: data_entry.timestamp)
+        sorted_timestamp_list = sorted(
+            self.data_entries, key=lambda data_entry: data_entry.timestamp
+        )
         for entry in sorted_timestamp_list:
             for metric in entry.metrics:
                 if metric.name == metric_name:
@@ -48,7 +56,7 @@ class CFile(CFileReadViewInterface, Protocol):
     def __str__(self) -> str:
         return f"Path: {self.path} \nHeaders: {[a.get_name()  for a in self.headers]}"
 
-    def get_header_by_name(self, name: str) -> CFileReadViewInterface:
+    def get_header_by_name(self, name: str) -> Optional[CFileReadViewInterface]:
         for header in self.headers:
             if header.get_name is name:
                 return header
@@ -56,7 +64,9 @@ class CFile(CFileReadViewInterface, Protocol):
 
     def get_timestamps(self) -> List[float]:
         timestamps: List[float] = list()
-        sorted_timestamp_list = sorted(self.data_entries, key=lambda data_entry: data_entry.timestamp)
+        sorted_timestamp_list = sorted(
+            self.data_entries, key=lambda data_entry: data_entry.timestamp
+        )
         for datapoint in sorted_timestamp_list:
             timestamps.append(datapoint.timestamp)
         return timestamps
@@ -64,5 +74,5 @@ class CFile(CFileReadViewInterface, Protocol):
     def get_headers(self):
         return self.headers
 
-    def has_header(self) -> bool:
+    def has_error(self) -> bool:
         return self.error

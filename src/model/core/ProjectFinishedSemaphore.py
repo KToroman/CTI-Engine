@@ -6,7 +6,6 @@ from multiprocessing import Lock
 from typing import List
 
 from PyQt5.QtCore import pyqtSignal
-from colorama import Fore
 
 
 class ProjectFinishedSemaphore:
@@ -44,7 +43,7 @@ class ProjectFinishedSemaphore:
             self.__semaphore_list.remove(self)
 
             self.__project_queue.put(self.project_name)
-            print(Fore.GREEN + "project finished " +
-                  self.project_name + Fore.RESET)
+            print("project finished " +
+                  self.project_name)
             self.__visualize_event.emit()
             self.__project_finished_event.set()
