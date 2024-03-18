@@ -24,14 +24,8 @@ class Configuration:
                 json.load(config_json), cls)
             if config.active_build_dir_path == "None":
                 print("[Configuration]  active_build_dir_path is None")
-                config.active_build_dir_path = Configuration.__get_cti_folder_path() + "builds"
+                config.active_build_dir_path = ""
             if config.saves_path == "None":
                 print("[Configuration]  saves_path is None")
                 config.saves_path = ""
             return config
-
-    @classmethod
-    def __get_cti_folder_path(cls) -> str:
-        path: str = ""
-        path += join(os.getcwd().split("cti-engine-prototype")[0])
-        return path

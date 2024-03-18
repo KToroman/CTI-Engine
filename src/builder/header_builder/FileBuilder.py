@@ -7,7 +7,7 @@ class FileBuilder:
     def __init__(self, curr_project_dir: str, compile_command: str, source_file_name: str, build_path: str) -> None:
         self.__original_compile_command: str = compile_command
         self.__source_file_name: str = source_file_name
-        self.__build_path: Path = Path(build_path) / "Active_Mode_Build" / "temp" / source_file_name.replace("/", "#")
+        self.__build_path: Path = Path(build_path)/ Path(curr_project_dir)/ "CTI_Engine_Active_Mode_Build" / "temp" / source_file_name.replace("/", "#")
         self.__curr_project_dir: str = curr_project_dir
 
 
