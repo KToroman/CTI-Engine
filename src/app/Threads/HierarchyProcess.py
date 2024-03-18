@@ -3,7 +3,6 @@ from multiprocessing import Queue, Process
 from threading import Thread
 from multiprocessing.synchronize import Event as SyncEvent
 
-from colorama import Fore
 
 from src.fetcher.hierarchy_fetcher.HierarchyFetcher import HierarchyFetcher
 from src.model.Model import Model
@@ -47,8 +46,8 @@ class HierarchyProcess:
                               continue
                     except FileNotFoundError as e:
                         self.__error_queue.put(FileNotFoundError("could not find the compile-commands.json file"))
-                        print(Fore.RED + "[HierarchyProcess]   could not find the compile-commands.json file for project: " +
-                              Fore.BLUE + self.__current_work + Fore.RESET)
+                        print("[HierarchyProcess]   could not find the compile-commands.json file for project: " +
+                              self.__current_work)
                         repeat = False
                     self.__current_work = ""
                     repeat = False

@@ -1,0 +1,2 @@
+class CFileNotFoundError(Exception):
+    pass

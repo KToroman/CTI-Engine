@@ -6,6 +6,7 @@ import random
 from PyQt5.QtCore import pyqtSignal, QThreadPool
 from typing import List
 from multiprocessing import Queue, Event
+from multiprocessing.synchronize import Event as SyncEvent
 
 from PyQt5.QtWidgets import (QMainWindow, QStackedWidget, QApplication, QCheckBox, QSpinBox, QLineEdit, QPushButton,
                              QWidget)
@@ -49,9 +50,9 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     change_table_signal: pyqtSignal = pyqtSignal()
     index_queue: Queue = Queue()
 
-    def __init__(self, shutdown_event: Event, q_application: QApplication, status_queue: Queue, project_queue: Queue,
-                 error_queue: Queue, load_path_queue: Queue, active_mode_queue: Queue, cancel_event: Event,
-                 restart_event: Event, model: ModelReadViewInterface):
+    def __init__(self, shutdown_event: SyncEvent, q_application: QApplication, status_queue: Queue, project_queue: Queue,
+                 error_queue: Queue, load_path_queue: Queue, active_mode_queue: Queue, cancel_event: SyncEvent,
+                 restart_event: SyncEvent, model: ModelReadViewInterface):
         super(MainWindow, self).__init__()
 
         self.central_widget: QWidget = QWidget(self)
@@ -61,7 +62,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         # Queues and events for communication between app and gui
         self.__model = model
         self.project_queue: Queue = project_queue
-        self.shutdown_event: Event = shutdown_event
+        self.shutdown_event: SyncEvent = shutdown_event
         self.active_mode_queue = active_mode_queue
         self.status_queue: Queue = status_queue
         self.error_queue: Queue = error_queue

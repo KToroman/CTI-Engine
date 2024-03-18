@@ -1,6 +1,9 @@
 from src.model.core.SourceFile import SourceFile
 from src.model.core.Header import Header
-from typing import cast, Self
+from typing import cast
+from typing_extensions import Self
+
+
 
 
 class HeaderIterator:

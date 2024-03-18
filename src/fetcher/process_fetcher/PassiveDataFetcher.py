@@ -12,7 +12,7 @@ import psutil
 from PyQt5.QtCore import pyqtSignal
 
 from src.fetcher.process_fetcher.DataFetcher import DataFetcher
-from src.fetcher.process_fetcher.Threads.DataCollectionThread import DataCollectionThread
+from src.fetcher.process_fetcher.Threads.PassiveDataCollectionThread import PassiveDataCollectionThread
 from src.fetcher.process_fetcher.Threads.ProcessCollectorThread import ProcessCollectorThread
 from src.fetcher.process_fetcher.Threads.ProcessFindingThread import ProcessFindingThread
 
@@ -51,7 +51,7 @@ class PassiveDataFetcher(DataFetcher):
 
         self.__fetcher_count: int = fetcher_count
         self.__fetcher_process_count = fetcher_process_count
-        self.__fetcher: List[DataCollectionThread] = list()
+        self.__fetcher: List[PassiveDataCollectionThread] = list()
         self.__done_fetching: bool = True
         self.max_time = 0
         self.__pid_queue = pid_queue
@@ -119,7 +119,7 @@ class PassiveDataFetcher(DataFetcher):
         process_list_lock: threading.Lock = threading.Lock()
         # self.__data_fetching_thread.start()
         for i in range(self.__fetcher_count):
-            fetcher = DataCollectionThread(process_list, process_list_lock, self.__model, self.__model_lock,
+            fetcher = PassiveDataCollectionThread(process_list, process_list_lock, self.__model, self.__model_lock,
                                            DataObserver(), self.__fetcher_process_count, self.__shutdown,
                                            self.__passive_event)
             self.__fetcher.append(fetcher)

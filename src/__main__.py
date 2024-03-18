@@ -53,8 +53,8 @@ def run(gui: bool, load_file: str, active: str):
         app.stop()
 
 
-def initialize_gui(GUI: bool) -> UIInterface:
-    if GUI:
+def initialize_gui(run_with_gui: bool) -> UIInterface:
+    if run_with_gui:
         gui: UIInterface = prepare_gui(shutdown_event=shutdown_event, status_queue=status_queue,
                                        project_queue=project_queue,
                                        error_queue=error_queue, load_path_queue=load_path_queue, cancel_event=cancel_event,

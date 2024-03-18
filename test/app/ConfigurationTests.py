@@ -1,12 +1,10 @@
-import json
 import os
-import cattrs
 
 from src.app.Configuration import Configuration
 
 
 def test_load_json():
-    json_str = '''{
+    json_str = """{
   "process_finder_count": 1,
   "process_collector_count": 1,
   "fetcher_count": 1,
@@ -15,7 +13,7 @@ def test_load_json():
   "active_build_dir_path": null,
   "saves_path": null
 }
-'''
+"""
     config: Configuration
     with open("test_config_no_path", "w+") as config_file:
         config_file.write(json_str)
@@ -29,7 +27,7 @@ def test_load_json():
 
 
 def test_load_json_with_set_path():
-    json_str = '''
+    json_str = """
     {
       "process_finder_count": 1,
       "process_collector_count": 1,
@@ -39,7 +37,7 @@ def test_load_json_with_set_path():
       "active_build_dir_path": "test\\test",
       "saves_path": "saves_path_test"
     }
-    '''
+    """
     config: Configuration
     with open("test_config_path_set", "w+") as config_file:
         config_file.write(json_str)
@@ -52,14 +50,14 @@ def test_load_json_with_set_path():
 
 
 def test_load_wrong_json():
-    json_str = '''
+    json_str = """
 {
   "process_collector_count": 1,
   "fetcher_count": 1,
   "fetcher_process_count": 15,
   "hierarchy_fetcher_worker_count": 16,
 }
-'''
+"""
     try:
         with open("test_config_wrong", "w+") as config_file:
             config_file.write(json_str)
