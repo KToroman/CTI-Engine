@@ -6,8 +6,8 @@ from PyQt5.QtWidgets import QVBoxLayout, QWidget
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
-from src.view.GUI.Graph.CustomToolbar import CustomToolbar
-from src.view.GUI.Graph.Plot import Plot
+from src.view.gui.graph.CustomToolbar import CustomToolbar
+from src.view.gui.graph.Plot import Plot
 
 
 class BarWidget(QWidget):

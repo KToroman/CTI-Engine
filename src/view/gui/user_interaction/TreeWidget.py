@@ -4,10 +4,10 @@ from typing import List
 from PyQt5.QtCore import QThreadPool, Qt
 from PyQt5.QtWidgets import QInputDialog, QWidget, QHBoxLayout, QHeaderView, QTreeWidget, QLineEdit
 
-from src.view.GUI.Graph.Plot import Plot
-from src.view.GUI.UserInteraction.Displayable import Displayable
-from src.view.GUI.UserInteraction.ItemWrapper import ItemWrapper
-from src.view.GUI.UserInteraction.TableRow import TableRow
+from src.view.gui.graph.Plot import Plot
+from src.view.gui.user_interaction.Displayable import Displayable
+from src.view.gui.user_interaction.ItemWrapper import ItemWrapper
+from src.view.gui.user_interaction.TableRow import TableRow
 
 
 class TreeWidget(QTreeWidget):

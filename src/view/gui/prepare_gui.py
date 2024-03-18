@@ -7,7 +7,7 @@ from multiprocessing.synchronize import Event as SyncEvent
 from PyQt5.QtWidgets import QApplication
 
 from src.model.Model import Model
-from src.view.GUI.MainWindow import MainWindow
+from src.view.gui.MainWindow import MainWindow
 from src.view.UIInterface import UIInterface
 
 

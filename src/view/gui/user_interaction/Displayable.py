@@ -1,7 +1,7 @@
 from typing import List
 
-from src.view.GUI.Graph.Plot import Plot
-from src.view.GUI.Graph.Plot import Plot
+from src.view.gui.graph.Plot import Plot
+from src.view.gui.graph.Plot import Plot
 
 
 class Displayable:

@@ -1,11 +1,11 @@
 from PyQt5.QtCore import QRunnable, QMutex
 
-from src.view.GUI.Graph.BarWidget import BarWidget
-from src.view.GUI.Graph.GraphWidget import GraphWidget
-from src.view.GUI.UserInteraction.Displayable import Displayable
+from src.view.gui.graph.BarWidget import BarWidget
+from src.view.gui.graph.GraphWidget import GraphWidget
+from src.view.gui.user_interaction.Displayable import Displayable
 
 
-class AddRunnable(QRunnable):
+class RemoveRunnable(QRunnable):
 
     def __init__(self, ram_graph: GraphWidget,  cpu_graph: GraphWidget, runtime_graph: BarWidget,
                  displayable: Displayable, mutex: QMutex):
@@ -20,7 +20,8 @@ class AddRunnable(QRunnable):
 
     def run(self):
         self.mutex.lock()
-        self.ram_graph.add_plot(self.displayable.ram_plot)
-        self.cpu_graph.add_plot(self.displayable.cpu_plot)
-        self.runtime_graph.add_bar(self.displayable.runtime_plot)
+        self.ram_graph.remove_plot(self.displayable.ram_plot)
+        self.cpu_graph.remove_plot(self.displayable.cpu_plot)
+        self.runtime_graph.remove_bar(self.displayable.runtime_plot)
         self.mutex.unlock()
+

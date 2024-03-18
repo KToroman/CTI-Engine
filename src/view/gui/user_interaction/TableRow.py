@@ -1,6 +1,6 @@
 from typing import List
 
-from src.view.GUI.UserInteraction.Displayable import Displayable
+from src.view.gui.user_interaction.Displayable import Displayable
 from PyQt5.QtWidgets import QCheckBox, QPushButton
 
 

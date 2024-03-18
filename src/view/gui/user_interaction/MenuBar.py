@@ -4,7 +4,7 @@ from typing import List
 
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QPushButton, QInputDialog, QScrollArea, QWidget, QVBoxLayout
-from src.view.GUI.UserInteraction.ProjectNameButtonWrapper import ProjectNameButton
+from src.view.gui.user_interaction.ProjectNameButtonWrapper import ProjectNameButton
 
 
 class MenuBar:

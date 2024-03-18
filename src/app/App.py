@@ -65,7 +65,7 @@ class App(AppRequestsInterface):
         self.__model_lock: SyncLock = Lock()
         self.__model = model
 
-        # Signals for GUI
+        # Signals for gui
         self.__error_signal: pyqtSignal = error_signal
         self.__status_signal: pyqtSignal = status_signal
         self.visualize_signal: pyqtSignal = visualize_signal

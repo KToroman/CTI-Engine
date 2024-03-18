@@ -44,7 +44,7 @@ def setup_ui(main_window):
     main_window.sidebar_button_layout.addWidget(main_window.label)
     icon_label2 = QLabel()
     icon_label2.setAlignment(Qt.AlignHCenter)
-    icon_label2.setPixmap(QIcon('src/view/GUI/Images/CTIEngineLogo.png').pixmap(40, 40))
+    icon_label2.setPixmap(QIcon('src/view/gui/images/CTIEngineLogo.png').pixmap(40, 40))
     main_window.sidebar_button_layout.addWidget(icon_label2)
     main_window.load_button = main_window.menu_bar.load_file_button
     main_window.sidebar_button_layout.addWidget(main_window.load_button)

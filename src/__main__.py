@@ -8,7 +8,7 @@ from src.app.App import App
 from src.model.Model import Model
 from src.view.UIInterface import UIInterface
 from src.view.CommandLineUI import CommandLineUI
-from src.view.GUI.prepare_gui import prepare_gui
+from src.view.gui.prepare_gui import prepare_gui
 
 
 @click.command()
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     passive_mode_event.set()
     load_event = multiprocessing.Event()
 
-    # Queues for GUI messages
+    # Queues for gui messages
     load_path_queue = Queue(3)
     source_file_name_queue = Queue(1)
     error_queue: Queue = Queue(4)

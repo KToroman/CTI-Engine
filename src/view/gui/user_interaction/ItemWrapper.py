@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QTreeWidgetItem
 
-from src.view.GUI.UserInteraction.TableRow import TableRow
+from src.view.gui.user_interaction.TableRow import TableRow
 
 
 class ItemWrapper(QTreeWidgetItem):

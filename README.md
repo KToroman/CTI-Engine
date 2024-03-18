@@ -1,5 +1,5 @@
 <div align="center">
-<img src="./src/view/GUI/Images/CTIEngineLogo.png" width="250" height="250" alt="CTIEngine Logo">
+<img src="src/view/gui/images/CTIEngineLogo.png" width="250" height="250" alt="CTIEngine Logo">
 </div>
 
 

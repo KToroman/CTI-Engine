@@ -4,7 +4,7 @@ from PyQt5.QtCore import pyqtSignal
 
 from src.model.core.StatusSettings import StatusSettings
 from src.view.UIInterface import UIInterface
-from src.view.GUI.MainWindowMeta import MainWindowMeta
+from src.view.gui.MainWindowMeta import MainWindowMeta
 from PyQt5.QtWidgets import QWidget, QApplication
 
 

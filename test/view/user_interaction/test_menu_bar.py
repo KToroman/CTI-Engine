@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import QPushButton, QInputDialog, QAbstractButton
 
 from src.app.App import App
 from src.model.Model import Model
-from src.view.GUI.prepare_gui import prepare_gui
+from src.view.gui.prepare_gui import prepare_gui
 
 
 @pytest.fixture
@@ -21,7 +21,7 @@ def app():
     passive_mode_event = multiprocessing.Event()
     passive_mode_event.set()
     load_event = multiprocessing.Event()
-    # Queues for GUI messages
+    # Queues for gui messages
     load_path_queue = Queue(3)
     source_file_name_queue = Queue(1)
 

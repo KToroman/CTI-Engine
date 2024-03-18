@@ -7,25 +7,25 @@ from multiprocessing import Queue, Event
 from PyQt5.QtWidgets import (QMainWindow, QStackedWidget, QApplication, QCheckBox, QSpinBox, QLineEdit, QPushButton,
                              QWidget)
 from src.model.core.ProjectReadViewInterface import ProjectReadViewInterface
-from src.view.GUI.PlotRunnable import PlotRunnable
-from src.view.GUI.AddRunnable import AddRunnable
-from src.view.GUI.Graph.BarWidget import BarWidget
-from src.view.GUI.Graph.GraphWidget import GraphWidget
-from src.view.GUI.MainWindowMeta import MainWindowMeta
-from src.view.GUI.RemoveRunnable import RemoveRunnable
-from src.view.GUI.UserInteraction.MenuBar import MenuBar
-from src.view.GUI.UserInteraction.Displayable import Displayable
-from src.view.GUI.UserInteraction.MetricBar import MetricBar
+from src.view.gui.PlotRunnable import PlotRunnable
+from src.view.gui.AddRunnable import AddRunnable
+from src.view.gui.graph.BarWidget import BarWidget
+from src.view.gui.graph.GraphWidget import GraphWidget
+from src.view.gui.MainWindowMeta import MainWindowMeta
+from src.view.gui.RemoveRunnable import RemoveRunnable
+from src.view.gui.user_interaction.MenuBar import MenuBar
+from src.view.gui.user_interaction.Displayable import Displayable
+from src.view.gui.user_interaction.MetricBar import MetricBar
 from src.model.ModelReadViewInterface import ModelReadViewInterface
 from src.model.core.CFileReadViewInterface import CFileReadViewInterface
-from src.view.GUI.Graph.Plot import Plot
+from src.view.gui.graph.Plot import Plot
 from src.model.core.MetricName import MetricName
-from src.view.GUI.Visuals.StatusBar import StatusBar
+from src.view.gui.visuals.StatusBar import StatusBar
 from src.model.core.StatusSettings import StatusSettings
 from src.view.UIInterface import UIInterface
-from src.view.GUI.Visuals.ErrorWindow import ErrorWindow
-import src.view.GUI.Visuals.GuiDesign as gd
-from src.view.GUI.UserInteraction.TreeWidget import TreeWidget
+from src.view.gui.visuals.ErrorWindow import ErrorWindow
+import src.view.gui.visuals.GuiDesign as gd
+from src.view.gui.user_interaction.TreeWidget import TreeWidget
 
 
 class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
@@ -55,7 +55,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         # Queues and events for communication between app and gui
         self.__model = model
         self.project_queue: Queue = project_queue
-        self.shutdown_event: Event = shutdown_event
+        self.shutdown_event = shutdown_event
         self.active_mode_queue = active_mode_queue
         self.status_queue: Queue = status_queue
         self.error_queue: Queue = error_queue
@@ -223,7 +223,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         ram_peak: float = cfile.get_max(MetricName.RAM)
         cpu_peak: float = cfile.get_max(MetricName.CPU)
 
-        # Create Graph Plots
+        # Create graph Plots
         x_values: List[float] = list()
         for c in cfile.get_timestamps():
             x_values.append(c - self.project_time)
@@ -282,6 +282,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.metric_bar.runtime_button.pressed.connect(lambda: self.stacked_widget.setCurrentIndex(2))
 
     def __update_visibility(self, displayable: Displayable):
+        print("updating visibility")
         """Shows or hides plots of given displayable."""
         visibility: bool = False
         for visible_displayable in self.__visible_plots:
@@ -294,7 +295,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
                                                                  displayable=displayable, mutex=self.mutex)
                 self.thread_pool.start(remove_runnable)
         if not visibility:
-            self.__visible_plots.append(displayable)
+            print("ABOUT TO RUNNABLE")
             add_runnable: AddRunnable = AddRunnable(ram_graph=self.ram_graph_widget,
                                                     cpu_graph=self.cpu_graph_widget,
                                                     runtime_graph=self.bar_chart_widget, displayable=displayable,
