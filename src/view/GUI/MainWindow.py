@@ -1,6 +1,6 @@
 import colorsys
 import random
-from PyQt5.QtCore import pyqtSignal, QThreadPool
+from PyQt5.QtCore import pyqtSignal, QThreadPool, QMutex
 from typing import List
 from multiprocessing import Queue, Event
 
@@ -89,6 +89,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.__visible_plots: List[Displayable] = []
         self.project_time: float = 0
 
+        self.mutex: QMutex = QMutex()
         self.thread_pool: QThreadPool = QThreadPool.globalInstance()
         self.thread_pool.setMaxThreadCount(10)
         self.displayed_project: str = ""
@@ -137,8 +138,8 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.lower_limit.setMaximum(file_count)
         self.upper_limit.setMaximum(file_count)
         # Update other Widgets
-        self.__setup_connections()
-        self.status_bar.update_status(StatusSettings.FINISHED)
+        self.setup_connections()
+        self.status_bar.update_status(StatusSettings.FINISHED, "")
         self.menu_bar.project_buttons[len(self.menu_bar.project_buttons) - 1].setStyleSheet("background-color: #00FF00")
 
     def __visualize_active(self, project: ProjectReadViewInterface):
@@ -159,7 +160,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         for cfile in cfile_list:
             self.current_table.add_active_data(self.__create_displayable(cfile))
         # Update other Widgets
-        self.__setup_connections()
+        self.setup_connections()
         self.status_bar.update_status(StatusSettings.FINISHED)
 
     def __connect_new_table(self):
@@ -264,7 +265,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
         return random_color_hex
 
-    def __setup_connections(self):
+    def setup_connections(self):
         """Sets up connections between table and graph widgets."""
         for row in self.current_table.rows:
             if not row.connected:
@@ -290,17 +291,18 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
                 remove_runnable: RemoveRunnable = RemoveRunnable(ram_graph=self.ram_graph_widget,
                                                                  cpu_graph=self.cpu_graph_widget,
                                                                  runtime_graph=self.bar_chart_widget,
-                                                                 displayable=displayable)
+                                                                 displayable=displayable, mutex=self.mutex)
                 self.thread_pool.start(remove_runnable)
         if not visibility:
             self.__visible_plots.append(displayable)
             add_runnable: AddRunnable = AddRunnable(ram_graph=self.ram_graph_widget,
                                                     cpu_graph=self.cpu_graph_widget,
-                                                    runtime_graph=self.bar_chart_widget, displayable=displayable)
+                                                    runtime_graph=self.bar_chart_widget, displayable=displayable,
+                                                    mutex=self.mutex)
             self.thread_pool.start(add_runnable)
         if not self.current_table.in_row_loop:
             plot_runnable: PlotRunnable = PlotRunnable(ram_graph=self.ram_graph_widget, cpu_graph=self.cpu_graph_widget,
-                                                       runtime_graph=self.bar_chart_widget)
+                                                       runtime_graph=self.bar_chart_widget, mutex=self.mutex)
             self.thread_pool.start(plot_runnable)
 
     def __setup_click_connections(self):

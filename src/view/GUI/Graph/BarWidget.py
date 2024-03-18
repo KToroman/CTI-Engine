@@ -63,9 +63,6 @@ class BarWidget(QWidget):
         #self.figure.set_facecolor("#61b3bf")
         # Create subplot for bar chart
         self.ax = self.figure.add_subplot(111)
-        print("VALUES LISTE: " + len(self.values).__str__())
-        print("COLORS LISTE: " + len(self.colors).__str__())
-        print("CATEGORIES LISTE: " + len(self.categories).__str__())
         # Create bar chart
         bars = self.ax.bar(self.categories, self.values, color=self.colors, label=self.categories)
         self.ax.set_xticks([])
