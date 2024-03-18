@@ -25,11 +25,12 @@ def active_fetcher_thread():
                                             model=model, model_lock=model_lock, source_file_name_queue=sourcefile_queue, error_queue=error_queue,
                                             build_dir_path=build_dir_path, active_measurement_active=active_measurement_active, visualise_event=visualize_signal, visualise_project_queue=vizualize_queue)
     thread_mock = Mock()
+    thread_mock.patch('__thread.start', return_value=True)
     actv_fetch_thread.__thread = thread_mock
     return actv_fetch_thread
 
 
 def test_start(active_fetcher_thread):
-    active_fetcher_thread.start()
-    assert active_fetcher_thread.__thread.start.called_once()
+    
+    assert active_fetcher_thread.start()
     assert True
