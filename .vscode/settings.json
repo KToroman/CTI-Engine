@@ -2,7 +2,7 @@
     "python.analysis.autoImportCompletions": true,
     "python.analysis.typeCheckingMode": "basic",
     "[python]": {
-        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.defaultFormatter": "ms-python.autopep8",
         "editor.insertSpaces": true,
         "editor.tabSize": 4,
         "editor.formatOnSave": true
@@ -14,3 +14,4 @@
     "python.testing.pytestEnabled": true,
     "python.testing.cwd": "",
 }
+
