@@ -1,10 +1,11 @@
 import os
 from multiprocessing import Manager, Queue
 from multiprocessing.synchronize import Lock as SyncLock
+from posixpath import join
 from typing import Dict, List, Optional, Tuple
 
 
-from rocksdict import Rdict
+from rocksdict import Rdict, RdictIter
 
 from src.exceptions.CFileNotFoundError import CFileNotFoundError
 from src.fetcher.FetcherInterface import FetcherInterface
@@ -38,7 +39,9 @@ class FileLoader(FetcherInterface):
 
     def update_project(self) -> bool:
         if self.__is_valid_path():
-            self.__db = Rdict(self.__path)
+            self.__db = Rdict(self.__path) #TODO
+            if self.__db is None:
+                print("no database")
             project: Project = self.__create_project()
             print("[FileLoader]     created new project")
             self.__insert_values(project)
@@ -53,9 +56,14 @@ class FileLoader(FetcherInterface):
         raise FileNotFoundError("Couldn't find any saved projects on the given path")
 
     def __insert_values(self, project: Project):
-        for key, value in self.__db.items():
+        iter: RdictIter = self.__db.iter()
+        iter.seek_to_first()
+        while iter.valid():
             print("next entry")
+            key = iter.key()
+            value = iter.value()
             self.__add_to_project(key, value, project)
+            iter.next()
         print("[FileLoader]     added all items in database")
 
     def __add_to_project(self, key: str, value: Tuple, project: Project):

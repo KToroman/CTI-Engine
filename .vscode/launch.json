@@ -22,7 +22,17 @@
             "name": "load",
             "args": [
                 "--load-file",
-                "/common/homes/students/upufw_toroman/Downloads/CTI_ENGINE_SAVE bullet3 2024-02-09"
+                "/common/homes/students/upufw_toroman/PSE/saves/simox_2024-03-18/simox_2024-03-18_DataBase"
+            ],
+            "type": "debugpy",
+            "request": "launch",
+            "module": "src",
+            "justMyCode": true
+        },
+        {
+            "name": "no gui",
+            "args": [
+                "--nogui",
             ],
             "type": "debugpy",
             "request": "launch",

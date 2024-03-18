@@ -3,7 +3,7 @@ from typing import List, Tuple
 from unittest.mock import MagicMock
 from PyQt5.QtCore import pyqtSignal
 from qtpy import QT5
-from rocksdict import Rdict
+from rocksdict import Rdict, RdictIter
 from src.fetcher.file_fetcher.FileLoader import FileLoader
 from src.model.DataBaseEntry import DataBaseEntry
 from src.model.Model import Model
@@ -66,4 +66,14 @@ if __name__ == "__main__":
     test_db()
     test_loading()
     test_split()
+    db = Rdict("/common/homes/students/upufw_toroman/PSE/saves/simox_2024-03-18/simox_2024-03-18_DataBase")
+    iter: RdictIter = db.iter()
+    iter.seek_to_first()
+    while iter.valid():
+        print("next entry")
+        key = iter.key()
+        value = iter.value()
+        print("new item")
+        iter.next()
     print("[SaveToDataBaseTest]     concluded tests")
+    Rdict.destroy(path)

@@ -24,10 +24,10 @@ class Configuration:
                 json.load(config_json), cls)
             if config.active_build_dir_path == "None":
                 print("[Configuration]  active_build_dir_path is None")
-                config.active_build_dir_path = Configuration.__get_cti_folder_path() + "\\builds"
+                config.active_build_dir_path = Configuration.__get_cti_folder_path() + "builds"
             if config.saves_path == "None":
                 print("[Configuration]  saves_path is None")
-                config.saves_path = Configuration.__get_cti_folder_path() + "\\saves"
+                config.saves_path = Configuration.__get_cti_folder_path() + "saves"
             return config
 
     @classmethod
@@ -35,8 +35,3 @@ class Configuration:
         path: str = ""
         path += join(os.getcwd().split("cti-engine-prototype")[0])
         return path
-
-
-if __name__ == "__main__":
-    config = Configuration.load("/common/homes/all/udixi_schneider/Documents/git/cti-engine-prototype/config/ConfigFile.json")
-    print(config.active_build_dir_path)
