@@ -16,10 +16,7 @@ class CFile(CFileReadViewInterface, Protocol):
     error: bool
 
     def __init__(self, path: str) -> None:
-        self.data_entries: List[DataEntry] = []
-        self.headers: List[CFileReadViewInterface] = []
-        self.path: str = path
-        self.error: bool = False
+        raise NotImplementedError
 
     def get_name(self) -> str:
         return self.path

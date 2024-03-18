@@ -12,6 +12,16 @@
             "justMyCode": true
         },
         {
+            "name": "no gui",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "src",
+            "args": [
+                "--nogui"
+            ],
+            "justMyCode": true
+        },
+        {
             "name": "test saving, correct import",
             "type": "debugpy",
             "request": "launch",
