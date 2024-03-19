@@ -1,4 +1,4 @@
-from PyQt5.QtCore import QRunnable
+from PyQt5.QtCore import QRunnable, QMutex
 
 from src.view.GUI.Graph.BarWidget import BarWidget
 from src.view.GUI.Graph.GraphWidget import GraphWidget
@@ -8,7 +8,7 @@ from src.view.GUI.UserInteraction.Displayable import Displayable
 class AddRunnable(QRunnable):
 
     def __init__(self, ram_graph: GraphWidget,  cpu_graph: GraphWidget, runtime_graph: BarWidget,
-                 displayable: Displayable):
+                 displayable: Displayable, mutex: QMutex):
         super().__init__()
 
         self.ram_graph: GraphWidget = ram_graph

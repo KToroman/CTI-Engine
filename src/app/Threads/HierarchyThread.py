@@ -32,9 +32,10 @@ class HierarchyThread:
         while not self.__shutdown.is_set():
             if not self.__hierarchy_work_queue.empty():
                 if not self.__process.is_alive():
+                    self.__process_shutdown.clear()
                     self.__process.start()
             if not self.source_file_queue.empty():
-                data = self.source_file_queue.get()
+                data: SourceFile = self.source_file_queue.get()
                 if self.__current_work == "":
                     self.__current_work = data.path
                     self.__fetching_hierarchy.set()
@@ -50,7 +51,7 @@ class HierarchyThread:
                     continue
                 time.sleep(0.01)
                 with self.__model_lock:
-                    source_file = self.__model.get_project_by_name(self.__current_work).get_sourcefile(data.path)
+                    source_file: SourceFile = self.__model.get_project_by_name(self.__current_work).get_sourcefile(data.path)
                     source_file.headers = data.headers
                     source_file.compile_command = data.compile_command
                     source_file.error = data.error
