@@ -38,16 +38,18 @@ class Model(ModelReadViewInterface):
         )
 
     def insert_datapoint_header(self, source_file_path: str, data_entry: DataEntry):
-        path = source_file_path + data_entry.path
-        header = self.headers.get(path, None)
+        header = self.headers.get(data_entry.path, None)
         if header is None:
             raise CFileNotFoundError
         header.data_entries.append(data_entry)
         if self.current_project is None:
             raise ProjectNotFoundException
+        parent = header.parent
+        if parent is None:
+            raise CFileNotFoundError
         self.current_project.add_to_delta(
             path=header.path,
-            parent_path=header.parent.path,
+            parent_path=parent.path,
             data_entry=data_entry,
             hierarchy_level=header.hierarchy_level,
         )
