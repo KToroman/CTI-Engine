@@ -73,9 +73,12 @@ class Project(ProjectReadViewInterface):
 
 
     def add_to_delta(
-        self, hierarchy_level: int, path: str, parent_path: str, data_entry: DataEntry
+        self, hierarchy_level: int, path: str, parent_path: str, data_entry: DataEntry|None
     ):
-        self.delta_entries.append(
+        if data_entry is None:
+            self.delta_entries.append(DataBaseEntry(path, parent_path, None, None, hierarchy_level))
+        else:
+            self.delta_entries.append(
             DataBaseEntry(
                 path,
                 parent_path,
