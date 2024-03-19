@@ -34,8 +34,8 @@ class ActiveDataCollectionThread(PassiveDataCollectionThread):
         active_event: SyncEvent,
         saving_queue: Queue,
     ):
-        self.__source_file = source_file
-        self.__saving_queue: Queue = saving_queue
+        self._source_file = source_file
+        self._saving_queue: Queue = saving_queue
         super().__init__(
             process_list,
             process_list_lock,
@@ -47,14 +47,14 @@ class ActiveDataCollectionThread(PassiveDataCollectionThread):
             active_event,
         )
 
-    def __add_data_entry(self, data_entry: DataEntry):
-        with self.__model_lock:
-            self.__model.insert_datapoint_header(
+    def _add_data_entry(self, data_entry: DataEntry):
+        with self._model_lock:
+            self._model.insert_datapoint_header(
                 data_entry=data_entry,
-                source_file_path=self.__source_file.path,
+                source_file_path=self._source_file.path,
             )
 
-    def __make_entry(self, process_point: ProcessPoint) -> None:
+    def _make_entry(self, process_point: ProcessPoint) -> None:
         try:
             cmdline: list[str] = process_point.process.cmdline()
             path: str = process_point.process.cwd()
@@ -67,7 +67,7 @@ class ActiveDataCollectionThread(PassiveDataCollectionThread):
                 if line.endswith(".o"):
 
                     source_file_path = line.split("/")[-2].replace("#", "/")
-                    if source_file_path != self.__source_file.path:
+                    if source_file_path != self._source_file.path:
                         return
 
                     path = line.split("/")[-1].replace("#", "/")
@@ -80,7 +80,7 @@ class ActiveDataCollectionThread(PassiveDataCollectionThread):
             entry: DataEntry = DataEntry(
                 path, process_point.timestamp, process_point.metrics
             )
-            self.__add_data_entry(entry)
+            self._add_data_entry(entry)
         except NoSuchProcess:
             return
         except FileNotFoundError:

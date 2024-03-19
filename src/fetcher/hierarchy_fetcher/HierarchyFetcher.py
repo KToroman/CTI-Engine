@@ -27,6 +27,8 @@ class HierarchyFetcher(FetcherInterface):
         shutdown_event: SyncEvent,
         source_file_queue: Queue,
         pid_queue: Queue,
+        model: Model,
+        model_lock: SyncLock,
         max_workers,
     ) -> None:
         self.source_file_queue = source_file_queue
@@ -36,6 +38,8 @@ class HierarchyFetcher(FetcherInterface):
         self.__hierarchy_fetching_event = hierarchy_fetching_event
         self.__shutdown_event = shutdown_event
         self.project: Project
+        self.__model: Model = model
+        self.__model_lock: SyncLock = model_lock
         self.worker_thread_pool: ThreadPoolExecutor = ThreadPoolExecutor(
             max_workers=max_workers, thread_name_prefix="hierarchy_worker"
         )
@@ -181,12 +185,12 @@ class HierarchyFetcher(FetcherInterface):
         path: str = self.__get_path_from_line(line)
         if not hierarchy:
             new_header: Header = self.__append_header_to_file(
-                line_depth, source_file, path
+                line_depth, source_file, path, source_file
             )
             hierarchy.append((new_header, line_depth))
         elif line_depth > hierarchy[-1][1]:
             new_header: Header = self.__append_header_to_file(
-                line_depth, hierarchy[-1][0], path
+                line_depth, hierarchy[-1][0], path, source_file
             )
             hierarchy.append((new_header, line_depth))
         else:
@@ -194,12 +198,14 @@ class HierarchyFetcher(FetcherInterface):
             self.__append_header_recursive(line, hierarchy, source_file)
 
     def __append_header_to_file(
-        self, hierarchy_level: int, cfile: CFile, new_header_path: str
+        self, hierarchy_level: int, cfile: CFile, new_header_path: str, root_source_file: SourceFile
     ) -> Header:
         new_header = Header(
             new_header_path, parent=cfile, hierarchy_level=hierarchy_level
         )
         cfile.headers.append(new_header)
+        with self.__model_lock:
+            self.__model.headers[root_source_file.path + new_header_path] = new_header
         return new_header
 
     def __get_depth(self, line: str) -> int:
