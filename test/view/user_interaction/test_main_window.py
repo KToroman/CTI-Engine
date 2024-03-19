@@ -99,32 +99,14 @@ def main_window(app) -> MainWindowMock:
     return main_window
 
 
-@pytest.fixture
-def tree_widget(main_window):
-    return main_window.current_table
-
-
-"""@pytest.fixture
-def model(main_window):
-    return main_window.get_model()"""
-
-"""
-def cfile():
-    cfile_mock = MagicMock()
-
-    return cfile_mock
-"""
-"""
-def project(main_window: MainWindow):
-    pass"""
-
-
-def test_visualize_passive(main_window, tree_widget):
+def test_visualize_passive(main_window):
     project_mock: ProjectMock = ProjectMock(" ", " ")
-    #main_window.get_model().get_project_by_name = project_mock
     main_window.project_queue.put(project_mock)
-    # main_window.project_queue.put("Mock Project Name")
-    # model.get_project_by_name("Mock Project Name").return_value = project_mock
-    # project(main_window=main_window)
     main_window.visualize()
-    assert True
+    assert main_window.current_table.rows[0].displayable.name == project_mock.get_cfiles()[0].get_name()
+
+
+def test_visualize_active(main_window):
+    test_visualize_passive(main_window)
+
+    main_window.current_table.start_active_measurement("CFile Mock")
