@@ -51,7 +51,6 @@ class BarWidget(QWidget):
 
     def plot_bar_chart(self):
         """(Re)draws bar chart."""
-
         # Remove previous axes labels
         self.figure.clear()
         # Create subplot for bar chart
