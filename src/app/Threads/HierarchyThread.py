@@ -6,6 +6,7 @@ from multiprocessing.synchronize import Event as SyncEvent
 from src.app.Threads.HierarchyProcess import HierarchyProcess
 from src.fetcher.hierarchy_fetcher.HierarchyFetcher import HierarchyFetcher
 from src.model.Model import Model
+from src.model.core.CFile import CFile
 from src.model.core.Project import Project
 from src.model.core.SourceFile import SourceFile
 from multiprocessing.synchronize import Lock as SyncLock
@@ -51,10 +52,16 @@ class HierarchyThread:
                     continue
                 time.sleep(0.01)
                 with self.__model_lock:
-                    source_file: SourceFile = self.__model.get_project_by_name(self.__current_work).get_sourcefile(data.path)
-                    source_file.headers = data.headers
-                    source_file.compile_command = data.compile_command
+                    proj: Project = self.__model.get_project_by_name(self.__current_work)
+                    source_file: SourceFile = proj.update_source_file(data.path, data.compile_command)
+                    self.__update_headers(proj, source_file, 1)
                     source_file.error = data.error
+
+    def __update_headers(self, project: Project, parent: CFile, hierarchy_level: int) -> None:
+        for header in parent.headers:
+            project.update_header(header.get_name(), parent.get_name(), hierarchy_level)
+            self.__update_headers(project, header, hierarchy_level + 1)
+
 
     def start(self):
         print("[HierarchyThread]    started")
