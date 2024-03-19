@@ -19,8 +19,8 @@ class RemoveRunnable(QRunnable):
 
 
     def run(self):
-        self.mutex.lock()
         self.ram_graph.remove_plot(self.displayable.ram_plot)
         self.cpu_graph.remove_plot(self.displayable.cpu_plot)
+        self.mutex.lock()
         self.runtime_graph.remove_bar(self.displayable.runtime_plot)
         self.mutex.unlock()

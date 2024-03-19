@@ -15,8 +15,12 @@ class AddRunnable(QRunnable):
         self.cpu_graph: GraphWidget = cpu_graph
         self.runtime_graph: BarWidget = runtime_graph
         self.displayable: Displayable = displayable
+        self.mutex = mutex
 
     def run(self):
         self.ram_graph.add_plot(self.displayable.ram_plot)
         self.cpu_graph.add_plot(self.displayable.cpu_plot)
+        #print("im AddRunnable")
+        self.mutex.lock()
         self.runtime_graph.add_bar(self.displayable.runtime_plot)
+        self.mutex.unlock()

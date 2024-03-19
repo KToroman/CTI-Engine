@@ -17,8 +17,8 @@ class PlotRunnable(QRunnable):
 
 
     def run(self):
-        self.mutex.lock()
         self.ram_graph.plot_graph()
         self.cpu_graph.plot_graph()
+        self.mutex.lock()
         self.runtime_graph.plot_bar_chart()
         self.mutex.unlock()

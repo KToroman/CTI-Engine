@@ -43,15 +43,12 @@ class GraphWidget(QWidget):
         self.canvas.mpl_connect('pick_event', self.on_pick)
 
     def add_plot(self, plot: Plot):
-        print("adding plot: " + plot.name)
         """adds plot to graph widget"""
-        print(f"[GraphWidget]   x:{plot.x_values} \ny:{plot.y_values}")
         line, = self.ax.plot(plot.x_values, plot.y_values, label=plot.name, color=plot.color, linewidth=1.5)
         line.set_picker(True)
 
         # Add line to cpu list
         self.lines.append(line)
-        print("line lenght: " + len(self.lines).__str__())
 
     def remove_plot(self, plot: Plot):
         """removes plot from graph widget"""
