@@ -39,7 +39,7 @@ class FileLoader(FetcherInterface):
 
     def update_project(self) -> bool:
         if self.__is_valid_path():
-            self.__db = Rdict(self.__path)  # TODO
+            self.__db = Rdict(self.__path) 
             if self.__db is None:
                 print("no database")
             project: Project = self.__create_project()
@@ -82,19 +82,21 @@ class FileLoader(FetcherInterface):
             )
         else:
             print(f"second entry for {path}")
-        self.__add_data_entry(found_cfile, value)
+        self.__add_data_entry(found_cfile, parent_path, value, hierarchy, project)
         if hierarchy > 0 and found_cfile.parent is None:
             parent = self.__all_cfiles.get(parent_path, None)
             if parent is None:
                 parent = self.__add_parent(parent_path, hierarchy, project)
             found_cfile.parent = parent
 
-    def __add_data_entry(self, cfile: CFile, value: List):
+    def __add_data_entry(self, cfile: CFile, parent_path: str, value: List, hierarchy: int, project: Project):
+        
         data_entry = self.__extract_dataentry(
             value=value, cfile_path=cfile.path)
         if data_entry is None:
             return
-        cfile.data_entries.append(data_entry)
+        else:
+            cfile.data_entries.append(data_entry)
         
 
     def __add_cfile_to_project(
@@ -105,21 +107,31 @@ class FileLoader(FetcherInterface):
         value: List,
         project: Project,
     ) -> CFile:
+        '''to be called if no cfile with path==path was found yet. '''
         if hierarchy > 0:
-            parent = self.__all_cfiles.get(parent_path, None)
-            if parent is None:
-                parent = self.__add_parent(parent_path, hierarchy, project)
+            if parent_path == "":
+                parent = None
+            else:
+                parent = self.__all_cfiles.get(parent_path, None)
+                if parent is None:
+                    # TODO check
+                    parent = self.__add_parent(parent_path, hierarchy, project)
+                    # TODO maybe: self.__all_cfiles[parent_path] = parent 
+            
             new_header = Header(path=path, parent=parent,
                                 hierarchy_level=hierarchy)
-            parent.headers.append(new_header)
+            #TODO append header only when parent path is not ""
+            if parent is not None:
+                parent.headers.append(new_header)
+                project.file_dict.add_file(new_header)
             self.__all_cfiles[path] = new_header
             print("[FileLoader]     found new header to save")
-            with self.__model_lock:
-                self.__model.headers[new_header.path] = new_header
             return new_header
         else:
             new_sourcefile: SourceFile = SourceFile(path)
             project.source_files.append(new_sourcefile)
+            project.file_dict.add_file(new_sourcefile)
+            # TODO maybe need to add to project dict as well?
             self.__all_cfiles[path] = new_sourcefile
 
             return new_sourcefile
@@ -129,21 +141,22 @@ class FileLoader(FetcherInterface):
         if hierarchy == 1:
             parent = SourceFile(parent_path)
             project.source_files.append(parent)
+            project.file_dict.add_file(parent)
         if hierarchy == 2:
             parent = Header(path=parent_path, parent=None, hierarchy_level=1)
         self.__all_cfiles[parent_path] = parent
         return parent
 
-    def __extract_dataentry(self, value: List, cfile_path: str) -> Optional[DataEntry]:
+    def __extract_dataentry(self, value: List|None, cfile_path: str) -> Optional[DataEntry]:
+        if value is None:
+            return None
         timestamp: float = value[0]
         metrics: List[Metric] = value[1]
-        if timestamp is None or metrics is None:
-            return None
-        else:
-            data_entry: DataEntry = DataEntry(
-                path=cfile_path, timestamp=timestamp, metrics=metrics
-            )
-            return data_entry
+        # TODO if compile command add to sourcefile
+        data_entry: DataEntry = DataEntry(
+            path=cfile_path, timestamp=timestamp, metrics=metrics
+        )
+        return data_entry
 
     def __create_project(self) -> Project:
         project_name = self.__path.removesuffix("_DataBase")

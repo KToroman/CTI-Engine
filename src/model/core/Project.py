@@ -65,8 +65,9 @@ class Project(ProjectReadViewInterface):
         header.hierarchy_level = hierarchy_level
         self.add_to_delta(hierarchy_level=hierarchy_level, path=header_path, parent_path=parent_path, data_entry=None)
 
-    def update_source_file(self, path):
-        self.get_sourcefile(path)
+    def update_source_file(self, path, compile_command: str):
+        source_file = self.get_sourcefile(path)
+        source_file.compile_command = compile_command
         self.add_to_delta(hierarchy_level=0, path=path, parent_path="", data_entry=None)
 
 
