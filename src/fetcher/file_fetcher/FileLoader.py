@@ -114,9 +114,7 @@ class FileLoader(FetcherInterface):
             else:
                 parent = self.__all_cfiles.get(parent_path, None)
                 if parent is None:
-                    # TODO check
                     parent = self.__add_parent(parent_path, hierarchy, project)
-                    # TODO maybe: self.__all_cfiles[parent_path] = parent 
             
             new_header = Header(path=path, parent=parent,
                                 hierarchy_level=hierarchy)

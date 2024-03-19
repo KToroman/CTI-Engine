@@ -132,8 +132,6 @@ class App(AppRequestsInterface):
             self.shutdown_event,
             self.source_file_queue,
             self.__pid_queue,
-            self.__model,
-            self.__model_lock,
             max_workers=50,
         )
 

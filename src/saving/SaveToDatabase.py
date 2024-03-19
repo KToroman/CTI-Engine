@@ -26,7 +26,9 @@ class SaveToDatabase(SaveInterface):
 
     def save_project(self, project_name: str):
         project = self.__model.get_project_by_name(project_name)
+        print("[SaveToDatabase]     found project in model")
         with self.__model_lock:
+            print("[SaveToDatabase]     now in modellock")
             delta: List[DataBaseEntry] = project.delta_entries
             project.delta_entries = list()
         if self.__current_project_name != project_name:
@@ -50,7 +52,7 @@ class SaveToDatabase(SaveInterface):
             key = f"{entry.path}\n{entry.parent}\n{entry.hierarchy_level}"
             if entry.timestamp is None or entry.metrics is None:
                 value = None
-            else :
+            else:
                 value = [entry.timestamp, entry.metrics]
             db[key] = value
         db.close()

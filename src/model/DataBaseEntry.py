@@ -17,5 +17,5 @@ class DataBaseEntry:
         self.parent: str = parent
         self.timestamp: Optional[float] = timestamp
         self.metrics: Optional[List[Metric]] = metrics
-        assert hierarchy_level <= 3 and hierarchy_level >= 0
+        assert hierarchy_level < 3 and hierarchy_level >= 0
         self.hierarchy_level: int = hierarchy_level
