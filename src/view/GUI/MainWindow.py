@@ -3,6 +3,8 @@ import colorsys
 import os
 
 import random
+import time
+
 from PyQt5.QtCore import pyqtSignal, QThreadPool, QMutex
 from typing import List
 from multiprocessing import Queue, Event
@@ -155,9 +157,6 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     def visualize(self):
         print(f"[MainWindow]    visualizing...")
         """displays the data contained in that model to the user."""
-        self.select_all_checkbox.setChecked(True)
-        self.select_all_checkbox.setChecked(False)
-
         project_name: str = self.project_queue.get()
         print(f"[MainWindow]    project visualizing: {project_name}")
         project = self.__model.get_project_by_name(project_name)
@@ -176,7 +175,6 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.__connect_new_table()
         # Select spot for displayables to be inserted into
         self.current_table.insertion_point = project.get_project_name()
-
         # Update TableWidget for each cfile
         self.__connect_new_table()
         cfile_list: List[CFileReadViewInterface] = project.get_cfiles()
@@ -223,6 +221,9 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     def __connect_new_table(self):
         """creates a new table for each loaded project and saves them in a list. That way the already loaded projects
            can be changed quickly"""
+        self.select_all_checkbox.setChecked(True)
+        time.sleep(4)
+        self.select_all_checkbox.setChecked(False)
         self.current_table: TreeWidget = TreeWidget(self.active_mode_queue)
         self.stacked_table_widget.addWidget(self.current_table)
         self.all_tables.append(self.current_table)
@@ -234,15 +235,22 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.lower_limit.editingFinished.connect(
             lambda: self.current_table.toggle_custom_amount(self.lower_limit.value(), self.upper_limit.value()))
         self.search_button.clicked.connect(lambda: self.current_table.search_item(self.line_edit))
+        self.__setup_connections()
         # change our gui to the page where the new table is located
         self.stacked_table_widget.setCurrentIndex(self.stacked_table_widget.count() - 1)
 
     def toggle_table_vis(self, index: int):
         """changes the currently displayed table. Deselects all graphs to make sure the change goes flawlessly"""
         self.select_all_checkbox.setChecked(True)
+        time.sleep(2)
         self.select_all_checkbox.setChecked(False)
         self.stacked_table_widget.setCurrentIndex(index + 1)
         self.current_table: TreeWidget = self.all_tables[index + 1]
+        self.select_all_checkbox.disconnect()
+        # setting up connections for the new table
+        self.__setup_connections()
+        self.select_all_checkbox.stateChanged.connect(lambda: self.current_table.toggle_all_rows())
+
 
     def deploy_error(self):
         """Receives an Exception, displays information regarding that exception to the user."""
@@ -335,6 +343,16 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.metric_bar.ram_button.pressed.connect(lambda: self.stacked_widget.setCurrentIndex(0))
         self.metric_bar.runtime_button.pressed.connect(lambda: self.stacked_widget.setCurrentIndex(2))
 
+    def __reset_graph(self):
+        for displayable in self.__visible_plots:
+            self.__visible_plots.remove(displayable)
+            remove_runnable: RemoveRunnable = RemoveRunnable(ram_graph=self.ram_graph_widget,
+                                                             cpu_graph=self.cpu_graph_widget,
+                                                             runtime_graph=self.bar_chart_widget,
+                                                             displayable=displayable, mutex=self.mutex)
+            self.thread_pool.start(remove_runnable)
+
+
     def __update_visibility(self, displayable: Displayable):
         """Shows or hides plots of given displayable."""
         visibility: bool = False
@@ -347,6 +365,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
                                                                  runtime_graph=self.bar_chart_widget,
                                                                  displayable=displayable, mutex=self.mutex)
                 self.thread_pool.start(remove_runnable)
+                break
         if not visibility:
             self.__visible_plots.append(displayable)
             add_runnable: AddRunnable = AddRunnable(ram_graph=self.ram_graph_widget,

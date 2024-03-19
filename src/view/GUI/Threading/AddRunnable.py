@@ -18,6 +18,8 @@ class AddRunnable(QRunnable):
         self.mutex = mutex
 
     def run(self):
+        #self.mutex.lock()
         self.ram_graph.add_plot(self.displayable.ram_plot)
         self.cpu_graph.add_plot(self.displayable.cpu_plot)
         self.runtime_graph.add_bar(self.displayable.runtime_plot)
+        #self.mutex.unlock()
