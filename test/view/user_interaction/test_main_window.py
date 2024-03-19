@@ -139,6 +139,7 @@ def test_visualize_active(main_window):
     main_window.current_table.insertion_point = "Header Mock"
     main_window.current_table.active_started = True
     main_window.visualize()
+    print("hi")
     print(main_window.current_table.rows[1].displayable.cpu_peak.__str__())
     """assert main_window.current_table.insertion_point = """
     assert False
