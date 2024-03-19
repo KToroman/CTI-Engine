@@ -43,7 +43,7 @@ class MainWindowMock(MainWindow):
 class HeaderMock(Header):
 
     def get_name(self) -> str:
-        return "CFile Mock"
+        return "Header Mock"
 
     def get_total_time(self) -> float:
         return 1
@@ -79,7 +79,7 @@ class CFileMock(CFile):
         return [1]
 
     def get_headers(self) -> List[CFileReadViewInterface]:
-        return [HeaderMock]
+        return [HeaderMock("")]
 
 
 class ProjectMock(Project):
@@ -135,5 +135,5 @@ def test_visualize_passive(main_window):
 
 def test_visualize_active(main_window):
     test_visualize_passive(main_window)
-
-    main_window.current_table.start_active_measurement("CFile Mock")
+    main_window.current_table.start_active_measurement("Header Mock")
+    """assert main_window.current_table.insertion_point = """
