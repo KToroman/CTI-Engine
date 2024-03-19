@@ -88,6 +88,8 @@ class MenuBar:
             else:
                 show_name = name.split(" ")[0]
             # put new buttons in
+            if name.split("/").__len__() > 2:
+                show_name = name.split("/")[-2]
             new_button = ProjectNameButton(self.project_buttons, show_name, name, self.__project_queue,
                                            self.__visualize_event, self.index_queue, self.change_table_signal)
             self.scroll_layout.addWidget(new_button)

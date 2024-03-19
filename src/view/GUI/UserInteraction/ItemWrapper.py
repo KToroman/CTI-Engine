@@ -1,3 +1,4 @@
+from PyQt5.QtCore import QThread
 from PyQt5.QtWidgets import QTreeWidgetItem
 
 from src.view.GUI.UserInteraction.TableRow import TableRow
@@ -12,4 +13,3 @@ class ItemWrapper(QTreeWidgetItem):
 
     def set_row(self, row: TableRow):
         self.row = row
-

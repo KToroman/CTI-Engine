@@ -1,4 +1,5 @@
 import subprocess, shutil, threading
+from multiprocessing import Queue
 from pathlib import Path
 
 from src.builder.BuilderInterface import BuilderInterface
@@ -19,6 +20,7 @@ class CompilingTool(BuilderInterface):
                  curr_project_dir: str,
                  source_file: SourceFile,
                  path: str,
+                 header_error_queue: Queue,
                  header_depth: int = DEFAULT_HEADER_DEPTH) -> None:
         """Compiling tool:
         curr_project_dir    -- The working directory of the project the SourceFile is from
@@ -34,6 +36,7 @@ class CompilingTool(BuilderInterface):
                                           source_file_name=source_file.get_name(),
                                           build_path=path)
         self.__header_iterator = HeaderIterator(self.source_file, header_depth)
+        self.__header_error_queue = header_error_queue
 
     def build(self) -> bool:
         """returns true if there is another header to be built"""
@@ -52,7 +55,8 @@ class CompilingTool(BuilderInterface):
         try:
             proc.check_returncode()
         except CalledProcessError:
-            header.error = True
+            print("[Failed]     " + header.get_name())
+            self.__header_error_queue.put(header.get_name())
 
     def __compile(self, file_name: Path) -> CompletedProcess:
         args: list[str] = self.__file_builder.get_compile_command(file_name)
