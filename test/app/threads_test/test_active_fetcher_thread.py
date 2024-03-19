@@ -50,13 +50,19 @@ def active_fetcher_thread() -> ActiveFetcherThread:
 
 def test_run(active_fetcher_thread):
     shutdown.clear()
-    active_fetcher_thread.__shutdown_event = shutdown
     active_fetcher_thread.start()
     shutdown.set()
     time.sleep(0.5)
     assert not active_fetcher_thread.__thread.is_alive()
 
 def test_start_new_measurement(active_fetcher_thread):
-    active_fetcher_thread.measure_source_file = MagicMock(return_value = True)
-    
-    
+    shutdown.clear()
+    sourcefile_queue.put("test_file")
+    active_fetcher_thread.measure_source_file = MagicMock(return_value = None)
+    active_fetcher_thread.start()
+    shutdown.set()
+    time.sleep(1)
+    assert not active_fetcher_thread.__thread.is_alive()
+    assert not active_measurement_active.is_set()
+    assert sourcefile_queue.empty()
+    assert active_fetcher_thread.measure_source_file.assert_called_once()
