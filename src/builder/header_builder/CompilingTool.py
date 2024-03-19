@@ -61,7 +61,7 @@ class CompilingTool(BuilderInterface):
     def __compile(self, file_name: Path) -> CompletedProcess:
         args: list[str] = self.__file_builder.get_compile_command(file_name)
 
-        proc: CompletedProcess = subprocess.run(args=args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc: CompletedProcess = subprocess.run(args=args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         return proc
 
     def get_next_header(self) -> Header:

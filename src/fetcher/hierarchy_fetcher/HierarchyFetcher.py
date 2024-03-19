@@ -27,8 +27,6 @@ class HierarchyFetcher(FetcherInterface):
         shutdown_event: SyncEvent,
         source_file_queue: Queue,
         pid_queue: Queue,
-        model: Model,
-        model_lock: SyncLock,
         max_workers,
     ) -> None:
         self.source_file_queue = source_file_queue
@@ -38,8 +36,6 @@ class HierarchyFetcher(FetcherInterface):
         self.__hierarchy_fetching_event = hierarchy_fetching_event
         self.__shutdown_event = shutdown_event
         self.project: Project
-        self.__model: Model = model
-        self.__model_lock: SyncLock = model_lock
         self.worker_thread_pool: ThreadPoolExecutor = ThreadPoolExecutor(
             max_workers=max_workers, thread_name_prefix="hierarchy_worker"
         )
@@ -204,8 +200,6 @@ class HierarchyFetcher(FetcherInterface):
             new_header_path, parent=cfile, hierarchy_level=hierarchy_level
         )
         cfile.headers.append(new_header)
-        with self.__model_lock:
-            self.__model.headers[root_source_file.path + new_header_path] = new_header
         return new_header
 
     def __get_depth(self, line: str) -> int:

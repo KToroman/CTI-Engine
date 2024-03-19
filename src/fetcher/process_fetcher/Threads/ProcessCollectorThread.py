@@ -1,4 +1,5 @@
 import os
+import queue
 import time
 from datetime import date
 from multiprocessing import Queue, Lock
@@ -40,7 +41,7 @@ class ProcessCollectorThread:
     ):
         self.__thread: Thread
         self.__shutdown = shutdown
-        self.__work_queue_lock = Lock()
+        self.__work_queue_lock: Lock = Lock()
         self.__work_queue: list[psutil.Process] = list()
         self.__process_list = process_list
         self.__process_list_lock = process_list_lock
@@ -85,7 +86,10 @@ class ProcessCollectorThread:
         self.__thread.start()
 
     def stop(self):
-        self.__thread.join()
+        if self.__thread.is_alive():
+            self.__thread.join(timeout=1)
+            if self.__thread.is_alive():
+                print("thread timed out")
         print("[ProcessCollectorThread]    stopped now")
 
     def add_work(self, process: psutil.Process):
@@ -104,7 +108,10 @@ class ProcessCollectorThread:
             else:
                 with self.__model_lock:
                     name = self.__model.get_current_project_name()
-                self.__saver_queue.put(name)
+                try:
+                    self.__saver_queue.put(name, block=False)
+                except queue.Full:
+                    pass
             self.__counter += 1
             self.time_till_false = time.time() + 45
             with self.__process_list_lock:
