@@ -115,7 +115,6 @@ class FileLoader(FetcherInterface):
             new_sourcefile: SourceFile = SourceFile(path)
             project.source_files.append(new_sourcefile)
             self.__all_cfiles.update({path: new_sourcefile})
-            print("[FileLoader]     found new sourcefile to save")
 
             return new_sourcefile
 

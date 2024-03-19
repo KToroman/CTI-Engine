@@ -316,7 +316,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
         return random_color_hex
 
-    def setup_connections(self):
+    def __setup_connections(self):
         """Sets up connections between table and graph widgets."""
         for row in self.current_table.rows:
             if not row.connected:
