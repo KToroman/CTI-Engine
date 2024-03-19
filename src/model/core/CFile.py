@@ -24,13 +24,13 @@ class CFile(CFileReadViewInterface, Protocol):
         return self.path
 
     def get_total_time(self) -> float:
-        #print("[CFile]      getting total time...")
-        #print(len(self.data_entries))
+        if len(self.data_entries) > 1:
+            print("[CFile]  not zero runtime")
         sorted_timestamp_list = sorted(
             self.data_entries, key=lambda data_entry: data_entry.timestamp
         )
-        #print(len(sorted_timestamp_list))
-        if sorted_timestamp_list:
+        if len(sorted_timestamp_list) > 1:
+            print("[CFile]  not zero runtime")
             return (
                 sorted_timestamp_list[-1].timestamp -
                 sorted_timestamp_list[0].timestamp

@@ -63,26 +63,26 @@ class Project(ProjectReadViewInterface):
         header.parent = parent
         parent.headers.append(header)
         header.hierarchy_level = hierarchy_level
-        self.add_to_delta(hierarchy_level=hierarchy_level, path=header_path, parent_path=parent_path, data_entry=None)
+        self.add_to_delta(hierarchy_level=hierarchy_level, path=header_path, parent_or_compile_command=parent_path, data_entry=None)
 
     def update_source_file(self, path, compile_command: str) -> CFile:
         source_file = self.get_sourcefile(path)
         source_file.compile_command = compile_command
-        self.add_to_delta(hierarchy_level=0, path=path, parent_path="", data_entry=None)
+        self.add_to_delta(hierarchy_level=0, path=path, parent_or_compile_command=compile_command, data_entry=None)
         return source_file
 
 
 
     def add_to_delta(
-        self, hierarchy_level: int, path: str, parent_path: str, data_entry: DataEntry|None
+        self, hierarchy_level: int, path: str, parent_or_compile_command: str, data_entry: DataEntry|None
     ):
         if data_entry is None:
-            self.delta_entries.append(DataBaseEntry(path, parent_path, None, None, hierarchy_level))
+            self.delta_entries.append(DataBaseEntry(path, parent_or_compile_command, None, None, hierarchy_level))
         else:
             self.delta_entries.append(
             DataBaseEntry(
                 path,
-                parent_path,
+                parent_or_compile_command,
                 data_entry.timestamp,
                 data_entry.metrics,
                 hierarchy_level,

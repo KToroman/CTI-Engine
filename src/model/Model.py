@@ -34,7 +34,7 @@ class Model(ModelReadViewInterface):
         cfile: CFile = self.current_project.get_sourcefile(data_point.path)
         cfile.data_entries.append(data_point)
         self.current_project.add_to_delta(
-            path=cfile.path, parent_path="", data_entry=data_point, hierarchy_level=0
+            path=cfile.path, parent_or_compile_command="", data_entry=data_point, hierarchy_level=0
         )
 
     def insert_datapoint_header(self, data_entry: DataEntry):
@@ -51,7 +51,7 @@ class Model(ModelReadViewInterface):
             raise CFileNotFoundError
         self.current_project.add_to_delta(
             path=header.path,
-            parent_path=parent.path,
+            parent_or_compile_command=parent.path,
             data_entry=data_entry,
             hierarchy_level=header.hierarchy_level,
         )

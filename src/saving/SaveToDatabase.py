@@ -47,12 +47,15 @@ class SaveToDatabase(SaveInterface):
 
     def __add_to_data_base(self, delta: List[DataBaseEntry]):
         db: Rdict = Rdict(self.__saves_path)
-        print(f"opened Database: {self.__saves_path}")
+        print(f"[SaveToDatabase]    opened Database: {self.__saves_path}")
         for entry in delta:
-            key = f"{entry.path}\n{entry.parent}\n{entry.hierarchy_level}"
+            key = f"{entry.path}\n{entry.parent_or_compile_command}\n{entry.hierarchy_level}"
             if entry.timestamp is None or entry.metrics is None:
                 value = None
             else:
                 value = [entry.timestamp, entry.metrics]
+                paths = entry.path.split("/")
+                print_path = paths[-2]+"/"+paths[-3]+"/"+paths[-4]
+                print(f"[SaveToDatabase]    added entry with time: {entry.timestamp}, path:{print_path}")
             db[key] = value
         db.close()

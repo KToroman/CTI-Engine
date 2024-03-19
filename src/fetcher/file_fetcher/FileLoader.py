@@ -69,27 +69,27 @@ class FileLoader(FetcherInterface):
     def __add_to_project(self, key: str, value: List, project: Project):
         paths: List[str] = key.split("\n")
         path = paths[0]
-        parent_path = paths[1]
+        parent_or_compile_command = paths[1]
         hierarchy: int = int(paths[2])
         found_cfile = self.__all_cfiles.get(path, None)
         if found_cfile is None:
             found_cfile = self.__add_cfile_to_project(
                 path=path,
-                parent_path=parent_path,
+                parent_or_compile_command=parent_or_compile_command,
                 hierarchy=hierarchy,
                 value=value,
                 project=project,
             )
         else:
-            print(f"second entry for {path}")
-        self.__add_data_entry(found_cfile, parent_path, value, hierarchy, project)
+            print(f"[FileLoader]    second entry for {path}")
+        self.__add_data_entry(found_cfile, parent_or_compile_command, value, hierarchy, project)
         if hierarchy > 0 and found_cfile.parent is None:
-            parent = self.__all_cfiles.get(parent_path, None)
+            parent = self.__all_cfiles.get(parent_or_compile_command, None)
             if parent is None:
-                parent = self.__add_parent(parent_path, hierarchy, project)
+                parent = self.__add_parent(parent_or_compile_command, hierarchy, project)
             found_cfile.parent = parent
 
-    def __add_data_entry(self, cfile: CFile, parent_path: str, value: List, hierarchy: int, project: Project):
+    def __add_data_entry(self, cfile: CFile, parent_or_compile_command: str, value: List, hierarchy: int, project: Project):
         
         data_entry = self.__extract_dataentry(
             value=value, cfile_path=cfile.path)
@@ -102,19 +102,19 @@ class FileLoader(FetcherInterface):
     def __add_cfile_to_project(
         self,
         path: str,
-        parent_path: str,
+        parent_or_compile_command: str,
         hierarchy: int,
         value: List,
         project: Project,
     ) -> CFile:
         '''to be called if no cfile with path==path was found yet. '''
         if hierarchy > 0:
-            if parent_path == "":
+            if parent_or_compile_command == "":
                 parent = None
             else:
-                parent = self.__all_cfiles.get(parent_path, None)
+                parent = self.__all_cfiles.get(parent_or_compile_command, None)
                 if parent is None:
-                    parent = self.__add_parent(parent_path, hierarchy, project)
+                    parent = self.__add_parent(parent_or_compile_command, hierarchy, project)
             
             new_header = Header(path=path, parent=parent,
                                 hierarchy_level=hierarchy)
@@ -127,6 +127,8 @@ class FileLoader(FetcherInterface):
             return new_header
         else:
             new_sourcefile: SourceFile = SourceFile(path)
+            if not parent_or_compile_command == "":
+                new_sourcefile.compile_command = parent_or_compile_command
             project.source_files.append(new_sourcefile)
             project.file_dict.add_file(new_sourcefile)
             # TODO maybe need to add to project dict as well?

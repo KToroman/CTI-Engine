@@ -54,15 +54,14 @@ class HierarchyThread:
                 with self.__model_lock:
                     proj: Project = self.__model.get_project_by_name(self.__current_work)
                     source_file: SourceFile = proj.update_source_file(data.path, data.compile_command)
-                    source_file.headers = data.headers
                     print("[HierarchyThread]    updated source file to project")
-                    self.__update_headers(proj, source_file, 1)
+                    self.__update_headers(proj, data, 1)
                     source_file.error = data.error
 
     def __update_headers(self, project: Project, parent: CFile, hierarchy_level: int) -> None:
         if hierarchy_level > 2:
             return
-        for header in parent.headers:     
+        for header in parent.headers:
             project.update_header(header.get_name(), parent.get_name(), hierarchy_level)
             self.__update_headers(project, header, hierarchy_level + 1)
 
