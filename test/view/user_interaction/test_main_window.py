@@ -11,6 +11,7 @@ from src.model.Model import Model
 from src.model.ModelReadViewInterface import ModelReadViewInterface
 from src.model.core.CFile import CFile
 from src.model.core.CFileReadViewInterface import CFileReadViewInterface
+from src.model.core.Header import Header
 from src.model.core.MetricName import MetricName
 from src.model.core.Project import Project
 from src.model.core.ProjectReadViewInterface import ProjectReadViewInterface
@@ -39,6 +40,26 @@ class MainWindowMock(MainWindow):
     def set_model(self, model: ModelReadViewInterface):
         self.__model = model
 
+class HeaderMock(Header):
+
+    def get_name(self) -> str:
+        return "CFile Mock"
+
+    def get_total_time(self) -> float:
+        return 1
+
+    def get_max(self, metric_name: MetricName) -> float:
+        return 1
+
+    def get_metrics(self, metric_name: MetricName) -> List[float]:
+        return [1]
+
+    def get_timestamps(self) -> List[float]:
+        return [1]
+
+    def get_headers(self) -> List[CFileReadViewInterface]:
+        return []
+
 
 class CFileMock(CFile):
 
@@ -58,7 +79,7 @@ class CFileMock(CFile):
         return [1]
 
     def get_headers(self) -> List[CFileReadViewInterface]:
-        return []
+        return [HeaderMock]
 
 
 class ProjectMock(Project):
@@ -97,6 +118,12 @@ def main_window(app) -> MainWindowMock:
                                                  shutdown_event=shutdown_event, model=model)
     main_window.set_model(model=model)
     return main_window
+
+@pytest.fixture
+def cfile() -> CFileMock:
+    cfile = CFileMock("")
+    cfile.headers = []
+    return
 
 
 def test_visualize_passive(main_window):
