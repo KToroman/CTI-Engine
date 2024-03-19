@@ -10,7 +10,7 @@ from src.model.core.SourceFile import SourceFile
 
 class BuilderThread:
     def __init__(self, start_building_event: SyncEvent,
-            compiling_tool: BuilderInterface, grep_command_queue: Queue, finished_event: SyncEvent,
+                 compiling_tool: BuilderInterface, grep_command_queue: Queue, finished_event: SyncEvent,
                  shutdown_event: SyncEvent) -> None:
         self.__building_event: SyncEvent = start_building_event
         self.__shutdown_event: SyncEvent = shutdown_event
@@ -35,7 +35,6 @@ class BuilderThread:
         header: str = self.__compiling_tool.get_next_header().get_name()
         command: str = 'ps -e | grep ' + header
         self.__grep_command_queue.put(command)
-
 
     def start(self) -> None:
         self.__process = multiprocessing.Process(target=self.__run)

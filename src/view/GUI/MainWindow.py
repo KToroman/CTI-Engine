@@ -21,6 +21,7 @@ from src.view.GUI.Graph.BarWidget import BarWidget
 from src.view.GUI.Graph.GraphWidget import GraphWidget
 from src.view.GUI.MainWindowMeta import MainWindowMeta
 from src.view.GUI.Threading.RemoveRunnable import RemoveRunnable
+from src.view.GUI.UserInteraction.DisplayableHolder import DisplayableHolder
 from src.view.GUI.UserInteraction.MenuBar import MenuBar
 from src.view.GUI.UserInteraction.Displayable import Displayable
 from src.view.GUI.UserInteraction.MetricBar import MetricBar
@@ -33,7 +34,7 @@ from src.model.core.StatusSettings import StatusSettings
 from src.view.UIInterface import UIInterface
 from src.view.GUI.Visuals.ErrorWindow import ErrorWindow
 import src.view.GUI.Visuals.GuiDesign as gd
-from src.view.GUI.UserInteraction.TreeWidget import TreeWidget
+from src.view.GUI.UserInteraction.TreeWidget import TreeWidget, get_new_tree_widget
 
 
 class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
@@ -72,7 +73,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.visualize_signal.connect(lambda: self.visualize())
         self.change_table_signal.connect(lambda: self.toggle_table_vis(self.index_queue.get()))
         self.status_signal.connect(lambda: self.update_statusbar())
-
+        self.HIERARCHY_DEPTH: int = 3
         self.thread_pool: QThreadPool = QThreadPool.globalInstance()
         self.thread_pool.setMaxThreadCount(10)
 
@@ -177,13 +178,14 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.current_table.insertion_point = project.get_project_name()
 
         # Update TableWidget for each cfile
+        self.__connect_new_table()
         cfile_list: List[CFileReadViewInterface] = project.get_cfiles()
         file_count: int = 1
-        displayable_list: List[Displayable] = []
+        displayable_list: List[DisplayableHolder] = []
         for cfile in cfile_list:
             file_count += 1
-            displayable_list.append(self.__create_displayable(cfile))
-        self.current_table.insert_values(displayable_list)
+            displayable_list.append(self.__create_displayable(cfile, 0))
+        self.current_table.insert_values(displayables=displayable_list)
         self.lower_limit.setMaximum(file_count)
         self.upper_limit.setMaximum(file_count)
         # Update other Widgets
@@ -207,12 +209,16 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
             if cfile.get_headers():
                 cfile_list.extend(cfile.get_headers())
         for cfile in cfile_list:
-            self.current_table.add_active_data(self.__create_displayable(cfile))
+            self.current_table.add_active_data(self.__create_displayable(cfile, 1))
         # Update other Widgets
         for row in self.current_table.rows:
             row.connected = False
         self.__setup_connections()
         self.status_bar.update_status(StatusSettings.FINISHED, self.current_table.insertion_point)
+
+    def connect_table_from_queue(self):
+        tree_widget: TreeWidget = self.___return_queue.get()
+        self.connect_table(tree_widget)
 
     def __connect_new_table(self):
         """creates a new table for each loaded project and saves them in a list. That way the already loaded projects
@@ -267,13 +273,20 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         for header in cfile.get_headers():
             self.__get_hierarchy(header, active_row)
 
-    def __create_displayable(self, cfile: CFileReadViewInterface) -> Displayable:
-        """Turns given cfile into displayable."""
-        # Collect data for Displayable
+    def __create_displayable(self, cfile: CFileReadViewInterface, depth_p: int) -> DisplayableHolder:
+        """turns given cfile into displayable"""
+        depth = depth_p + 1
+        if depth >= self.HIERARCHY_DEPTH or not cfile.get_headers():
+            return DisplayableHolder(self.__make_disp(cfile), [])
+        sub_disp_list: List[DisplayableHolder] = list()
+        for h in cfile.get_headers():
+            sub_disp_list.append(self.__create_displayable(h, depth))
+        return DisplayableHolder(self.__make_disp(cfile), sub_disp_list)
+
+    def __make_disp(self, cfile: CFileReadViewInterface) -> Displayable:
         name: str = cfile.get_name()
         ram_peak: float = cfile.get_max(MetricName.RAM)
         cpu_peak: float = cfile.get_max(MetricName.CPU)
-
         # Create Graph Plots
         x_values: List[float] = list()
         for c in cfile.get_timestamps():
@@ -285,17 +298,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         ram_plot: Plot = Plot(name, color, x_values, ram_y_values)
         cpu_plot: Plot = Plot(name, color, x_values, cpu_y_values)
         runtime_plot: Plot = Plot(name, color, None, runtime)
-
-        # Create header and secondary header list for current Displayable
-        headers: List[str] = list()
-        secondary_headers: List[List[str]] = list()
-        for header in cfile.get_headers():
-            headers.append(header.get_name())
-            subheaders: List[str] = []
-            for secondary_header in header.get_headers():
-                subheaders.append(secondary_header.get_name())
-            secondary_headers.append(subheaders)
-        return Displayable(name, ram_plot, cpu_plot, runtime_plot, ram_peak, cpu_peak, headers, secondary_headers)
+        return Displayable(name, ram_plot, cpu_plot, runtime_plot, ram_peak, cpu_peak, cfile.has_error())
 
     def __generate_random_color(self) -> str:
         """Generates random saturated color between light blue and pink."""
@@ -316,7 +319,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
         return random_color_hex
 
-    def setup_connections(self):
+    def __setup_connections(self):
         """Sets up connections between table and graph widgets."""
         for row in self.current_table.rows:
             if not row.connected:
