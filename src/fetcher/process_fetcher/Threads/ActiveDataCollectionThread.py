@@ -2,6 +2,7 @@ from multiprocessing import Queue
 import os
 from multiprocessing.synchronize import Event as SyncEvent
 from multiprocessing.synchronize import Lock as SyncLock
+from typing import List
 
 
 import psutil
@@ -50,13 +51,12 @@ class ActiveDataCollectionThread(PassiveDataCollectionThread):
     def _add_data_entry(self, data_entry: DataEntry):
         with self._model_lock:
             self._model.insert_datapoint_header(
-                data_entry=data_entry,
-                source_file_path=self._source_file.path,
+                data_entry=data_entry
             )
 
     def _make_entry(self, process_point: ProcessPoint) -> None:
         try:
-            cmdline: list[str] = process_point.process.cmdline()
+            cmdline: List[str] = process_point.process.cmdline()
             path: str = process_point.process.cwd()
 
             if "cc1plus" not in cmdline[0]:

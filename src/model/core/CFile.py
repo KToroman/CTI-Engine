@@ -14,6 +14,7 @@ class CFile(CFileReadViewInterface, Protocol):
     headers: List[CFileReadViewInterface]
     path: str
     error: bool
+    hierarchy_level: int
 
     def __init__(self, path: str) -> None:
         raise NotImplementedError

@@ -37,7 +37,7 @@ class Model(ModelReadViewInterface):
             path=cfile.path, parent_path="", data_entry=data_point, hierarchy_level=0
         )
 
-    def insert_datapoint_header(self, source_file_path: str, data_entry: DataEntry):
+    def insert_datapoint_header(self, data_entry: DataEntry):
         header = self.headers.get(data_entry.path, None)
         if header is None:
             raise CFileNotFoundError
