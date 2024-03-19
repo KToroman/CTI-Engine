@@ -80,6 +80,8 @@ class FileLoader(FetcherInterface):
                 value=value,
                 project=project,
             )
+        else:
+            print(f"second entry for {path}")
         self.__add_data_entry(found_cfile, value)
         if hierarchy > 0 and found_cfile.parent is None:
             parent = self.__all_cfiles.get(parent_path, None)
@@ -87,16 +89,13 @@ class FileLoader(FetcherInterface):
                 parent = self.__add_parent(parent_path, hierarchy, project)
             found_cfile.parent = parent
 
-    def __add_data_entry(self, cfile: CFile, value: Tuple):
+    def __add_data_entry(self, cfile: CFile, value: List):
         data_entry = self.__extract_dataentry(
             value=value, cfile_path=cfile.path)
         if data_entry is None:
             return
         cfile.data_entries.append(data_entry)
-        if cfile.hierarchy_level > 0:
-            with self.__model_lock:
-                header: Header = cfile
-                self.__model.headers.update({cfile.path: header})
+        
 
     def __add_cfile_to_project(
         self,
@@ -113,14 +112,15 @@ class FileLoader(FetcherInterface):
             new_header = Header(path=path, parent=parent,
                                 hierarchy_level=hierarchy)
             parent.headers.append(new_header)
-            self.__all_cfiles.update({path: new_header})
+            self.__all_cfiles[path] = new_header
             print("[FileLoader]     found new header to save")
-
+            with self.__model_lock:
+                self.__model.headers[new_header.path] = new_header
             return new_header
         else:
             new_sourcefile: SourceFile = SourceFile(path)
             project.source_files.append(new_sourcefile)
-            self.__all_cfiles.update({path: new_sourcefile})
+            self.__all_cfiles[path] = new_sourcefile
 
             return new_sourcefile
 
@@ -131,7 +131,7 @@ class FileLoader(FetcherInterface):
             project.source_files.append(parent)
         if hierarchy == 2:
             parent = Header(path=parent_path, parent=None, hierarchy_level=1)
-        self.__all_cfiles.update({parent_path: parent})
+        self.__all_cfiles[parent_path] = parent
         return parent
 
     def __extract_dataentry(self, value: List, cfile_path: str) -> Optional[DataEntry]:

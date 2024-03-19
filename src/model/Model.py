@@ -25,7 +25,7 @@ class Model(ModelReadViewInterface):
         self.current_project: Optional[Project] = None
         self.projects: List[Project] = list()
         self.semaphore_list: List[ProjectFinishedSemaphore] = list()
-        self.headers: Dict[str, Header] = dict()
+        
 
     def insert_datapoint(self, data_point: DataEntry):
         """inserts datapoint to sourcefile according to their paths to the current project"""
@@ -38,7 +38,9 @@ class Model(ModelReadViewInterface):
         )
 
     def insert_datapoint_header(self, data_entry: DataEntry):
-        header = self.headers.get(data_entry.path, None)
+        if self.current_project is None:
+            raise ProjectNotFoundException
+        header = self.current_project.get_header_by_name(data_entry.path)
         if header is None:
             raise CFileNotFoundError
         header.data_entries.append(data_entry)
