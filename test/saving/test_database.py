@@ -5,7 +5,7 @@ from PyQt5.QtCore import pyqtSignal
 from qtpy import QT5
 from rocksdict import Rdict, RdictIter
 from src.fetcher.file_fetcher.FileLoader import FileLoader
-from src.model.DataBaseEntry import DataBaseEntry
+from src.model.core.DataBaseEntry import DataBaseEntry
 from src.model.Model import Model
 from src.model.core.Header import Header
 from src.model.core.Metric import Metric

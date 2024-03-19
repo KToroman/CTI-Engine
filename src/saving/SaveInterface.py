@@ -1,5 +1,5 @@
 from typing import List, Protocol
-from src.model.DataBaseEntry import DataBaseEntry
+from src.model.core.DataBaseEntry import DataBaseEntry
 
 
 class SaveInterface(Protocol):

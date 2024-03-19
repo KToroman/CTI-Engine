@@ -5,7 +5,7 @@ from src.exceptions.CFileNotFoundError import CFileNotFoundError
 from src.exceptions.SemaphoreNotFoundException import SemaphoreNotFoundException
 from src.exceptions.ProjectNotFoundException import ProjectNotFoundException
 
-from src.model.DataBaseEntry import DataBaseEntry
+from src.model.core.DataBaseEntry import DataBaseEntry
 from src.model.ModelReadViewInterface import ModelReadViewInterface
 from src.model.core.CFile import CFile
 from src.model.core.CFileReadViewInterface import CFileReadViewInterface

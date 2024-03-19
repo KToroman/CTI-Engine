@@ -1,6 +1,6 @@
 import time
 from typing import List, Optional
-from src.model.DataBaseEntry import DataBaseEntry
+from src.model.core.DataBaseEntry import DataBaseEntry
 from src.model.core.CFile import CFile
 from src.model.core.CFileReadViewInterface import CFileReadViewInterface
 from src.model.core.DataEntry import DataEntry
