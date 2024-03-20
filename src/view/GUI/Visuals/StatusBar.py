@@ -16,23 +16,23 @@ class StatusBar(QWidget):
     SPACING: int = 10
     STATUS_TEXT: str = "Status: "
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         # Create Components of StatusBar
 
-        self.counter = 0
-        self.last_update = 0
+        self.counter: int = 0
+        self.last_update: int = 0
 
-        self.project_name = QLabel(self)
+        self.project_name: QLabel = QLabel(self)
         self.project_name.setText("[]")
         self.setFixedSize(self.SIZE_X, self.SIZE_Y)
-        self.status_message = QLabel(self)
-        self.color_window = QLabel(self)
+        self.status_message: QLabel = QLabel(self)
+        self.color_window: QLabel = QLabel(self)
         self.color_window.setFixedSize(self.WINDOW_SIZE, self.WINDOW_SIZE)
         # Setup Layout for StatusBar
-        layout = QVBoxLayout()
+        layout: QVBoxLayout = QVBoxLayout()
         layout.addWidget(self.project_name)
-        layout_1 = QHBoxLayout()
+        layout_1: QHBoxLayout = QHBoxLayout()
         layout_1.addWidget(self.color_window)
         layout_1.addWidget(self.status_message)
         layout_1.addStretch(4)
@@ -41,24 +41,26 @@ class StatusBar(QWidget):
         layout.setSpacing(0)
         layout.addLayout(layout_1)
         layout_1.setAlignment(Qt.AlignRight)
-        self.show_list = ["|", "/", "-", "\\"]
-        self.dot_list = ["", ".", "..", "..."]
+        self.show_list: list[str] = ["|", "/", "-", "\\"]
+        self.dot_list: list[str] = ["", ".", "..", "..."]
 
         self.setLayout(layout)
 
         self.layout().setAlignment(Qt.AlignTop)
         # Initialize StatusBar to WAITING
-        self.__name: str = ""
-        self.name_counter = 0
+        self.__name: str|None = ""
+        self.name_counter: int = 0
         self.build_string = ""
         self.update_status(StatusSettings.WAITING, "")
 
-    def update_status(self, status: StatusSettings, project_name: Optional[str]):
+    def update_status(self, status: StatusSettings, project_name: Optional[str]) -> None:
         """Updates the statusbar according to a given setting."""
         if project_name != self.__name:
             self.build_string = ""
             self.__name = project_name
             self.name_counter = 0
+        if self.__name is None:
+            raise Exception
         if self.name_counter < len(self.__name):
             self.build_string += self.__name[self.name_counter]
             self.name_counter += 1

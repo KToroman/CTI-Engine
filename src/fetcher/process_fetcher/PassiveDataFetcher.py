@@ -17,15 +17,17 @@ from src.fetcher.process_fetcher.Threads.ProcessCollectorThread import ProcessCo
 from src.fetcher.process_fetcher.Threads.ProcessFindingThread import ProcessFindingThread
 
 from src.fetcher.process_fetcher.process_observer.metrics_observer.DataObserver import DataObserver
+from src.model.DataBaseEntry import DataBaseEntry
 from src.model.Model import Model
+from src.model.core.Project import Project
 
 
 class PassiveDataFetcher(DataFetcher):
 
-    def __init__(self, model: Model, model_lock: SyncLock, saver_queue: Queue, hierarchy_queue: Queue,
-                 shutdown: SyncEvent, save_path: str, project_queue: Queue, finished_event: pyqtSignal,
-                 project_finished_event: SyncEvent, passive_mode_event: SyncEvent, pid_queue: Queue,
-                 process_finder_count=2, process_collector_count=2, fetcher_count=2, fetcher_process_count=15):
+    def __init__(self, model: Model, model_lock: SyncLock, saver_queue: "Queue[str]", hierarchy_queue: "Queue[Project]",
+                 shutdown: SyncEvent, save_path: str, project_queue: "Queue[str]", finished_event: pyqtSignal,
+                 project_finished_event: SyncEvent, passive_mode_event: SyncEvent, pid_queue: "Queue[str]",
+                 process_finder_count: int = 2, process_collector_count: int = 2, fetcher_count: int = 2, fetcher_process_count: int = 15) -> None:
 
         self.__model = model
         self.__model_lock = model_lock
@@ -58,7 +60,6 @@ class PassiveDataFetcher(DataFetcher):
 
         self.__pid_list: List[str] = list()
 
-        self.__line_work_queue: Queue = Queue()
         self.__save_time: float = 0
 
         self.workers_on: bool = False
@@ -83,12 +84,12 @@ class PassiveDataFetcher(DataFetcher):
         self.__pid_list.clear()
         return time_keeper_bool
 
-    def finish_fetching(self):
+    def finish_fetching(self) -> None:
         if not self.__done_fetching:
             self.__done_fetching = True
             self.__semaphore()
 
-    def __semaphore(self):
+    def __semaphore(self) -> None:
         with self.__model_lock:
             if self.__model.current_project is not None and self.__model.project_in_semaphore_list(self.__model.get_current_working_directory()):
                 with self.__model.get_semaphore_by_name(self.__model.current_project.name).set_lock:
@@ -113,10 +114,10 @@ class PassiveDataFetcher(DataFetcher):
         max_time = max(process_time, fetcher_time)
         return max_time
 
-    def start(self):
+    def start(self) -> None:
         print("[PassiveDataFetcher]    sending start signal")
         process_list: List[psutil.Process] = list()
-        process_list_lock: threading.Lock = threading.Lock()
+        process_list_lock: SyncLock = Lock()
         # self.__data_fetching_thread.start()
         for i in range(self.__fetcher_count):
             fetcher = PassiveDataCollectionThread(process_list, process_list_lock, self.__model, self.__model_lock,
@@ -141,7 +142,7 @@ class PassiveDataFetcher(DataFetcher):
             finder.start()
         self.workers_on = True
 
-    def stop(self):
+    def stop(self) -> None:
         print("[PassiveDataFetcher]  stop signal sent...")
         for finder in self.__process_finder:
             finder.stop()
@@ -152,7 +153,7 @@ class PassiveDataFetcher(DataFetcher):
         self.workers_on = False
         print("[PassiveDataFetcher]  stopped all threads")
 
-    def restart_workers(self):
+    def restart_workers(self) -> None:
         for finder in self.__process_finder:
             finder.start()
         for collector in self.__process_collector_list:

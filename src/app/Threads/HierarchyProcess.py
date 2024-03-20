@@ -12,8 +12,8 @@ from multiprocessing.synchronize import Lock as SyncLock
 
 
 class HierarchyProcess:
-    def __init__(self, shutdown_event: SyncEvent, data_fetcher: HierarchyFetcher, error_queue: Queue,
-                 work_queue: Queue, hierarchy_fetching_event: SyncEvent):
+    def __init__(self, shutdown_event: SyncEvent, data_fetcher: HierarchyFetcher, error_queue: "Queue[BaseException]",
+                 work_queue: "Queue[Project]", hierarchy_fetching_event: SyncEvent):
         self.__process: Process = Process(target=self.__run_process)
         self.__shutdown = shutdown_event
         self.__data_fetcher = data_fetcher
@@ -23,7 +23,7 @@ class HierarchyProcess:
         self.project: Project
         self.__hierarchy_fetching_event = hierarchy_fetching_event
 
-    def __run_process(self):
+    def __run_process(self) -> None:
         try:
             repeat: bool = False
             while not self.__shutdown.is_set():
@@ -56,12 +56,12 @@ class HierarchyProcess:
             pass
         self.__data_fetcher.__del__()
 
-    def start(self):
+    def start(self) -> None:
         print("[HierarchyProcess]    started")
         self.__process = Process(target=self.__run_process)
         self.__process.start()
 
-    def stop(self):
+    def stop(self) -> None:
         self.__data_fetcher.__del__()
         if self.__process.is_alive():
             self.__process.join()

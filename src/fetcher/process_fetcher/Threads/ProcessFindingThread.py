@@ -38,30 +38,32 @@ class ProcessFindingThread:
         self.__pid_list: List[str] = list()
         self.__pid_list_lock: SyncLock = Lock()
 
-    def __run(self):
+    def __run(self) -> None:
         while self.__active_event.is_set() and (not self.__shutdown.is_set()):
             self.__fetch_process()
 
         self.__finding_list.clear()
 
-    def start(self):
+    def start(self) -> None:
         print("[ProcessFindingThread]    started")
         self.__thread = Thread(target=self.__run)
         self.__thread.start()
 
-    def stop(self):
+    def stop(self) -> None:
         self.__thread.join()
         print("[ProcessFindingThread]    stopped")
 
-    def set_work(self, pid_list: Optional[List[str]]):
+    def set_work(self, pid_list: Optional[List[str]]) -> None:
         with self.__pid_list_lock:
             if pid_list is not None:
                 self.__pid_list.extend(pid_list)
 
-    def __fetch_process(self):
-        grep = subprocess.Popen(self.__grep_command, stdout=subprocess.PIPE, shell=True, encoding='utf-8')
+    def __fetch_process(self) -> None:
+        grep: subprocess.Popen[str] = subprocess.Popen(self.__grep_command, stdout=subprocess.PIPE, shell=True, encoding='utf-8')
         temp_counter = 0
         if grep is None:
+            return
+        if grep.stdout is None:
             return
         for line in grep.stdout:
             with self.__pid_list_lock:

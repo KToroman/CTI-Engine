@@ -1,3 +1,4 @@
+import typing
 from multiprocessing import Queue
 import multiprocessing
 import threading
@@ -23,10 +24,10 @@ class TreeWidget(QTreeWidget):
     COLUMN_3_LABEL = "Peak CPU (%)"
     COLUMN_4_LABEL = "Runtime"
 
-    def __init__(self, active_mode_queue: Queue):
+    def __init__(self, active_mode_queue: "Queue[str]") -> None:
         super().__init__()
 
-        self.active_mode_queue = active_mode_queue
+        self.active_mode_queue: "Queue[str]" = active_mode_queue
         self.setColumnCount(self.NUMBER_OF_COLUMNS)
         self.rows: List[TableRow] = []
         self.items: List[ItemWrapper] = []
@@ -41,7 +42,6 @@ class TreeWidget(QTreeWidget):
         self.in_row_loop: bool = False
 
         self.__shutdown: SyncEvent = multiprocessing.Event()
-        self.work_queue: Queue = Queue()
 
         self.thread_pool: QThreadPool = QThreadPool.globalInstance()
 
@@ -52,12 +52,12 @@ class TreeWidget(QTreeWidget):
         self.table_list: List[QTreeWidget] = list()
         self.header().sectionClicked.connect(lambda col: self.__sort_table(col))
 
-    def insert_values(self, displayables: List[DisplayableHolder]):
+    def insert_values(self, displayables: List[DisplayableHolder]) -> None:
         print(len(displayables))
         for displayable in displayables:
             self.insert_data(displayable, self)
 
-    def insert_data(self, displayable_holder: DisplayableHolder, parent):
+    def insert_data(self, displayable_holder: DisplayableHolder, parent: typing.Any) -> None:
         if not displayable_holder.get_sub_disp():
             item = ItemWrapper(displayable_holder.displayable.name, parent)
             self.create_row(item, displayable_holder.displayable)
@@ -65,9 +65,9 @@ class TreeWidget(QTreeWidget):
         item = ItemWrapper(displayable_holder.displayable.name, parent)
         self.create_row(item, displayable_holder.displayable)
         for h in displayable_holder.get_sub_disp():
-            self.insert_data(h, item)
+            self.insert_data(typing.cast(DisplayableHolder, h), item)
 
-    def create_row(self, item: ItemWrapper, displayable: Displayable):
+    def create_row(self, item: ItemWrapper, displayable: Displayable) -> None:
         row = TableRow(displayable)
         cell_widget = QWidget()
         layout = QHBoxLayout(cell_widget)
@@ -87,49 +87,49 @@ class TreeWidget(QTreeWidget):
         self.items.append(item)
         self.rows.append(row)
 
-    def add_active_data(self, displayable: DisplayableHolder):
+    def add_active_data(self, displayable: DisplayableHolder) -> None:
         for item in self.items:
             if item.name == self.insertion_point:
                 for i in range(item.childCount()):
-                    if displayable.displayable.name == item.child(i).name:
+                    if displayable.displayable.name == item.child(i).name:  # type: ignore[attr-defined]
                         values = [displayable.displayable.ram_peak, displayable.displayable.cpu_peak,
                                   displayable.displayable.runtime_plot.y_values[0]]
                         item.child(i).setData(1, 0, round((values[0]), 4))
                         item.child(i).setData(2, 0, round((values[1]), 4))
                         item.child(i).setData(3, 0, round((values[2]), 4))
                         if values[2] != 0:
-                            item.child(i).row.checkbox.setDisabled(False)
-                            item.child(i).row.connected = False
+                            item.child(i).row.checkbox.setDisabled(False)  # type: ignore[attr-defined]
+                            item.child(i).row.connected = False  # type: ignore[attr-defined]
                         if displayable.displayable.failed:
                             item.child(i).row.name_button.setStyleSheet("background-color:  #7F1717")
                     for j in range(item.child(i).childCount()):
-                        if displayable.displayable.name == item.child(i).child(j).name:
+                        if displayable.displayable.name == item.child(i).child(j).name:  # type: ignore[attr-defined]
                             values = [displayable.displayable.ram_peak, displayable.displayable.cpu_peak,
                                       displayable.displayable.runtime_plot.y_values[0]]
                             item.child(i).child(j).setData(1, 0, round((values[0]), 4))
                             item.child(i).child(j).setData(2, 0, round((values[1]), 4))
                             item.child(i).child(j).setData(3, 0, round((values[2]), 4))
                             if values[2] != 0:
-                                item.child(i).child(j).row.checkbox.setDisabled(False)
-                                item.child(i).row.connected = False
+                                item.child(i).child(j).row.checkbox.setDisabled(False)  # type: ignore[attr-defined]
+                                item.child(i).row.connected = False  # type: ignore[attr-defined]
                             if displayable.displayable.failed:
                                 item.child(i).child(j).row.name_button.setStyleSheet("background-color:  #7F1717")
         for disp in displayable.get_sub_disp():
-            self.add_active_data(disp)
+            self.add_active_data(typing.cast(DisplayableHolder, disp))
 
-    def start_active_measurement(self, name):
+    def start_active_measurement(self, name: str) -> None:
         """entry point for an active measurement."""
         self.active_started = True
-        self.insertion_point: str = name
-        self.active_mode_queue.put((name))
+        self.insertion_point = name
+        self.active_mode_queue.put(name)
 
-    def __show_input_dialog_active(self, name):
+    def __show_input_dialog_active(self, name: str) -> None:
         """shows an input window, where the user can see and edit the path for the active measurement"""
-        text, ok = QInputDialog.getText(None, "Active measurement", 'Start active measurement with following file?: ',
+        text, ok = QInputDialog.getText(None, "Active measurement", 'Start active measurement with following file?: ',  # type: ignore[arg-type]
                                         text=name)
         if ok: self.start_active_measurement(text)
 
-    def highlight_row(self, name: str):
+    def highlight_row(self, name: str) -> None:
         """select the row for the given input string to highlight it in the table"""
         for row in self.rows:
             if row.displayable.name == name:
@@ -137,7 +137,7 @@ class TreeWidget(QTreeWidget):
                 self.scrollToItem(self.currentItem())
                 break
 
-    def toggle_all_rows(self):
+    def toggle_all_rows(self) -> None:
         """Selects or deselects checkboxes of all rows."""
         last_checkbox: int = self.__find_last_checkbox()
         row_count: int = 1
@@ -159,7 +159,7 @@ class TreeWidget(QTreeWidget):
                         pass
         self.all_selected = not self.all_selected
 
-    def toggle_custom_amount(self, lower_limit: int, upper_limit: int):
+    def toggle_custom_amount(self, lower_limit: int, upper_limit: int) -> None:
         """Receives two limits and selects checkboxes of rows inbetween them."""
         real_lower_limit: int = min(lower_limit, upper_limit)
         real_upper_limit: int = max(lower_limit, upper_limit)
@@ -202,7 +202,7 @@ class TreeWidget(QTreeWidget):
                     pass
         return last_checkbox
 
-    def search_item(self, line_edit: QLineEdit):
+    def search_item(self, line_edit: QLineEdit) -> None:
         """searches the table for a user input in order to select and highlight the found items"""
         search_text = line_edit.text().strip()
         if search_text:
@@ -220,7 +220,7 @@ class TreeWidget(QTreeWidget):
                     self.expandItem(parent)
                     parent = parent.parent()
 
-    def __sort_table(self, column: int):
+    def __sort_table(self, column: int) -> None:
         """Sorts table according to a given parameter."""
         out_list = []
         key_list = [lambda obj: obj.displayable.ram_peak, lambda obj: obj.displayable.cpu_peak, lambda obj:

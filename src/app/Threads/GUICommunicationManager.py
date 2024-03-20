@@ -10,15 +10,15 @@ from src.model.core.StatusSettings import StatusSettings
 
 
 class GUICommunicationManager:
-    def __init__(self, shutdown_event: SyncEvent, error_queue: Queue, error_signal: pyqtSignal,
-                 passive_mode_event: SyncEvent, status_queue: Queue, status_signal: pyqtSignal,
+    def __init__(self, shutdown_event: SyncEvent, error_queue: "Queue[BaseException]", error_signal: pyqtSignal,
+                 passive_mode_event: SyncEvent, status_queue: "Queue[StatusSettings]", status_signal: pyqtSignal,
                  fetching_passive_data: SyncEvent, active_measurement_active: SyncEvent,
                  finished_project_event: SyncEvent, load_event: SyncEvent, cancel_event: SyncEvent,
                  restart_event: SyncEvent, hierarchy_fetching_event: SyncEvent, fetching_hierarchy: SyncEvent):
         self.__error_queue = error_queue
         self.__error_signal = error_signal
-        self.__status_signal: pyqtSignal = status_signal
-        self.__status_queue: Queue = status_queue
+        self.__status_signal: pyqtSignal = status_signal  # type: ignore[call-overload]
+        self.__status_queue: "Queue[StatusSettings]" = status_queue
         self.__shutdown_event: SyncEvent = shutdown_event
         self.__thread: Thread
         self.__status: StatusSettings = StatusSettings.SEARCHING
@@ -32,14 +32,14 @@ class GUICommunicationManager:
         self.__restart_event = restart_event
         self.__hierarchy_fetching_event = hierarchy_fetching_event
         self.__fetching_hierarchy = fetching_hierarchy
-        self.finished_time = 0
+        self.finished_time: float = 0
 
-    def start(self):
+    def start(self) -> None:
         print("[StatusAndErrorThread]   started.")
         self.__thread = Thread(target=self.__run)
         self.__thread.start()
 
-    def __run(self):
+    def __run(self) -> None:
         while not self.__shutdown_event.is_set():
             if not self.__error_queue.empty():
                 self.__deploy_error()
@@ -73,9 +73,9 @@ class GUICommunicationManager:
                 self.__deploy_status()
             self.__deploy_error()
 
-    def __deploy_error(self):
+    def __deploy_error(self) -> None:
         if not self.__error_queue.empty():
-            self.__error_signal.emit()
+            self.__error_signal.emit()  # type: ignore[attr-defined]
 
     def __update_status(self) -> bool:
         if self.__time_of_last_status_change + 0.45 > time.time():
@@ -103,12 +103,12 @@ class GUICommunicationManager:
         self.__time_of_last_status_change = time.time()
         return True
 
-    def __deploy_status(self):
+    def __deploy_status(self) -> None:
         self.__status_queue.put(self.__status)
-        self.__status_signal.emit()
+        self.__status_signal.emit()  # type: ignore[attr-defined]
 
 
 
-    def stop(self):
+    def stop(self) -> None:
         self.__thread.join()
         print("[StatusAndErrorThread]   stopped.")

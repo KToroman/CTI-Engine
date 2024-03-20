@@ -7,7 +7,7 @@ from src.view.GUI.Graph.Plot import Plot
 class Displayable:
 
     def __init__(self, name: str, ram_plot: Plot, cpu_plot: Plot, runtime_plot: Plot, ram_peak: float, cpu_peak: float,
-                 failed: bool):
+                 failed: bool) -> None:
 
         self.name: str = name
         self.ram_plot: Plot = ram_plot

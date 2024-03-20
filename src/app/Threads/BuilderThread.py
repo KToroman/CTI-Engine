@@ -10,12 +10,12 @@ from src.model.core.SourceFile import SourceFile
 
 class BuilderThread:
     def __init__(self, start_building_event: SyncEvent,
-                 compiling_tool: BuilderInterface, grep_command_queue: Queue, finished_event: SyncEvent,
+                 compiling_tool: BuilderInterface, grep_command_queue: "Queue[str]", finished_event: SyncEvent,
                  shutdown_event: SyncEvent) -> None:
         self.__building_event: SyncEvent = start_building_event
         self.__shutdown_event: SyncEvent = shutdown_event
         self.__compiling_tool: BuilderInterface = compiling_tool
-        self.__grep_command_queue: Queue = grep_command_queue
+        self.__grep_command_queue: "Queue[str]" = grep_command_queue
         self.__finished_event: SyncEvent = finished_event
 
         self.__process: multiprocessing.Process = multiprocessing.Process(target=self.__run)
@@ -31,7 +31,7 @@ class BuilderThread:
                     self.__finished_event.clear()
                 self.__building_event.clear()
 
-    def __add_grep_command_to_queue(self):
+    def __add_grep_command_to_queue(self) -> None:
         header: str = self.__compiling_tool.get_next_header().get_name()
         command: str = 'ps -e | grep ' + header
         self.__grep_command_queue.put(command)
