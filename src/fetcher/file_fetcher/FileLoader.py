@@ -39,7 +39,7 @@ class FileLoader(FetcherInterface):
 
     def update_project(self) -> bool:
         if self.__is_valid_path():
-            self.__db = Rdict(self.__path) 
+            self.__db = Rdict(self.__path)
             if self.__db is None:
                 print("no database")
             project: Project = self.__create_project()
@@ -82,22 +82,28 @@ class FileLoader(FetcherInterface):
             )
         else:
             print(f"[FileLoader]    second entry for {path}")
-        self.__add_data_entry(found_cfile, parent_or_compile_command, value, hierarchy, project)
+        self.__add_data_entry(
+            found_cfile, parent_or_compile_command, value, hierarchy, project)
         if hierarchy > 0 and found_cfile.parent is None:
             parent = self.__all_cfiles.get(parent_or_compile_command, None)
             if parent is None:
-                parent = self.__add_parent(parent_or_compile_command, hierarchy, project)
+                parent = self.__add_parent(
+                    parent_or_compile_command, hierarchy, project)
             found_cfile.parent = parent
 
     def __add_data_entry(self, cfile: CFile, parent_or_compile_command: str, value: List, hierarchy: int, project: Project):
-        
+
         data_entry = self.__extract_dataentry(
             value=value, cfile_path=cfile.path)
         if data_entry is None:
             return
         else:
+            if len(cfile.data_entries) > 0:
+                paths = cfile.path.split("/")
+                print_path = paths[-2]+"/"+paths[-3]+"/"+paths[-4]
+                print(
+                    f"[FileLoader]    added the {len(cfile.data_entries)}-th entry for {print_path}")
             cfile.data_entries.append(data_entry)
-        
 
     def __add_cfile_to_project(
         self,
@@ -114,11 +120,12 @@ class FileLoader(FetcherInterface):
             else:
                 parent = self.__all_cfiles.get(parent_or_compile_command, None)
                 if parent is None:
-                    parent = self.__add_parent(parent_or_compile_command, hierarchy, project)
-            
+                    parent = self.__add_parent(
+                        parent_or_compile_command, hierarchy, project)
+
             new_header = Header(path=path, parent=parent,
                                 hierarchy_level=hierarchy)
-            #TODO append header only when parent path is not ""
+            # TODO append header only when parent path is not ""
             if parent is not None:
                 parent.headers.append(new_header)
                 project.file_dict.add_file(new_header)
@@ -147,7 +154,7 @@ class FileLoader(FetcherInterface):
         self.__all_cfiles[parent_path] = parent
         return parent
 
-    def __extract_dataentry(self, value: List|None, cfile_path: str) -> Optional[DataEntry]:
+    def __extract_dataentry(self, value: List | None, cfile_path: str) -> Optional[DataEntry]:
         if value is None:
             return None
         timestamp: float = value[0]
