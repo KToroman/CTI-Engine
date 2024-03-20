@@ -126,7 +126,6 @@ class FileLoader(FetcherInterface):
         else:
             new_sourcefile: SourceFile = SourceFile(path)
             if not parent_or_compile_command == "":
-                print(f"[FileLoader]     added compile command {parent_or_compile_command} to {path}")
                 new_sourcefile.compile_command = parent_or_compile_command
             project.source_files.append(new_sourcefile)
             project.file_dict.add_file(new_sourcefile)

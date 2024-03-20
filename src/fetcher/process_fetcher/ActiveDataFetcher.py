@@ -69,7 +69,7 @@ class ActiveDataFetcher(FetcherInterface):
             path=build_dir_path,
             header_error_queue=self.__header_error_queue
         )
-
+        
         self.__save_path = save_path
 
         self.__builder_Thread: BuilderThread
@@ -96,7 +96,8 @@ class ActiveDataFetcher(FetcherInterface):
 
     def update_project(self) -> bool:
         """Main method of the active data fetcher. Returns True if this method should be called again."""
-        self.__building_event.set()
+        if not self.__header_error_queue.empty():
+            self.__building_event.set()
         while self.__building_event.is_set() and not self.__header_error_queue.empty():
             if not self.__header_error_queue.empty():
                 header = self.__header_error_queue.get()
@@ -121,6 +122,7 @@ class ActiveDataFetcher(FetcherInterface):
     def __enter__(self) -> Self:
         # required threads should be started here
         # queue to be used by builder thread and process finding thread
+        
         self.__grep_command_queue = multiprocessing.Queue()
         process_list: List[psutil.Process] = list()
         process_list_lock: SyncLock = multiprocessing.Lock()
@@ -178,7 +180,10 @@ class ActiveDataFetcher(FetcherInterface):
             self.__finished_event,
             self.__shutdown_event,
         )
-        self.__building_thread.start()
+        if not self.__header_error_queue.empty():
+            self.__finished_event.set()
+        else :
+            self.__building_thread.start()
         return self
 
     def get_header(self, name: str, cfile: CFileReadViewInterface) -> CFileReadViewInterface:
