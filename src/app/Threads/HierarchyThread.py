@@ -1,4 +1,5 @@
 import time
+import typing
 from multiprocessing import Queue, Process
 from threading import Thread
 from multiprocessing.synchronize import Event as SyncEvent
@@ -13,8 +14,8 @@ from multiprocessing.synchronize import Lock as SyncLock
 
 
 class HierarchyThread:
-    def __init__(self, shutdown_event: SyncEvent, fetching_hierarchy: SyncEvent, source_file_queue: Queue,
-                 model: Model, model_lock: SyncLock, hierarchy_process: HierarchyProcess, hierarchy_work_queue: Queue,
+    def __init__(self, shutdown_event: SyncEvent, fetching_hierarchy: SyncEvent, source_file_queue: "Queue[SourceFile]",
+                 model: Model, model_lock: SyncLock, hierarchy_process: HierarchyProcess, hierarchy_work_queue: "Queue[Project]",
                  process_shutdown: SyncEvent):
 
         self.__thread: Thread
@@ -28,7 +29,7 @@ class HierarchyThread:
         self.__hierarchy_work_queue = hierarchy_work_queue
         self.__process_shutdown = process_shutdown
 
-    def __run_thread(self):
+    def __run_thread(self) -> None:
         current_project: str = ""
         while not self.__shutdown.is_set():
             if not self.__hierarchy_work_queue.empty():
@@ -62,15 +63,15 @@ class HierarchyThread:
             return
         for header in parent.headers:
             project.update_header(header.get_name(), parent.get_name(), hierarchy_level)
-            self.__update_headers(project, header, hierarchy_level + 1)
+            self.__update_headers(project, typing.cast(SourceFile, header), hierarchy_level + 1)
 
 
-    def start(self):
+    def start(self) -> None:
         print("[HierarchyThread]    started")
         self.__thread = Thread(target=self.__run_thread)
         self.__thread.start()
 
-    def stop(self):
+    def stop(self) -> None:
         self.__process_shutdown.set()
         self.__process.stop()
         self.__thread.join()

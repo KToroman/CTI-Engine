@@ -11,7 +11,7 @@ from src.model.core.ProcessPoint import ProcessPoint
 
 
 class DataFetcher(FetcherInterface, Protocol):
-    def add_data_entry(self, data_entry: DataEntry):
+    def add_data_entry(self, data_entry: DataEntry) -> None:
         raise NotImplemented
 
     def fetch_metrics(self, process: psutil.Process) -> ProcessPoint:

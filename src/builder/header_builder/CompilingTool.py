@@ -20,7 +20,7 @@ class CompilingTool(BuilderInterface):
                  curr_project_dir: str,
                  source_file: SourceFile,
                  path: str,
-                 header_error_queue: Queue,
+                 header_error_queue: "Queue[str]",
                  header_depth: int = DEFAULT_HEADER_DEPTH) -> None:
         """Compiling tool:
         curr_project_dir    -- The working directory of the project the SourceFile is from
@@ -32,9 +32,7 @@ class CompilingTool(BuilderInterface):
         self.source_file: SourceFile = source_file
         self.__header_error_queue = header_error_queue
         self.__build_path = path
-        if self.source_file.compile_command == "":
-            for header in self.source_file.headers:
-                self.__header_error_queue.put(header.get_name())
+        self.__curr_project_dir = curr_project_dir
         self.__file_builder = FileBuilder(curr_project_dir=curr_project_dir,
                                           compile_command=self.source_file.compile_command,
                                           source_file_name=source_file.get_name(),
@@ -54,7 +52,7 @@ class CompilingTool(BuilderInterface):
 
     def build_header(self, header: Header) -> None:
         file_path: Path = self.__file_builder.generate_source_file(header)
-        proc: CompletedProcess = self.__compile(file_path)
+        proc: CompletedProcess[bytes] = self.__compile(file_path)
 
         try:
             proc.check_returncode()
@@ -62,15 +60,15 @@ class CompilingTool(BuilderInterface):
             print("[Failed]     " + header.get_name())
             self.__header_error_queue.put(header.get_name())
 
-    def __compile(self, file_name: Path) -> CompletedProcess:
+    def __compile(self, file_name: Path) -> CompletedProcess[bytes]:
         args: list[str] = self.__file_builder.get_compile_command(file_name)
 
-        proc: CompletedProcess = subprocess.run(args=args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        proc: CompletedProcess[bytes] = subprocess.run(args=args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         return proc
 
     def get_next_header(self) -> Header:
         return self.__header_iterator.get_next_header()
 
     def clear_directory(self) -> None:
-        path: Path = (Path(self.__build_path) / "Active_Mode_Build" / "temp").resolve()
+        path: Path = (Path(self.__build_path) / Path(self.__curr_project_dir) /"Active_Mode_Build" / "temp").resolve()
         shutil.rmtree(path)

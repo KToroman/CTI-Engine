@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor, Future
 from multiprocessing.synchronize import Event as SyncEvent
 from multiprocessing.synchronize import Lock as SyncLock
 
-
+from src.exceptions.ProjectNotFoundException import ProjectNotFoundException
 from src.fetcher.FetcherInterface import FetcherInterface
 from src.fetcher.hierarchy_fetcher.GCCCommandExecutor import GCCCommandExecutor
 from src.fetcher.hierarchy_fetcher.CompileCommandGetter import CompileCommandGetter
@@ -26,9 +26,9 @@ class HierarchyFetcher(FetcherInterface):
         self,
         hierarchy_fetching_event: SyncEvent,
         shutdown_event: SyncEvent,
-        source_file_queue: Queue,
-        pid_queue: Queue,
-        max_workers,
+        source_file_queue: "Queue[SourceFile]",
+        pid_queue: "Queue[str]",
+        max_workers: int,
     ) -> None:
         self.source_file_queue = source_file_queue
         self.__gcc_command_executor: GCCCommandExecutor = GCCCommandExecutor(pid_queue)
@@ -36,7 +36,7 @@ class HierarchyFetcher(FetcherInterface):
         self.__open_timeout: int = 0
         self.__hierarchy_fetching_event = hierarchy_fetching_event
         self.__shutdown_event = shutdown_event
-        self.project: Project | None = None
+        self.project: typing.Optional[Project] = None
         self.worker_thread_pool: ThreadPoolExecutor = ThreadPoolExecutor(
             max_workers=max_workers, thread_name_prefix="hierarchy_worker"
         )
@@ -44,7 +44,8 @@ class HierarchyFetcher(FetcherInterface):
     def update_project(self) -> bool:
         """Updates the current project by adding a hierarchical structure of header objects to all source files
         Returns True if this method should be called again"""
-
+        if self.project is None:
+            raise ProjectNotFoundException
         try:
             self.command_getter = CompileCommandGetter(self.project.working_dir)
             self.__open_timeout = 0
@@ -70,7 +71,7 @@ class HierarchyFetcher(FetcherInterface):
             f"\033[96m [HierarchyFetcher]     {len(source_files)} Sourcefiles added to Project\033[0m"
         )
         source_files_retry: list[SourceFile] = []
-        futures: dict[Future, SourceFile] = {}
+        futures: dict[Future[str], SourceFile] = {}
         failed_source_files: int = 0
         for source_file in source_files:
             if (
@@ -192,7 +193,7 @@ class HierarchyFetcher(FetcherInterface):
             )
             hierarchy.append((new_header, line_depth))
         elif line_depth > hierarchy[-1][1]:
-            new_header: Header = self.__append_header_to_file(
+            new_header = self.__append_header_to_file(
                 line_depth, hierarchy[-1][0], path
             )
             hierarchy.append((new_header, line_depth))
@@ -221,3 +222,4 @@ class HierarchyFetcher(FetcherInterface):
 
     def __del__(self) -> None:
         self.worker_thread_pool.shutdown(wait=True, cancel_futures=True)
+        print("[HierarchyFetcher]   Workers shut down")

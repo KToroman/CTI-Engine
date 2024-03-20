@@ -4,7 +4,7 @@ class ErrorWindow(QMessageBox):
 
     WINDOW_TITLE: str = "Error"
 
-    def __init__(self, exception: BaseException):
+    def __init__(self, exception: BaseException) -> None:
         super().__init__()
         # Setup ErrorWindow
         self.setText(exception.__str__())

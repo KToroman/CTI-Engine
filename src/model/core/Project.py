@@ -1,4 +1,5 @@
 import time
+import typing
 from typing import List, Optional
 import typing
 from src.exceptions.CFileNotFoundError import CFileNotFoundError
@@ -8,7 +9,6 @@ from src.model.core.CFileReadViewInterface import CFileReadViewInterface
 from src.model.core.DataEntry import DataEntry
 from src.model.core.FileDictionary import FileDictionary
 from src.model.core.Header import Header
-from src.model.core.ProjectFinishedSemaphore import ProjectFinishedSemaphore
 from src.model.core.ProjectReadViewInterface import ProjectReadViewInterface
 from src.model.core.SourceFile import SourceFile
 
@@ -24,28 +24,28 @@ class Project(ProjectReadViewInterface):
         self.source_files: List[SourceFile] = list()
         self.working_dir = working_dir
         self.name = name
-        self.file_dict = FileDictionary()
-        self.project_time = time.time() - 0.5
+        self.file_dict: FileDictionary = FileDictionary()
+        self.project_time: float = time.time() - 0.5
         time_stamp = str(self.project_time).split(".")
         time_stamp_str = f"{time_stamp[0]}_{time_stamp[1]}"
         self.path_to_save = f"{path_to_save}/{self.working_dir}/CTI_Engine_{time_stamp_str}"
         self.delta_entries: List[DataBaseEntry] = list()
         self.count_headers = 0
 
-    def get_sourcefile(self, name: str) -> CFile:
+    def get_sourcefile(self, name: str) -> SourceFile:
         cfile = self.file_dict.get_cfile_by_name(name)
         if cfile is None:
             cfile = SourceFile(path=name)
             self.file_dict.add_file(cfile)
             self.source_files.append(cfile)
-        return cfile
-
+        return typing.cast(SourceFile, cfile)
+    
     def get_header_by_name(self, name: str) -> CFile:
         cfile = self.file_dict.get_cfile_by_name(name)
         if cfile is None:
             cfile = Header(name, None, 1)
             self.file_dict.add_file(cfile)
-        
+
         return cfile
 
     def get_unkown_cfile(self, path: str, hierarchy_level: int) -> CFile:
@@ -82,8 +82,8 @@ class Project(ProjectReadViewInterface):
         return source_file
 
     def add_to_delta(
-        self, hierarchy_level: int, path: str, parent_or_compile_command: str, data_entry: DataEntry | None
-    ):
+        self, hierarchy_level: int, path: str, parent_or_compile_command: str, data_entry: DataEntry|None
+    ) -> None:
         if data_entry is None:
             self.delta_entries.append(DataBaseEntry(
                 path, parent_or_compile_command, None, None, hierarchy_level))

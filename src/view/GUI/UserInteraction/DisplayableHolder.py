@@ -5,12 +5,12 @@ from src.view.GUI.UserInteraction.DisplayableInterface import DisplayableInterfa
 
 
 class DisplayableHolder(DisplayableInterface):
-    def __init__(self, disp: Displayable, header_list: list[DisplayableInterface]):
-        self.displayable = disp
-        self.disp_list = header_list
+    def __init__(self, disp: Displayable, header_list: List[DisplayableInterface]) -> None:
+        self.displayable: Displayable = disp
+        self.disp_list: List[DisplayableInterface] = header_list
 
     def get_disp(self) -> Displayable:
         return self.displayable
 
-    def get_sub_disp(self):
+    def get_sub_disp(self) -> List[DisplayableInterface]:
         return self.disp_list

@@ -2,7 +2,9 @@ import threading
 import multiprocessing
 import time
 from multiprocessing import Queue
-from typing import List
+from typing import List, Any
+
+import typing_extensions
 from typing_extensions import Self
 
 from multiprocessing.synchronize import Event as SyncEvent
@@ -21,9 +23,11 @@ from src.fetcher.process_fetcher.Threads.ActiveDataCollectionThread import (
 from src.fetcher.process_fetcher.process_observer.metrics_observer.DataObserver import (
     DataObserver,
 )
+from src.model.DataBaseEntry import DataBaseEntry
 from src.model.Model import Model
 from src.model.core.CFile import CFile
 from src.model.core.CFileReadViewInterface import CFileReadViewInterface
+from src.model.core.Project import Project
 from src.model.core.SourceFile import SourceFile
 from src.fetcher.process_fetcher.Threads.ProcessFindingThread import (
     ProcessFindingThread,
@@ -44,9 +48,9 @@ class ActiveDataFetcher(FetcherInterface):
         source_file_name: str,
         model: Model,
         build_dir_path: str,
-        saver_queue: multiprocessing.Queue,
+        saver_queue: "multiprocessing.Queue[str]",
         save_path: str,
-        hierarchy_queue: multiprocessing.Queue,
+        hierarchy_queue: "multiprocessing.Queue[Any]",
         model_lock: SyncLock,
         fetcher_count: int = 5,
         fetcher_process_count: int = 10,
@@ -56,7 +60,7 @@ class ActiveDataFetcher(FetcherInterface):
         self.__model = model
         self.__model_lock = model_lock
         self.__model.wait_for_project()
-        self.__header_error_queue: Queue = Queue()
+        self.__header_error_queue: "Queue[str]" = Queue()
         with self.__model_lock:
             self.__source_file: SourceFile = model.get_sourcefile_by_name(
                 source_file_name
@@ -69,7 +73,7 @@ class ActiveDataFetcher(FetcherInterface):
             path=build_dir_path,
             header_error_queue=self.__header_error_queue
         )
-        
+
         self.__save_path = save_path
 
         self.__builder_Thread: BuilderThread
@@ -122,8 +126,7 @@ class ActiveDataFetcher(FetcherInterface):
     def __enter__(self) -> Self:
         # required threads should be started here
         # queue to be used by builder thread and process finding thread
-        
-        self.__grep_command_queue = multiprocessing.Queue()
+        self.__grep_command_queue: "multiprocessing.Queue[str]" = multiprocessing.Queue()
         process_list: List[psutil.Process] = list()
         process_list_lock: SyncLock = multiprocessing.Lock()
 
@@ -186,23 +189,16 @@ class ActiveDataFetcher(FetcherInterface):
             self.__building_thread.start()
         return self
 
-    def get_header(self, name: str, cfile: CFileReadViewInterface) -> CFileReadViewInterface:
-        print(cfile.get_name())
-        if name.split("/")[-1].split(".")[0] == cfile.get_name().split("/")[-1].split(".")[0]:
-            return cfile
-        for header in cfile.get_headers():
-            self.get_header(name, header)
-
-
-    def __exit__(self, exc_type, exc_val, traceback) -> bool:
+    def __exit__(self, exc_type: Any, exc_val: Any, traceback: Any) -> typing_extensions.Literal[False]:
         # required threads should be stopped here
         self.__shutdown_event.set()
         self.__active_event.clear()
         for thread in self.__process_finder_list:
             thread.stop()
-        for thread in self.__process_collector_list:
-            thread.stop()
-        for thread in self.__data_collector_list:
-            thread.stop()
+        for thread1 in self.__process_collector_list:
+            thread1.stop()
+        for thread2 in self.__data_collector_list:
+            thread2.stop()
         self.__building_thread.stop()
+        self.__compiling_tool.clear_directory()
         return False

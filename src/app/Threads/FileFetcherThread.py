@@ -10,8 +10,8 @@ from src.model.core.Project import Project
 
 
 class FileFetcherThread:
-    def __init__(self, error_queue: Queue, model: Model, model_lock: SyncLock, shutdown: SyncEvent, load_path_queue: Queue,
-                 load_event: SyncEvent, project_queue: Queue, visualize_event: pyqtSignal):
+    def __init__(self, error_queue: "Queue[BaseException]", model: Model, model_lock: SyncLock, shutdown: SyncEvent, load_path_queue: "Queue[str]",
+                 load_event: SyncEvent, project_queue: "Queue[str]", visualize_event: pyqtSignal):
         self.__thread: Thread
         self.__shutdown = shutdown
         self.__work_queue = load_path_queue
@@ -23,7 +23,7 @@ class FileFetcherThread:
         self.__project_queue = project_queue
         self.__visualize_event = visualize_event
 
-    def __run(self):
+    def __run(self) -> None:
         while not self.__shutdown.is_set():
             work: str
             if not self.__work_queue.empty():
@@ -45,11 +45,11 @@ class FileFetcherThread:
             self.__load_event.clear()
 
 
-    def start(self):
+    def start(self) -> None:
         print("[FileFetcherThread]    started")
         self.__thread = Thread(target=self.__run)
         self.__thread.start()
 
-    def stop(self):
+    def stop(self) -> None:
         self.__thread.join()
         print("[FileFetcherThread]  stopped")

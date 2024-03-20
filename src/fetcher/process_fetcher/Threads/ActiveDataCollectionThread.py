@@ -14,6 +14,7 @@ from src.fetcher.process_fetcher.Threads.PassiveDataCollectionThread import (
 from src.fetcher.process_fetcher.process_observer.metrics_observer.DataObserver import (
     DataObserver,
 )
+from src.model.DataBaseEntry import DataBaseEntry
 from src.model.Model import Model
 from src.model.core.DataEntry import DataEntry
 from src.model.core.ProcessPoint import ProcessPoint
@@ -29,14 +30,14 @@ class ActiveDataCollectionThread(PassiveDataCollectionThread):
         model: Model,
         model_lock: SyncLock,
         data_observer: DataObserver,
-        process_count,
+        process_count: int,
         shutdown: SyncEvent,
         source_file: SourceFile,
         active_event: SyncEvent,
-        saving_queue: Queue,
+        saving_queue: "Queue[str]",
     ):
         self._source_file = source_file
-        self._saving_queue: Queue = saving_queue
+        self._saving_queue = saving_queue
         super().__init__(
             process_list,
             process_list_lock,
@@ -48,7 +49,7 @@ class ActiveDataCollectionThread(PassiveDataCollectionThread):
             active_event,
         )
 
-    def _add_data_entry(self, data_entry: DataEntry):
+    def _add_data_entry(self, data_entry: DataEntry) -> None:
         with self._model_lock:
             self._model.insert_datapoint_header(
                 data_entry=data_entry

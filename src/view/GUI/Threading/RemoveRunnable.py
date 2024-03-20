@@ -8,7 +8,7 @@ from src.view.GUI.UserInteraction.Displayable import Displayable
 class RemoveRunnable(QRunnable):
 
     def __init__(self, ram_graph: GraphWidget,  cpu_graph: GraphWidget, runtime_graph: BarWidget,
-                 displayable: Displayable, mutex: QMutex):
+                 displayable: Displayable, mutex: QMutex) -> None:
         super().__init__()
 
         self.ram_graph: GraphWidget = ram_graph
@@ -18,7 +18,7 @@ class RemoveRunnable(QRunnable):
         self.mutex: QMutex = mutex
 
 
-    def run(self):
+    def run(self) -> None:
         self.ram_graph.remove_plot(self.displayable.ram_plot)
         self.cpu_graph.remove_plot(self.displayable.cpu_plot)
         self.mutex.lock()

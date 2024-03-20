@@ -18,7 +18,7 @@ class Configuration:
     saves_path: str
 
     @classmethod
-    def load(cls, config_path: str):
+    def load(cls, config_path: str) -> "Configuration":
         with open(config_path, "r") as config_json:
             config: Configuration = cattrs.structure(
                 json.load(config_json), cls)

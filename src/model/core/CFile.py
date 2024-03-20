@@ -1,5 +1,6 @@
 import datetime
 import time
+import typing
 from typing import List, Optional, Protocol, Self
 
 from src.model.core.CFileReadViewInterface import CFileReadViewInterface
@@ -15,7 +16,7 @@ class CFile(CFileReadViewInterface, Protocol):
     path: str
     error: bool
     hierarchy_level: int
-    parent: Self|None
+    parent: typing.Optional["CFile"]
     sorted_timestamp_list: list[float]|None
 
     def __init__(self, path: str) -> None:
@@ -34,8 +35,8 @@ class CFile(CFileReadViewInterface, Protocol):
             return (
                 self.sorted_timestamp_list[0].timestamp
             )
-        return 0  
-    
+        return 0
+
     def get_max_timestamps(self) -> float:
         '''returns the last timestamp in CFile's entries'''
         if self.sorted_timestamp_list is None:
@@ -47,12 +48,12 @@ class CFile(CFileReadViewInterface, Protocol):
                 self.sorted_timestamp_list[-1].timestamp
             )
         return 0
-    
+
     def get_total_time(self) -> float:
         return self.get_max_timestamps() - self.get_min_timestamps()
 
     def get_max(self, metric_name: MetricName) -> float:
-        max_entry_value = 0
+        max_entry_value: float = 0
         for entry in self.data_entries:
             for metric in entry.metrics:
                 if metric.name == metric_name:
@@ -78,7 +79,7 @@ class CFile(CFileReadViewInterface, Protocol):
 
     def get_header_by_name(self, name: str) -> Optional[CFileReadViewInterface]:
         for header in self.headers:
-            if header.get_name is name:
+            if header.get_name() is name:
                 return header
         return None
 
@@ -91,7 +92,7 @@ class CFile(CFileReadViewInterface, Protocol):
             timestamps.append(datapoint.timestamp)
         return timestamps
 
-    def get_headers(self):
+    def get_headers(self) -> List[CFileReadViewInterface]:
         return self.headers
 
     def has_error(self) -> bool:

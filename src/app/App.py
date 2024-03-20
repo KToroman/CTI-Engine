@@ -3,7 +3,7 @@ from multiprocessing.synchronize import Event as SyncEvent
 from multiprocessing.synchronize import Lock as SyncLock
 import os
 from os.path import join
-from typing import List
+from typing import List, Any
 
 from PyQt5.QtCore import pyqtSignal
 from src.app.Configuration import Configuration
@@ -18,7 +18,11 @@ from src.fetcher.file_fetcher.FileLoader import FileLoader
 from src.fetcher.hierarchy_fetcher.HierarchyFetcher import HierarchyFetcher
 from src.fetcher.process_fetcher.PassiveDataFetcher import PassiveDataFetcher
 from src.app.Threads.GUICommunicationManager import GUICommunicationManager
+from src.model.DataBaseEntry import DataBaseEntry
 from src.model.Model import Model
+from src.model.core.Project import Project
+from src.model.core.SourceFile import SourceFile
+from src.model.core.StatusSettings import StatusSettings
 from src.saving.SaveInterface import SaveInterface
 from src.saving.SaveToDatabase import SaveToDatabase
 from src.saving.SaveToJSON import SaveToJSON
@@ -32,18 +36,18 @@ class App(AppRequestsInterface):
         shutdown_event: SyncEvent,
         passive_mode_event: SyncEvent,
         load_event: SyncEvent,
-        load_path_queue: Queue,
-        source_file_name_queue: Queue,
+        load_path_queue: "Queue[str]",
+        source_file_name_queue: "Queue[str]",
         visualize_signal: pyqtSignal,
-        error_queue: Queue,
+        error_queue: "Queue[BaseException]",
         error_signal: pyqtSignal,
         status_signal: pyqtSignal,
-        status_queue: Queue,
-        project_queue: Queue,
+        status_queue: "Queue[StatusSettings]",
+        project_queue: "Queue[str]",
         cancel_event: SyncEvent,
         restart_event: SyncEvent,
         model: Model,
-    ):
+    ) -> None:
         # Events:
         self.__finished_project_event: SyncEvent = Event()
         self.fetching_passive_data: SyncEvent = Event()
@@ -60,16 +64,16 @@ class App(AppRequestsInterface):
         self.hierarchy_process_shutdown: SyncEvent = Event()
 
         # Queues:
-        self.queue_list: List[Queue] = list()
-        self.source_file_queue: Queue = Queue()
-        self.load_path_queue: Queue = load_path_queue
-        self.__source_file_name_queue: Queue = source_file_name_queue
-        self.__error_queue: Queue = error_queue
-        self.status_queue: Queue = status_queue
-        self.__project_queue: Queue = project_queue
-        self.__hierarchy_fetcher_work_queue: Queue = Queue()
-        self.__file_saver_work_queue: Queue = Queue()
-        self.__pid_queue: Queue = Queue()
+        self.queue_list: "List[Queue[Any]]" = list()
+        self.source_file_queue: "Queue[SourceFile]" = Queue()
+        self.load_path_queue: "Queue[str]" = load_path_queue
+        self.__source_file_name_queue: "Queue[str]" = source_file_name_queue
+        self.__error_queue: "Queue[BaseException]" = error_queue
+        self.status_queue: "Queue[StatusSettings]" = status_queue
+        self.__project_queue: "Queue[str]" = project_queue
+        self.__hierarchy_fetcher_work_queue: "Queue[Project]" = Queue()
+        self.__file_saver_work_queue: "Queue[str]" = Queue()
+        self.__pid_queue: "Queue[str]" = Queue()
         self.queue_list.extend(
             [
                 self.load_path_queue,
@@ -89,9 +93,9 @@ class App(AppRequestsInterface):
         self.__model = model
 
         # Signals for GUI
-        self.__error_signal: pyqtSignal = error_signal
-        self.__status_signal: pyqtSignal = status_signal
-        self.visualize_signal: pyqtSignal = visualize_signal
+        self.__error_signal: pyqtSignal = error_signal  # type: ignore[call-overload]
+        self.__status_signal: pyqtSignal = status_signal  # type: ignore[call-overload]
+        self.visualize_signal: pyqtSignal = visualize_signal  # type: ignore[call-overload]
 
         # Configuration
         self.config: Configuration = Configuration.load(App.__get_config_path())
@@ -135,7 +139,7 @@ class App(AppRequestsInterface):
             max_workers=self.config.hierarchy_fetcher_worker_count,
         )
 
-    def prepare_threads(self):
+    def prepare_threads(self) -> None:
         self.hierarchy_process: HierarchyProcess = HierarchyProcess(
             self.hierarchy_process_shutdown,
             self.hierarchy_fetcher,
@@ -204,7 +208,7 @@ class App(AppRequestsInterface):
             self.__project_queue,
         )
 
-    def start(self):
+    def start(self) -> None:
         print("[app]    started")
         self.prepare_threads()
 
@@ -216,7 +220,7 @@ class App(AppRequestsInterface):
 
         self.__active_mode_fetcher_thread.start()
 
-    def stop(self):
+    def stop(self) -> None:
         self.shutdown_event.set()
         self.passive_thread.stop()
         self.hierarchy_thread.stop()
