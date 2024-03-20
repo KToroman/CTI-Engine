@@ -38,7 +38,7 @@ class Project(ProjectReadViewInterface):
             self.file_dict.add_file(cfile)
             self.source_files.append(cfile)
         return cfile
-    
+
     def get_header_by_name(self, name: str) -> CFile:
         cfile = self.file_dict.get_cfile_by_name(name)
         if cfile is None:
@@ -46,7 +46,7 @@ class Project(ProjectReadViewInterface):
             self.file_dict.add_file(cfile)
         
         return cfile
-    
+
     def get_unkown_cfile(self, path: str, hierarchy_level: int) -> CFile:
         cfile = self.file_dict.get_cfile_by_name(path)
         if cfile is None:
@@ -59,36 +59,42 @@ class Project(ProjectReadViewInterface):
         return cfile
 
     def update_header(self, header_path: str, parent_path: str, hierarchy_level: int):
-        parent = self.get_unkown_cfile(path=parent_path, hierarchy_level=hierarchy_level-1)
         header = self.get_header_by_name(header_path)
+        if header.parent is None or header.parent.path != parent_path:
+            header = Header(header_path, None, 1)
+            self.file_dict.add_file(header)
+        parent = self.get_unkown_cfile(
+            path=parent_path, hierarchy_level=hierarchy_level-1)
         header.parent = parent
         if header not in parent.headers:
             parent.headers.append(header)
         header.hierarchy_level = hierarchy_level
-        self.add_to_delta(hierarchy_level=hierarchy_level, path=header_path, parent_or_compile_command=parent_path, data_entry=None)
+        self.add_to_delta(hierarchy_level=hierarchy_level, path=header_path,
+                          parent_or_compile_command=parent_path, data_entry=None)
 
     def update_source_file(self, path, compile_command: str) -> CFile:
         source_file = typing.cast(SourceFile, self.get_sourcefile(path))
         source_file.compile_command = compile_command
-        self.add_to_delta(hierarchy_level=0, path=path, parent_or_compile_command=compile_command, data_entry=None)
+        self.add_to_delta(hierarchy_level=0, path=path,
+                          parent_or_compile_command=compile_command, data_entry=None)
         return source_file
 
-
-
     def add_to_delta(
-        self, hierarchy_level: int, path: str, parent_or_compile_command: str, data_entry: DataEntry|None
+        self, hierarchy_level: int, path: str, parent_or_compile_command: str, data_entry: DataEntry | None
     ):
         if data_entry is None:
-            self.delta_entries.append(DataBaseEntry(path, parent_or_compile_command, None, None, hierarchy_level))
+            self.delta_entries.append(DataBaseEntry(
+                path, parent_or_compile_command, None, None, hierarchy_level))
         else:
             self.delta_entries.append(
-            DataBaseEntry(
-                path,
-                parent_or_compile_command,
-                data_entry.timestamp,
-                data_entry.metrics,
-                hierarchy_level,
-            ))
+                DataBaseEntry(
+                    path,
+                    parent_or_compile_command,
+                    data_entry.timestamp,
+                    data_entry.metrics,
+                    hierarchy_level,
+                )
+            )
 
     def get_project_time(self) -> float:
         '''returns project's first measured timestamp'''

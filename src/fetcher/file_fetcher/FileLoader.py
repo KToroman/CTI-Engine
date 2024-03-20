@@ -79,6 +79,23 @@ class FileLoader(FetcherInterface):
                 value=value,
                 project=project,
             )
+        if found_cfile.hierarchy_level > 0 and found_cfile.parent.path != parent_or_compile_command:
+            found_cfile = self.__add_cfile_to_project(
+                path=path,
+                parent_or_compile_command=parent_or_compile_command,
+                hierarchy=hierarchy,
+                value=value,
+                project=project,
+            )
+        if found_cfile.hierarchy_level > 0 and found_cfile.parent.path != parent_or_compile_command:
+            found_cfile = self.__add_cfile_to_project(
+                path=path,
+                parent_or_compile_command=parent_or_compile_command,
+                hierarchy=hierarchy,
+                value=value,
+                project=project,
+            )
+            
         self.__add_data_entry(
             found_cfile, value, timestamp)
         if hierarchy > 0 and found_cfile.parent is None:
