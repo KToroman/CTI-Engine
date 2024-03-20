@@ -1,6 +1,6 @@
 import datetime
 import time
-from typing import List, Optional, Protocol
+from typing import List, Optional, Protocol, Self
 
 from src.model.core.CFileReadViewInterface import CFileReadViewInterface
 from src.model.core.DataEntry import DataEntry
@@ -14,6 +14,8 @@ class CFile(CFileReadViewInterface, Protocol):
     headers: List[CFileReadViewInterface]
     path: str
     error: bool
+    hierarchy_level: int
+    parent: Self|None
 
     def __init__(self, path: str) -> None:
         raise NotImplementedError
@@ -22,12 +24,16 @@ class CFile(CFileReadViewInterface, Protocol):
         return self.path
 
     def get_total_time(self) -> float:
+        if len(self.data_entries) > 1:
+            print("[CFile]  not zero runtime")
         sorted_timestamp_list = sorted(
             self.data_entries, key=lambda data_entry: data_entry.timestamp
         )
-        if sorted_timestamp_list:
+        if len(sorted_timestamp_list) > 1:
+            print("[CFile]  not zero runtime")
             return (
-                sorted_timestamp_list[-1].timestamp - sorted_timestamp_list[0].timestamp
+                sorted_timestamp_list[-1].timestamp -
+                sorted_timestamp_list[0].timestamp
             )
         return 0
 

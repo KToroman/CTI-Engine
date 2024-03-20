@@ -108,8 +108,9 @@ class ProcessCollectorThread:
             else:
                 with self.__model_lock:
                     name = self.__model.get_current_project_name()
+                    project: Project = self.__model.get_project_by_name(name)
                 try:
-                    self.__saver_queue.put(name, block=False)
+                    self.__saver_queue.put((project.delta_entries, name, block=False))
                 except queue.Full:
                     pass
             self.__counter += 1

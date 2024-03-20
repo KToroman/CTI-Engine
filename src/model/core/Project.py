@@ -1,10 +1,12 @@
 import time
 from typing import List, Optional
+from src.exceptions.CFileNotFoundError import CFileNotFoundError
 from src.model.DataBaseEntry import DataBaseEntry
 from src.model.core.CFile import CFile
 from src.model.core.CFileReadViewInterface import CFileReadViewInterface
 from src.model.core.DataEntry import DataEntry
 from src.model.core.FileDictionary import FileDictionary
+from src.model.core.Header import Header
 from src.model.core.ProjectFinishedSemaphore import ProjectFinishedSemaphore
 from src.model.core.ProjectReadViewInterface import ProjectReadViewInterface
 from src.model.core.SourceFile import SourceFile
@@ -28,20 +30,59 @@ class Project(ProjectReadViewInterface):
         self.path_to_save = f"{path_to_save}/{self.working_dir}/CTI_Engine_{time_stamp_str}"
         self.delta_entries: List[DataBaseEntry] = list()
 
-    def get_sourcefile(self, name: str) -> SourceFile:
-        file_exists: bool = self.file_dict.isInDictionary(name)
-        source_file: SourceFile = self.file_dict.get_sourcefile_by_name(name)
-        if not file_exists:
-            self.source_files.append(source_file)
+    def get_sourcefile(self, name: str) -> CFile:
+        cfile = self.file_dict.get_cfile_by_name(name)
+        if cfile is None:
+            cfile = SourceFile(path=name)
+            self.file_dict.add_file(cfile)
+            self.source_files.append(cfile)
+        return cfile
+    
+    def get_header_by_name(self, name: str) -> CFile:
+        cfile = self.file_dict.get_cfile_by_name(name)
+        if cfile is None:
+            cfile = Header(name, None, 1)
+            self.file_dict.add_file(cfile)
+        return cfile
+    
+    def get_unkown_cfile(self, path: str, hierarchy_level: int) -> CFile:
+        cfile = self.file_dict.get_cfile_by_name(path)
+        if cfile is None:
+            if hierarchy_level > 0:
+                cfile = SourceFile(path=path)
+                self.file_dict.add_file(cfile)
+            else:
+                cfile = Header(path, None, 1)
+                self.file_dict.add_file(cfile)
+
+        return cfile
+
+    def update_header(self, header_path: str, parent_path: str, hierarchy_level: int):
+        header = self.get_header_by_name(header_path)
+        parent = self.get_unkown_cfile(path=parent_path, hierarchy_level=hierarchy_level-1)
+        header.parent = parent
+        parent.headers.append(header)
+        header.hierarchy_level = hierarchy_level
+        self.add_to_delta(hierarchy_level=hierarchy_level, path=header_path, parent_or_compile_command=parent_path, data_entry=None)
+
+    def update_source_file(self, path, compile_command: str) -> CFile:
+        source_file = self.get_sourcefile(path)
+        source_file.compile_command = compile_command
+        self.add_to_delta(hierarchy_level=0, path=path, parent_or_compile_command=compile_command, data_entry=None)
         return source_file
 
+
+
     def add_to_delta(
-        self, hierarchy_level: int, path: str, parent_path: str, data_entry: DataEntry
+        self, hierarchy_level: int, path: str, parent_or_compile_command: str, data_entry: DataEntry|None
     ):
-        self.delta_entries.append(
+        if data_entry is None:
+            self.delta_entries.append(DataBaseEntry(path, parent_or_compile_command, None, None, hierarchy_level))
+        else:
+            self.delta_entries.append(
             DataBaseEntry(
                 path,
-                parent_path,
+                parent_or_compile_command,
                 data_entry.timestamp,
                 data_entry.metrics,
                 hierarchy_level,

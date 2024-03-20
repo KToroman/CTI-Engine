@@ -1,6 +1,7 @@
 import concurrent.futures
 import threading
 import time
+import typing
 from multiprocessing import Queue
 from subprocess import CalledProcessError
 from concurrent.futures import ThreadPoolExecutor, Future
@@ -35,7 +36,7 @@ class HierarchyFetcher(FetcherInterface):
         self.__open_timeout: int = 0
         self.__hierarchy_fetching_event = hierarchy_fetching_event
         self.__shutdown_event = shutdown_event
-        self.project: Project
+        self.project: Project | None = None
         self.worker_thread_pool: ThreadPoolExecutor = ThreadPoolExecutor(
             max_workers=max_workers, thread_name_prefix="hierarchy_worker"
         )
@@ -144,10 +145,10 @@ class HierarchyFetcher(FetcherInterface):
             f"\033[96m [HierarchyFetcher]     Hierarchy Fetching completed. {failed_source_files} files failed\033[0m"
         )
 
-    def __setup_source_files(self, project: Project) -> list[SourceFile]:
+    def __setup_source_files(self, project: Project) -> typing.List[SourceFile]:
         created_source_files: list[SourceFile] = []
         for opath in self.command_getter.get_all_opaths():
-            created_source_files.append(project.get_sourcefile(opath))
+            created_source_files.append(SourceFile(opath))
         return created_source_files
 
     def __generate_header_result(self, source_file: SourceFile) -> str:
@@ -164,7 +165,7 @@ class HierarchyFetcher(FetcherInterface):
             source_file.compile_command = compile_command
 
     def __update_headers(self, source_file: SourceFile, hierarchy_result: str) -> bool:
-        lines_to_append: list[str] = list()
+        lines_to_append: typing.List[str] = list()
         for line in hierarchy_result.splitlines():
             if line.startswith("."):
                 lines_to_append.append(line)
@@ -181,12 +182,12 @@ class HierarchyFetcher(FetcherInterface):
         path: str = self.__get_path_from_line(line)
         if not hierarchy:
             new_header: Header = self.__append_header_to_file(
-                line_depth, source_file, path, source_file
+                line_depth, source_file, path
             )
             hierarchy.append((new_header, line_depth))
         elif line_depth > hierarchy[-1][1]:
             new_header: Header = self.__append_header_to_file(
-                line_depth, hierarchy[-1][0], path, source_file
+                line_depth, hierarchy[-1][0], path
             )
             hierarchy.append((new_header, line_depth))
         else:
@@ -194,7 +195,7 @@ class HierarchyFetcher(FetcherInterface):
             self.__append_header_recursive(line, hierarchy, source_file)
 
     def __append_header_to_file(
-        self, hierarchy_level: int, cfile: CFile, new_header_path: str, root_source_file: SourceFile
+        self, hierarchy_level: int, cfile: CFile, new_header_path: str
     ) -> Header:
         new_header = Header(
             new_header_path, parent=cfile, hierarchy_level=hierarchy_level

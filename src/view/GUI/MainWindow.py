@@ -176,7 +176,6 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         # Select spot for displayables to be inserted into
         self.current_table.insertion_point = project.get_project_name()
         # Update TableWidget for each cfile
-        self.__connect_new_table()
         cfile_list: List[CFileReadViewInterface] = project.get_cfiles()
         file_count: int = 1
         displayable_list: List[DisplayableHolder] = []
