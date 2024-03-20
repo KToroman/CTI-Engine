@@ -44,6 +44,7 @@ class FileBuilder:
                 delindex = i
         if delindex != -1:
             del command[delindex]
+
         del command[-1]
         command.append("-I" + self.__curr_project_dir)
         command.append(file_path.resolve().__str__())

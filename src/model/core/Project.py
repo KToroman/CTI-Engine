@@ -44,6 +44,7 @@ class Project(ProjectReadViewInterface):
         if cfile is None:
             cfile = Header(name, None, 1)
             self.file_dict.add_file(cfile)
+        
         return cfile
     
     def get_unkown_cfile(self, path: str, hierarchy_level: int) -> CFile:
@@ -55,14 +56,14 @@ class Project(ProjectReadViewInterface):
             else:
                 cfile = Header(path, None, 1)
                 self.file_dict.add_file(cfile)
-
         return cfile
 
     def update_header(self, header_path: str, parent_path: str, hierarchy_level: int):
-        header = self.get_header_by_name(header_path)
         parent = self.get_unkown_cfile(path=parent_path, hierarchy_level=hierarchy_level-1)
+        header = self.get_header_by_name(header_path)
         header.parent = parent
-        parent.headers.append(header)
+        if header not in parent.headers:
+            parent.headers.append(header)
         header.hierarchy_level = hierarchy_level
         self.add_to_delta(hierarchy_level=hierarchy_level, path=header_path, parent_or_compile_command=parent_path, data_entry=None)
 
