@@ -30,6 +30,7 @@ class Project(ProjectReadViewInterface):
         time_stamp_str = f"{time_stamp[0]}_{time_stamp[1]}"
         self.path_to_save = f"{path_to_save}/{self.working_dir}/CTI_Engine_{time_stamp_str}"
         self.delta_entries: List[DataBaseEntry] = list()
+        self.count_headers = 0
 
     def get_sourcefile(self, name: str) -> CFile:
         cfile = self.file_dict.get_cfile_by_name(name)
@@ -62,7 +63,7 @@ class Project(ProjectReadViewInterface):
         header = self.get_header_by_name(header_path)
         if header.parent is None or header.parent.path != parent_path:
             header = Header(header_path, None, 1)
-            self.file_dict.add_file(header)
+            self.count_headers += 1
         parent = self.get_unkown_cfile(
             path=parent_path, hierarchy_level=hierarchy_level-1)
         header.parent = parent
@@ -71,6 +72,7 @@ class Project(ProjectReadViewInterface):
         header.hierarchy_level = hierarchy_level
         self.add_to_delta(hierarchy_level=hierarchy_level, path=header_path,
                           parent_or_compile_command=parent_path, data_entry=None)
+        
 
     def update_source_file(self, path, compile_command: str) -> CFile:
         source_file = typing.cast(SourceFile, self.get_sourcefile(path))
@@ -102,6 +104,7 @@ class Project(ProjectReadViewInterface):
         for source_file in self.source_files:
             starting_points.append(source_file.get_min_timestamps())
         starting_points.sort()
+        print(f"[Project]    header count: {self.count_headers}")
         return starting_points[0]
 
     def get_project_name(self) -> str:

@@ -18,6 +18,7 @@ from src.model.core.Project import Project
 from PyQt5.QtCore import pyqtSignal
 
 from src.model.core.SourceFile import SourceFile
+from src.view.GUI.UserInteraction.ProjectNameButtonWrapper import ProjectNameButton
 
 
 class FileLoader(FetcherInterface):
@@ -79,23 +80,9 @@ class FileLoader(FetcherInterface):
                 value=value,
                 project=project,
             )
-        if found_cfile.hierarchy_level > 0 and found_cfile.parent.path != parent_or_compile_command:
-            found_cfile = self.__add_cfile_to_project(
-                path=path,
-                parent_or_compile_command=parent_or_compile_command,
-                hierarchy=hierarchy,
-                value=value,
-                project=project,
-            )
-        if found_cfile.hierarchy_level > 0 and found_cfile.parent.path != parent_or_compile_command:
-            found_cfile = self.__add_cfile_to_project(
-                path=path,
-                parent_or_compile_command=parent_or_compile_command,
-                hierarchy=hierarchy,
-                value=value,
-                project=project,
-            )
-            
+        if hierarchy > 0:
+            self.__check_parent(found_cfile, parent_or_compile_command, hierarchy, project)
+
         self.__add_data_entry(
             found_cfile, value, timestamp)
         if hierarchy > 0 and found_cfile.parent is None:
@@ -104,6 +91,16 @@ class FileLoader(FetcherInterface):
                 parent = self.__add_parent(
                     parent_or_compile_command, hierarchy, project)
             found_cfile.parent = parent
+
+    def __check_parent(self, found_header: CFile, parent_or_compile_command: str, hierarchy: int, project: Project) -> CFile:
+        new_header: CFile = found_header
+        parent = self.__all_cfiles.get(parent_or_compile_command, None)
+        if parent is None:
+            parent = self.__add_parent(
+                parent_or_compile_command, hierarchy, project)
+        if found_header.hierarchy_level != hierarchy or parent.path != parent_or_compile_command:
+            new_header = Header(found_header.path, parent, hierarchy)
+            parent.headers.append(new_header)
 
     def __add_data_entry(self, cfile: CFile, value: List, timestamp):
 
@@ -124,6 +121,7 @@ class FileLoader(FetcherInterface):
     ) -> CFile:
         '''to be called if no cfile with path==path was found yet. '''
         if hierarchy > 0:
+            found_header = self.__all_cfiles.get(path, None)
             if parent_or_compile_command == "":
                 parent = None
             else:
