@@ -1,4 +1,5 @@
 import os
+import queue
 import time
 from datetime import date
 from multiprocessing import Queue, Lock
@@ -40,7 +41,7 @@ class ProcessCollectorThread:
     ):
         self.__thread: Thread
         self.__shutdown = shutdown
-        self.__work_queue_lock = Lock()
+        self.__work_queue_lock: Lock = Lock()
         self.__work_queue: list[psutil.Process] = list()
         self.__process_list = process_list
         self.__process_list_lock = process_list_lock

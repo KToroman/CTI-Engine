@@ -67,6 +67,7 @@ class ActiveDataFetcher(FetcherInterface):
             curr_project_dir=model.current_project.working_dir,
             source_file=self.__source_file,
             path=build_dir_path,
+            header_error_queue=self.__header_error_queue
         )
 
         self.__save_path = save_path
@@ -191,6 +192,7 @@ class ActiveDataFetcher(FetcherInterface):
     def __exit__(self, exc_type, exc_val, traceback) -> bool:
         # required threads should be stopped here
         self.__shutdown_event.set()
+        self.__active_event.clear()
         for thread in self.__process_finder_list:
             thread.stop()
         for thread in self.__process_collector_list:
