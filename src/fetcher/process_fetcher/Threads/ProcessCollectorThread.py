@@ -85,7 +85,10 @@ class ProcessCollectorThread:
         self.__thread.start()
 
     def stop(self):
-        self.__thread.join()
+        if self.__thread.is_alive():
+            self.__thread.join(timeout=1)
+            if self.__thread.is_alive():
+                print("thread timed out")
         print("[ProcessCollectorThread]    stopped now")
 
     def add_work(self, process: psutil.Process):
@@ -105,7 +108,10 @@ class ProcessCollectorThread:
                 with self.__model_lock:
                     name = self.__model.get_current_project_name()
                     project: Project = self.__model.get_project_by_name(name)
-                self.__saver_queue.put((project.delta_entries, name))
+                try:
+                    self.__saver_queue.put((project.delta_entries, name), block=False)
+                except queue.Full:
+                    pass
             self.__counter += 1
             self.time_till_false = time.time() + 45
             with self.__process_list_lock:

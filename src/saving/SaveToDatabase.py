@@ -16,7 +16,6 @@ from src.saving.SaveInterface import SaveInterface
 class SaveToDatabase(SaveInterface):
 
     def __init__(self, saves_path: str, model_lock: SyncLock, model: Model):
-        print("initializing")
         self.__current_project_name: str = ""
         self.__saves_path_prefix = saves_path
         self.__saves_path: str = saves_path
@@ -26,13 +25,10 @@ class SaveToDatabase(SaveInterface):
 
     def save_project(self, project_name: str):
         project = self.__model.get_project_by_name(project_name)
-        print("[SaveToDatabase]     found project in model")
         with self.__model_lock:
-            print("[SaveToDatabase]     now in modellock")
             delta: List[DataBaseEntry] = project.delta_entries
             project.delta_entries = list()
         if self.__current_project_name != project_name:
-            print("[SaveToDataBase]     new project saved")
             self.__add_new_project(project)
             # project is being saved for the first time
         self.__add_to_data_base(delta)
@@ -58,8 +54,5 @@ class SaveToDatabase(SaveInterface):
                 value = None
             else:
                 value = entry.metrics
-                paths = entry.path.split("/")
-                print_path = paths[-1]+"/"+paths[-2]+"/"+paths[-3]
-                print(f"[SaveToDatabase]    added entry with time: {entry.timestamp}, path:{print_path}")
             db[key] = value
         db.close()
