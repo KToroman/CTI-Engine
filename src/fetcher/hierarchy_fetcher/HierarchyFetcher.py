@@ -89,7 +89,6 @@ class HierarchyFetcher(FetcherInterface):
                 failed_source_files += 1
             except CalledProcessError as e:
                 source_files_retry.append(source_file)
-
         for future in concurrent.futures.as_completed(futures):
             if (
                 not self.__hierarchy_fetching_event.is_set()
@@ -127,6 +126,7 @@ class HierarchyFetcher(FetcherInterface):
                 source_file.error = True
                 failed_source_files += 1
                 continue
+        failed_list: typing.List[SourceFile] = list()
         for future in concurrent.futures.as_completed(futures):
             if (
                 not self.__hierarchy_fetching_event.is_set()
@@ -137,9 +137,14 @@ class HierarchyFetcher(FetcherInterface):
             except CompileCommandError as e:
                 futures[future].error = True
                 failed_source_files += 1
+                failed_list.append(futures[future])
             except CalledProcessError as e:
                 futures[future].error = True
                 failed_source_files += 1
+                failed_list.append(futures[future])
+        for source in failed_list:
+            self.source_file_queue.put(source)
+
         print(
             f"\033[96m [HierarchyFetcher]     Hierarchy Fetching completed. {failed_source_files} files failed\033[0m"
         )

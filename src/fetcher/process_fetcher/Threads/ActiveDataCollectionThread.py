@@ -59,7 +59,7 @@ class ActiveDataCollectionThread(PassiveDataCollectionThread):
             cmdline: List[str] = process_point.process.cmdline()
             path: str = process_point.process.cwd()
 
-            if "cc1plus" not in cmdline[0]:
+            if "cc1plus" not in cmdline:
                 return
 
             has_o: bool = False

@@ -54,8 +54,6 @@ class HierarchyThread:
                 with self.__model_lock:
                     proj: Project = self.__model.get_project_by_name(self.__current_work)
                     source_file: SourceFile = proj.update_source_file(data.path, data.compile_command)
-                    if len(source_file.get_headers()) > 50:
-                        print("[HiearchyFetcher]    many headers 58 " + source_file.get_name())
                     self.__update_headers(proj, data, 1)
                     source_file.error = data.error
 

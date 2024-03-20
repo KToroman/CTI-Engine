@@ -83,7 +83,7 @@ class TreeWidget(QTreeWidget):
         if values[2] == 0:
             item.row.checkbox.setDisabled(True)
         if displayable.failed:
-            item.setBackground(0, QColor().red())
+            row.name_button.setStyleSheet("background-color:  #7F1717")
         self.items.append(item)
         self.rows.append(row)
 
@@ -101,7 +101,7 @@ class TreeWidget(QTreeWidget):
                             item.child(i).row.checkbox.setDisabled(False)
                             item.child(i).row.connected = False
                         if displayable.displayable.failed:
-                            item.setStyleSheet("::section{Background-color: #FF3232}")
+                            item.child(i).row.name_button.setStyleSheet("background-color:  #7F1717")
                     for j in range(item.child(i).childCount()):
                         if displayable.displayable.name == item.child(i).child(j).name:
                             values = [displayable.displayable.ram_peak, displayable.displayable.cpu_peak,
@@ -113,7 +113,7 @@ class TreeWidget(QTreeWidget):
                                 item.child(i).child(j).row.checkbox.setDisabled(False)
                                 item.child(i).row.connected = False
                             if displayable.displayable.failed:
-                                item.setStyleSheet("::section{Background-color: #FF3232}")
+                                item.child(i).child(j).row.name_button.setStyleSheet("background-color:  #7F1717")
         for disp in displayable.get_sub_disp():
             self.add_active_data(disp)
 
