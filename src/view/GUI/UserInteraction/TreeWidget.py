@@ -50,6 +50,7 @@ class TreeWidget(QTreeWidget):
         self.setSortingEnabled(True)
         self.sortByColumn(0, Qt.AscendingOrder)
         self.table_list: List[QTreeWidget] = list()
+        self.header().sectionClicked.connect(lambda col: self.__sort_table(col))
 
     def insert_values(self, displayables: List[DisplayableHolder]):
         print(len(displayables))
@@ -176,7 +177,6 @@ class TreeWidget(QTreeWidget):
                     if row_count == real_upper_limit:
                         self.in_row_loop = False
                     try:
-                        row.checkbox.setChecked(False)
                         row.checkbox.setChecked(True)
                     except RuntimeError as e:
                         pass
@@ -218,6 +218,21 @@ class TreeWidget(QTreeWidget):
                 while parent:
                     self.expandItem(parent)
                     parent = parent.parent()
+
+    def __sort_table(self, column: int):
+        """Sorts table according to a given parameter."""
+        out_list = []
+        key_list = [lambda obj: obj.displayable.ram_peak, lambda obj: obj.displayable.cpu_peak, lambda obj:
+        obj.displayable.runtime_plot.y_values[0]]
+        sorted_objects = sorted(self.rows, key=key_list[column - 1], reverse=True)
+        for row in sorted_objects:
+            if row.displayable.name.endswith(".o"):
+                out_list.append(row)
+                for subrow in row.children:
+                    out_list.append(subrow)
+                    for subsubrow in subrow.children:
+                        out_list.append(subsubrow)
+        self.rows = out_list
 
 
 class TreeWidgetWrapper(QObject):
