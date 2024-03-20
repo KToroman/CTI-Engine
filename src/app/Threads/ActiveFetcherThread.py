@@ -1,3 +1,4 @@
+import queue
 from multiprocessing import Queue
 from threading import Thread
 from multiprocessing.synchronize import Event as SyncEvent
@@ -67,13 +68,19 @@ class ActiveFetcherThread:
             model_lock=self.__model_lock,
             hierarchy_queue=Queue(),
         ) as active_data_fetcher:
+            print(f"building {source_file_name}")
             self.measure_source_file(active_data_fetcher)
 
+        print(f"[ActiveFetcherThread]   finished building")
         with self.__model_lock:
+            print("lock acquired")
             curr_proj = self.__model.current_project
             if curr_proj is None:
                 return
-            self.__saver_queue.put((curr_proj.delta_entries, curr_proj.name))
+            try:
+                self.__saver_queue.put((curr_proj.delta_entries, curr_proj.name), block=False)
+            except queue.Full:
+                print(f"[ActiveFetcherThread]    Couldn't add to saver; Saver unavailable")
         print("[ActiveFetcherThread]   finished active")
         self.__visualise_project_queue.put(curr_proj.get_project_name())
         self.__active_measurement_active.clear()

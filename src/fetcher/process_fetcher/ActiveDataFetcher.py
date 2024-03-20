@@ -67,6 +67,7 @@ class ActiveDataFetcher(FetcherInterface):
             curr_project_dir=model.current_project.working_dir,
             source_file=self.__source_file,
             path=build_dir_path,
+            header_error_queue=self.__header_error_queue
         )
 
         self.__save_path = save_path
@@ -100,7 +101,7 @@ class ActiveDataFetcher(FetcherInterface):
             if not self.__header_error_queue.empty():
                 header = self.__header_error_queue.get()
                 print("[ActiveDataThread]   trying to find" + header)
-                model_header = self.get_header(header, self.__source_file)
+                model_header = self.__model.current_project.get_header_by_name(header)
                 if model_header is not None:
                     print("[ActiveDataThread]   made true" + header)
                     model_header.error = True
@@ -192,6 +193,7 @@ class ActiveDataFetcher(FetcherInterface):
     def __exit__(self, exc_type, exc_val, traceback) -> bool:
         # required threads should be stopped here
         self.__shutdown_event.set()
+        self.__active_event.clear()
         for thread in self.__process_finder_list:
             thread.stop()
         for thread in self.__process_collector_list:
