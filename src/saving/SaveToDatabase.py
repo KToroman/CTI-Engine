@@ -1,4 +1,4 @@
-from os.path import join
+import time
 
 from rocksdict import Rdict
 from pathlib import Path
@@ -49,13 +49,17 @@ class SaveToDatabase(SaveInterface):
         db: Rdict = Rdict(self.__saves_path)
         print(f"[SaveToDatabase]    opened Database: {self.__saves_path}")
         for entry in delta:
-            key = f"{entry.path}\n{entry.parent_or_compile_command}\n{entry.hierarchy_level}"
-            if entry.timestamp is None or entry.metrics is None:
+            if entry.timestamp is None:
+                timestamp = time.time()
+            else:
+                timestamp = entry.timestamp
+            key = f"{entry.path}\n{entry.parent_or_compile_command}\n{entry.hierarchy_level}\n{timestamp}"
+            if entry.metrics is None:
                 value = None
             else:
-                value = [entry.timestamp, entry.metrics]
+                value = entry.metrics
                 paths = entry.path.split("/")
-                print_path = paths[-2]+"/"+paths[-3]+"/"+paths[-4]
+                print_path = paths[-1]+"/"+paths[-2]+"/"+paths[-3]
                 print(f"[SaveToDatabase]    added entry with time: {entry.timestamp}, path:{print_path}")
             db[key] = value
         db.close()

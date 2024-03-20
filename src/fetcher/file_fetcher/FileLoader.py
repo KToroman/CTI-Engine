@@ -40,8 +40,6 @@ class FileLoader(FetcherInterface):
     def update_project(self) -> bool:
         if self.__is_valid_path():
             self.__db = Rdict(self.__path)
-            if self.__db is None:
-                print("no database")
             project: Project = self.__create_project()
             print("[FileLoader]     created new project")
             self.__insert_values(project)
@@ -64,13 +62,14 @@ class FileLoader(FetcherInterface):
             value = iter.value()
             self.__add_to_project(key, value, project)
             iter.next()
-        print("[FileLoader]     added all items in database")
+        print("[FileLoader]     added all entries to model.")
 
     def __add_to_project(self, key: str, value: List, project: Project):
-        paths: List[str] = key.split("\n")
-        path = paths[0]
-        parent_or_compile_command = paths[1]
-        hierarchy: int = int(paths[2])
+        keys: List[str] = key.split("\n")
+        path = keys[0]
+        parent_or_compile_command = keys[1]
+        hierarchy: int = int(keys[2])
+        timestamp: float = float(keys[3])
         found_cfile = self.__all_cfiles.get(path, None)
         if found_cfile is None:
             found_cfile = self.__add_cfile_to_project(
@@ -80,10 +79,8 @@ class FileLoader(FetcherInterface):
                 value=value,
                 project=project,
             )
-        else:
-            print(f"[FileLoader]    second entry for {path}")
         self.__add_data_entry(
-            found_cfile, parent_or_compile_command, value, hierarchy, project)
+            found_cfile, value, timestamp)
         if hierarchy > 0 and found_cfile.parent is None:
             parent = self.__all_cfiles.get(parent_or_compile_command, None)
             if parent is None:
@@ -91,18 +88,13 @@ class FileLoader(FetcherInterface):
                     parent_or_compile_command, hierarchy, project)
             found_cfile.parent = parent
 
-    def __add_data_entry(self, cfile: CFile, parent_or_compile_command: str, value: List, hierarchy: int, project: Project):
+    def __add_data_entry(self, cfile: CFile, value: List, timestamp):
 
         data_entry = self.__extract_dataentry(
-            value=value, cfile_path=cfile.path)
+            value=value, cfile_path=cfile.path, timestamp=timestamp)
         if data_entry is None:
             return
         else:
-            if len(cfile.data_entries) > 0:
-                paths = cfile.path.split("/")
-                print_path = paths[-2]+"/"+paths[-3]+"/"+paths[-4]
-                print(
-                    f"[FileLoader]    added the {len(cfile.data_entries)}-th entry for {print_path}")
             cfile.data_entries.append(data_entry)
 
     def __add_cfile_to_project(
@@ -130,7 +122,6 @@ class FileLoader(FetcherInterface):
                 parent.headers.append(new_header)
                 project.file_dict.add_file(new_header)
             self.__all_cfiles[path] = new_header
-            print("[FileLoader]     found new header to save")
             return new_header
         else:
             new_sourcefile: SourceFile = SourceFile(path)
@@ -154,11 +145,10 @@ class FileLoader(FetcherInterface):
         self.__all_cfiles[parent_path] = parent
         return parent
 
-    def __extract_dataentry(self, value: List | None, cfile_path: str) -> Optional[DataEntry]:
+    def __extract_dataentry(self, value: List | None, cfile_path: str, timestamp: float) -> Optional[DataEntry]:
         if value is None:
             return None
-        timestamp: float = value[0]
-        metrics: List[Metric] = value[1]
+        metrics: List[Metric] = value
         # TODO if compile command add to sourcefile
         data_entry: DataEntry = DataEntry(
             path=cfile_path, timestamp=timestamp, metrics=metrics

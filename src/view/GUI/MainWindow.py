@@ -271,7 +271,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         else:
             self.status_bar.update_status(status, "")
 
-    def __get_hierarchy(self, cfile: CFileReadViewInterface, active_row: str) -> CFileReadViewInterface:
+    def __get_hierarchy(self, cfile: CFileReadViewInterface, active_row: str) -> CFileReadViewInterface|None:
         """Finds cfile which started active mode."""
         if cfile.get_name() == active_row:
             return cfile
@@ -279,6 +279,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
             return None
         for header in cfile.get_headers():
             self.__get_hierarchy(header, active_row)
+        return None
 
     def __create_displayable(self, cfile: CFileReadViewInterface, depth_p: int) -> DisplayableHolder:
         """turns given cfile into displayable"""
@@ -286,8 +287,8 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         if depth >= self.HIERARCHY_DEPTH or not cfile.get_headers():
             return DisplayableHolder(self.__make_disp(cfile), [])
         sub_disp_list: List[DisplayableHolder] = list()
-        for h in cfile.get_headers():
-            sub_disp_list.append(self.__create_displayable(h, depth))
+        for header in cfile.get_headers():
+            sub_disp_list.append(self.__create_displayable(header, depth))
         return DisplayableHolder(self.__make_disp(cfile), sub_disp_list)
 
     def __make_disp(self, cfile: CFileReadViewInterface) -> Displayable:

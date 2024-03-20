@@ -15,3 +15,4 @@ class SourceFile(CFile):
         self.compile_command: str = ""
         self.hierarchy_level: int = 0
         self.parent = None
+        self.sorted_timestamp_list = None

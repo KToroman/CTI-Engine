@@ -1,4 +1,4 @@
-from typing import Protocol, List
+from typing import Protocol, List, Self
 
 from src.model.core.MetricName import MetricName
 
@@ -9,9 +9,17 @@ class CFileReadViewInterface(Protocol):
     def get_name(self) -> str:
         """Returns the path form CFile, by which CFiles are sorted by."""
         raise NotImplementedError
-
+    
     def get_total_time(self) -> float:
-        """Returns the total time a CFile needed to build."""
+        '''returns total time the cfile was building'''
+        raise NotImplementedError
+
+    def get_min_timestamps(self) -> float:
+        '''returns the first timestamp in CFile's entries'''
+        raise NotImplementedError
+    
+    def get_max_timestamps(self) -> float:
+        '''returns the last timestamp in CFile's entries'''
         raise NotImplementedError
 
     def get_max(self, metric: MetricName) -> float:
@@ -26,7 +34,7 @@ class CFileReadViewInterface(Protocol):
         """Returns every timestamp tracked for that CFile."""
         raise NotImplementedError
 
-    def get_headers(self):
+    def get_headers(self) -> list[Self]:
         raise NotImplementedError
 
     def has_error(self) -> bool:
