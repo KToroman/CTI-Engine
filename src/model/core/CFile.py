@@ -11,7 +11,7 @@ class CFile(CFileReadViewInterface, Protocol):
     """Models CFile and is used for representing a tracked CFile in program"""
 
     data_entries: List[DataEntry]
-    headers: List[CFileReadViewInterface]
+    headers: List[Self]
     path: str
     error: bool
     hierarchy_level: int

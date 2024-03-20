@@ -57,6 +57,8 @@ class TreeWidget(QTreeWidget):
             self.insert_data(displayable, self)
 
     def insert_data(self, displayable_holder: DisplayableHolder, parent):
+        if len(displayable_holder.get_sub_disp()) > 0:
+            print(f"[TreeWidget]     length: {len(displayable_holder.get_sub_disp())}")
         if not displayable_holder.get_sub_disp():
             item = ItemWrapper(displayable_holder.displayable.name, parent)
             self.create_row(item, displayable_holder.displayable)
