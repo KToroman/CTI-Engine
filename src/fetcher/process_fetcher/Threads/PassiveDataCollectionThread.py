@@ -87,9 +87,6 @@ class PassiveDataCollectionThread:
         try:
             cmdline: List[str] = process_point.process.cmdline()
             path: str = process_point.process.cwd()
-
-            cmdline: List[str] = process_point.process.cmdline()
-            path: str = process_point.process.cwd()
             if os.getcwd().split("/")[-1] in path:
                 return
             has_o: bool = False
