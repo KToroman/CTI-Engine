@@ -1,16 +1,16 @@
 import sys
 from multiprocessing import Queue, Event
 from multiprocessing.synchronize import Event as SyncEvent
-
 import pytest
 from PyQt5.QtWidgets import QApplication
-
 from src.model.Model import Model
 from src.model.ModelReadViewInterface import ModelReadViewInterface
+from src.view.GUI.Graph.BarWidget import BarWidget
 from src.view.GUI.Graph.GraphWidget import GraphWidget
 from src.view.GUI.Graph.Plot import Plot
 from src.view.GUI.MainWindow import MainWindow
 from src.view.GUI.UserInteraction.Displayable import Displayable
+from src.view.GUI.UserInteraction.DisplayableHolder import DisplayableHolder
 from src.view.GUI.UserInteraction.TreeWidget import TreeWidget
 
 
@@ -21,19 +21,21 @@ def app():
 
 
 @pytest.fixture
-def tree_widget():
-    active_mode_queue: Queue = Queue()
-    tree_widget: TreeWidget = TreeWidget(active_mode_queue)
-    return tree_widget
+def tree_widget(main_window):
+    return main_window.current_table
 
 
 @pytest.fixture
-def graph_widget() -> GraphWidget:
-    return GraphWidget("Y Axis Label")
+def graph_widget(main_window) -> GraphWidget:
+    return main_window.ram_graph_widget
+
+@pytest.fixture
+def bar_widget(main_window) -> BarWidget:
+    return main_window.bar_chart_widget
 
 
 @pytest.fixture
-def main_window(app, tree_widget, graph_widget) -> MainWindow:
+def main_window(app) -> MainWindow:
     shutdown_event: SyncEvent = Event()
     cancel_event: SyncEvent = Event()
     restart_event: SyncEvent = Event()
@@ -48,59 +50,87 @@ def main_window(app, tree_widget, graph_widget) -> MainWindow:
                                          error_queue=error_queue, load_path_queue=load_path_queue,
                                          active_mode_queue=active_mode_queue, cancel_event=cancel_event,
                                          shutdown_event=shutdown_event, model=model)
-
-    main_window.current_table = tree_widget
-    main_window.ram_graph_widget = graph_widget
     return main_window
 
 
-def test_main_window(main_window, tree_widget, graph_widget):
-    assert isinstance(main_window, MainWindow)
-    assert main_window.current_table == tree_widget
-    assert main_window.ram_graph_widget == graph_widget
-
-
-def test_click_checkbox_shows_graph() -> None:
-    # Insert Dummy Data
-    plot_mock1: Plot = Plot(name="mock_disp1", color="#FFFFFF", x_values=[0, 0], y_values=[0, 0])
+def create_mock_data() -> DisplayableHolder:
+    """Creates mock data for testing."""
+    plot_mock1: Plot = Plot(name="mock_disp1", color="#FFFFFF", x_values=[0], y_values=[0])
     mock_disp1: Displayable = Displayable(name="mock_disp1", ram_plot=plot_mock1, cpu_plot=plot_mock1,
-                                          runtime_plot=plot_mock1, ram_peak=0, cpu_peak=0, headers=[],
-                                          secondary_headers=[])
-    plot_mock2: Plot = Plot(name="mock_disp2", color="#FFFFFF", x_values=[0], y_values=[0])
-    mock_disp2: Displayable = Displayable(name="mock_disp2", ram_plot=plot_mock2, cpu_plot=plot_mock2,
-                                          runtime_plot=plot_mock2, ram_peak=0, cpu_peak=0, headers=[],
-                                          secondary_headers=[])
-    plot_mock3: Plot = Plot(name="mock_disp3", color="#FFFFFF", x_values=[0], y_values=[0])
-    mock_disp3: Displayable = Displayable(name="mock_disp3", ram_plot=plot_mock3, cpu_plot=plot_mock3,
-                                          runtime_plot=plot_mock3, ram_peak=0, cpu_peak=0, headers=[],
-                                          secondary_headers=[])
-    main_window.current_table.insert_values([mock_disp1, mock_disp2, mock_disp3])
-    main_window.setup_connections()
-    for row in main_window.current_table.rows:
-        row.checkbox.setChecked(True)
-    assert len(main_window.ram_graph_widget.lines) == len(main_window.current_table.rows)
+                                          runtime_plot=plot_mock1, ram_peak=0, cpu_peak=0, failed=False)
+    disp_holder1: DisplayableHolder = DisplayableHolder(disp=mock_disp1, header_list=[])
+    return disp_holder1
 
 
-"""def test_click_on_graph_selects_corresponding_row(app, main_window):
-    # Insert Dummy Data
-    plot_mock1: Plot = Plot(name="mock_disp1", color="#FFFFFF", x_values=[0, 0], y_values=[0, 0])
-    mock_disp1: Displayable = Displayable(name="mock_disp1", ram_plot=plot_mock1, cpu_plot=plot_mock1,
-                                          runtime_plot=plot_mock1, ram_peak=0, cpu_peak=0, headers=[],
-                                          secondary_headers=[])
-    plot_mock2: Plot = Plot(name="mock_disp2", color="#FFFFFF", x_values=[0], y_values=[0])
-    mock_disp2: Displayable = Displayable(name="mock_disp2", ram_plot=plot_mock2, cpu_plot=plot_mock2,
-                                          runtime_plot=plot_mock2, ram_peak=0, cpu_peak=0, headers=[],
-                                          secondary_headers=[])
-    plot_mock3: Plot = Plot(name="mock_disp3", color="#FFFFFF", x_values=[0], y_values=[0])
-    mock_disp3: Displayable = Displayable(name="mock_disp3", ram_plot=plot_mock3, cpu_plot=plot_mock3,
-                                          runtime_plot=plot_mock3, ram_peak=0, cpu_peak=0, headers=[],
-                                          secondary_headers=[])
-    main_window.current_table.insert_values([mock_disp1, mock_disp2, mock_disp3])
-    main_window.setup_connections()
+def setup_connections_mock(tree_widget: TreeWidget, graph_widget: GraphWidget, bar_widget: BarWidget):
+    """Mock for private method in MainWindow Class."""
+    for row in tree_widget.rows:
+        if not row.connected:
+            row.checkbox.stateChanged.connect(
+                lambda state, current_row=row: update_visibility_mock(displayable=current_row.displayable,
+                                                                      graph_widget=graph_widget, bar_widget=bar_widget))
+            row.connected = True
 
-    main_window.ram_graph_widget.click_signal.emit()
-    clicked_graph = main_window.ram_graph_widget.plot_clicked
-    selected_row = main_window.current_table.selectionModel().currentIndex().row()
-    assert selected_row == clicked_graph"""
-if __name__ == "__main__":
-    test_click_checkbox_shows_graph()
+
+def setup_click_connections_mock(tree_widget: TreeWidget, graph_widget: GraphWidget, bar_widget: BarWidget):
+    """Mock for private method in MainWindow Class."""
+    graph_widget.click_signal.connect(lambda: tree_widget.highlight_row(graph_widget.plot_clicked))
+    bar_widget.click_signal.connect(lambda: tree_widget.highlight_row(bar_widget.bar_clicked))
+
+
+def update_visibility_mock(displayable: Displayable, graph_widget: GraphWidget, bar_widget: BarWidget):
+    """Mock for private method in MainWindow Class."""
+    graph_widget.add_plot(displayable.ram_plot)
+    graph_widget.plot_graph()
+    bar_widget.add_bar(displayable.runtime_plot)
+    bar_widget.plot_bar_chart()
+
+
+def test_clicking_checkbox_shows_graph(graph_widget, bar_widget, tree_widget) -> None:
+    tree_widget.insert_values([create_mock_data()])
+    setup_connections_mock(tree_widget=tree_widget, graph_widget=graph_widget, bar_widget=bar_widget)
+
+    # checkbox in tree_widget set to checked
+    for row in tree_widget.rows:
+        row.checkbox.setCheckState(True)
+
+    # assert whether plot was added to graph_widget
+    assert len(graph_widget.lines) == len(tree_widget.rows)
+    assert len(bar_widget.categories) == len(tree_widget.rows)
+
+
+def test_click_on_graph_selects_corresponding_row(tree_widget, graph_widget, bar_widget):
+    mock_disp_holder: DisplayableHolder = create_mock_data()
+    tree_widget.insert_values([mock_disp_holder])
+    setup_click_connections_mock(tree_widget=tree_widget, graph_widget=graph_widget, bar_widget=bar_widget)
+    update_visibility_mock(displayable=mock_disp_holder.displayable, graph_widget=graph_widget, bar_widget=bar_widget)
+
+    # simulates click on graph
+    graph_widget.plot_clicked = mock_disp_holder.displayable.name
+    graph_widget.click_signal.emit()
+
+    # check whether according row in table was selected
+    selected_item: int = tree_widget.currentItem()
+    selected_row: str
+    row_index: int = 0
+    for item in tree_widget.items:
+        if item == selected_item:
+            selected_row = tree_widget.rows[row_index].displayable.name
+            break
+        row_index += 1
+    assert selected_row == graph_widget.plot_clicked
+
+    # simulates click on bar
+    bar_widget.bar_clicked = mock_disp_holder.displayable.name
+    bar_widget.click_signal.emit()
+
+    # check whether according row in table was selected
+    selected_item: int = tree_widget.currentItem()
+    selected_row: str
+    row_index: int = 0
+    for item in tree_widget.items:
+        if item == selected_item:
+            selected_row = tree_widget.rows[row_index].displayable.name
+            break
+        row_index += 1
+    assert selected_row == bar_widget.bar_clicked

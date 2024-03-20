@@ -214,6 +214,7 @@ class TreeWidget(QTreeWidget):
             # highlight found items and expand them if they are subrows
             for item in items:
                 item.setSelected(True)
+                self.scrollToItem(item)
                 parent = item.parent()
                 while parent:
                     self.expandItem(parent)
@@ -233,38 +234,3 @@ class TreeWidget(QTreeWidget):
                     for subsubrow in subrow.children:
                         out_list.append(subsubrow)
         self.rows = out_list
-
-
-class TreeWidgetWrapper(QObject):
-    visualiseSignal = pyqtSignal()
-    finished = pyqtSignal()
-
-    def __init__(self, active_mode_queue: Queue, input_queue: Queue, return_queue):
-        super().__init__()
-        self.tree_widget = TreeWidget(active_mode_queue)
-        self.return_queue = return_queue
-        self.input_queue: Queue[list[DisplayableHolder]] = input_queue
-        self.visualiseSignal.connect(self.visualise)
-
-    def visualise(self):
-        print(f"running on {str(QThread.currentThread())}")
-        displayables = self.input_queue.get()
-        self.tree_widget.insert_values(displayables)
-        self.return_queue.put(self.tree_widget)
-        self.finished.emit()
-
-
-QTHREAD = QThread()
-
-
-def get_new_tree_widget(active_mode_queue: Queue, displayables: list[DisplayableHolder], return_queue, callback):
-    global QTHREAD
-    print(f"QTHREAD: {str(QTHREAD)}; MAINTHREAD: {str(QApplication.instance().thread())}")
-    print(f"outer runing on {str(QThread.currentThread())}")
-    input_queue: Queue[list[DisplayableHolder]] = Queue()
-    tree_widget_wrapper = TreeWidgetWrapper(active_mode_queue, input_queue, return_queue)
-    input_queue.put(displayables)
-    tree_widget_wrapper.moveToThread(QTHREAD)
-    tree_widget_wrapper.finished.connect(callback)
-    QTHREAD.start()
-    tree_widget_wrapper.visualiseSignal.emit()

@@ -36,7 +36,7 @@ from src.model.core.StatusSettings import StatusSettings
 from src.view.UIInterface import UIInterface
 from src.view.GUI.Visuals.ErrorWindow import ErrorWindow
 import src.view.GUI.Visuals.GuiDesign as gd
-from src.view.GUI.UserInteraction.TreeWidget import TreeWidget, get_new_tree_widget
+from src.view.GUI.UserInteraction.TreeWidget import TreeWidget
 
 
 class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
@@ -188,7 +188,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         # Update other Widgets
         self.__setup_connections()
         self.status_bar.update_status(StatusSettings.FINISHED, project.get_project_name())
-        self.menu_bar.project_buttons[len(self.menu_bar.project_buttons) - 1].setStyleSheet("background-color: #00FF00")
+        #self.menu_bar.project_buttons[len(self.menu_bar.project_buttons) - 1].setStyleSheet("background-color: #00FF00")
 
     def __visualize_active(self, project: ProjectReadViewInterface):
         """Visualizes data from active mode."""
