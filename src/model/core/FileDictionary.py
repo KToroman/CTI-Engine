@@ -7,7 +7,7 @@ from src.model.core.SourceFile import SourceFile
 class FileDictionary:
     """a simple wrapper for a dictionary that stores the cfiles according to name"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.dictionary: Dict[str, CFile] = {}
 
     def add_file(self, cfile: CFile) -> CFile:

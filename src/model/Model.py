@@ -25,9 +25,8 @@ class Model(ModelReadViewInterface):
         self.current_project: Optional[Project] = None
         self.projects: List[Project] = list()
         self.semaphore_list: List[ProjectFinishedSemaphore] = list()
-        
 
-    def insert_datapoint(self, data_point: DataEntry):
+    def insert_datapoint(self, data_point: DataEntry) -> None:
         """inserts datapoint to sourcefile according to their paths to the current project"""
         if self.current_project is None:
             raise ProjectNotFoundException
@@ -37,7 +36,7 @@ class Model(ModelReadViewInterface):
             path=cfile.path, parent_or_compile_command="", data_entry=data_point, hierarchy_level=0
         )
 
-    def insert_datapoint_header(self, data_entry: DataEntry):
+    def insert_datapoint_header(self, data_entry: DataEntry) -> None:
         if self.current_project is None:
             raise ProjectNotFoundException
         header = self.current_project.get_header_by_name(data_entry.path)
@@ -56,7 +55,7 @@ class Model(ModelReadViewInterface):
             hierarchy_level=header.hierarchy_level,
         )
 
-    def project_in_semaphore_list(self, project_dir: str):
+    def project_in_semaphore_list(self, project_dir: str) -> bool:
         for semaphore in self.semaphore_list:
             if project_dir == semaphore.project_dir:
                 return True
@@ -74,7 +73,7 @@ class Model(ModelReadViewInterface):
                 return True
         return False
 
-    def get_semaphore_by_name(self, name) -> ProjectFinishedSemaphore:
+    def get_semaphore_by_name(self, name: str) -> ProjectFinishedSemaphore:
         for semaphore in self.semaphore_list:
             if name == semaphore.project_name:
                 return semaphore
@@ -83,13 +82,13 @@ class Model(ModelReadViewInterface):
         )
 
     def add_project(
-        self, project: Project, semaphore: Optional[ProjectFinishedSemaphore]
+            self, project: Project, semaphore: Optional[ProjectFinishedSemaphore]
     ) -> None:
         """adds new project to model"""
 
         if (
-            not self.project_in_list(project.name)
-            and os.getcwd().split("/")[-1] not in project.working_dir
+                not self.project_in_list(project.name)
+                and os.getcwd().split("/")[-1] not in project.working_dir
         ):
             self.projects.append(project)
             if semaphore is not None:
@@ -120,7 +119,7 @@ class Model(ModelReadViewInterface):
             return_list.append(project.name)
         return return_list
 
-    def wait_for_project(self):
+    def wait_for_project(self) -> None:
         """Blocks until current_project is available"""
         while self.current_project is None:
             pass

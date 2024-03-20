@@ -7,7 +7,7 @@ from src.view.GUI.UserInteraction.Displayable import Displayable
 
 class PlotRunnable(QRunnable):
 
-    def __init__(self, ram_graph: GraphWidget,  cpu_graph: GraphWidget, runtime_graph: BarWidget, mutex: QMutex):
+    def __init__(self, ram_graph: GraphWidget,  cpu_graph: GraphWidget, runtime_graph: BarWidget, mutex: QMutex) -> None:
         super().__init__()
 
         self.ram_graph: GraphWidget = ram_graph
@@ -16,7 +16,7 @@ class PlotRunnable(QRunnable):
         self.mutex: QMutex = mutex
 
 
-    def run(self):
+    def run(self) -> None:
         self.ram_graph.plot_graph()
         self.cpu_graph.plot_graph()
         self.mutex.lock()

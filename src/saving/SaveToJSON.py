@@ -1,8 +1,9 @@
 import os
+import typing
 from datetime import date
 from os.path import join
 
-import jsonpickle
+import jsonpickle  # type: ignore[import-untyped]
 import time
 from pathlib import Path
 
@@ -13,12 +14,15 @@ from src.saving.SaveInterface import SaveInterface
 
 class SaveToJSON(SaveInterface):
 
-    def __init__(self, cti_engine_folder: str):
+    def __init__(self, cti_engine_folder: str) -> None:
         self.__current_project_name: str = ""
         self.__save_path: Path
         self.__cti_engine_folder: str = cti_engine_folder
 
-    def save_project(self, project: Project):
+    def save_project(self, project: Project | str) -> None:
+        if type(project) is str:
+            raise Exception
+        project = typing.cast(Project, project)
         if self.__set_name(project):
             self.__set_path()
 
@@ -27,7 +31,7 @@ class SaveToJSON(SaveInterface):
 
         self.__write_file(project_string)
 
-    def __write_file(self, project_string: str):
+    def __write_file(self, project_string: str) -> None:
         writer = open(join(self.__save_path, self.__current_project_name + ".json"), "w")
         writer.write(project_string)
         writer.close()
@@ -38,6 +42,6 @@ class SaveToJSON(SaveInterface):
             return True
         return False
 
-    def __set_path(self):
+    def __set_path(self) -> None:
         path: str = join(self.__cti_engine_folder, self.__current_project_name)
         self.__save_path = Path(path)

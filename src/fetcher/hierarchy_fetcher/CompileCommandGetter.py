@@ -1,6 +1,7 @@
 import json, shlex
 import threading
-from io import FileIO
+import typing
+from io import TextIOWrapper
 from os.path import join
 from src.model.core.SourceFile import SourceFile
 from os.path import join
@@ -18,14 +19,14 @@ class CompileCommandGetter:
 
     def __get_json(self, path: str) -> list[dict[str, str]]:
         path = join(path, "build", "compile_commands.json")
-        json_file: FileIO
+        json_file: TextIOWrapper
         try:
             with open(path, "r") as json_file:
-                return json.load(json_file)
+                return typing.cast(list[dict[str, str]], json.load(json_file))
         except FileNotFoundError:
             raise FileNotFoundError(f"Did not find compile_commands.json file in project working directory\n {path}")
 
-    def __setup_commands(self):
+    def __setup_commands(self) -> None:
         command_object: dict[str, str]
         for command_object in self.compile_commands_json:
             if "command" not in command_object:

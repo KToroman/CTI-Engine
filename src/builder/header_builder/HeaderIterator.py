@@ -46,7 +46,7 @@ class HeaderIterator:
         """returns true if one or more headers can still be retrieved from the iterator"""
         return self.index < len(self.headers)
 
-    def __next__(self):
+    def __next__(self) -> Header:
         if not self.has_next_header():
             raise StopIteration
         else:

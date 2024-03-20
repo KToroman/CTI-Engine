@@ -12,7 +12,7 @@ from multiprocessing.synchronize import Event as SyncEvent
 
 from PyQt5.QtWidgets import (QMainWindow, QStackedWidget, QApplication, QCheckBox, QSpinBox, QLineEdit, QPushButton,
                              QWidget)
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QCloseEvent
 from PyQt5.QtWidgets import (QMainWindow, QStackedWidget, QApplication, QCheckBox, QSpinBox, QLineEdit,
                              QPushButton)
 
@@ -24,6 +24,7 @@ from src.view.GUI.Graph.GraphWidget import GraphWidget
 from src.view.GUI.MainWindowMeta import MainWindowMeta
 from src.view.GUI.Threading.RemoveRunnable import RemoveRunnable
 from src.view.GUI.UserInteraction.DisplayableHolder import DisplayableHolder
+from src.view.GUI.UserInteraction.DisplayableInterface import DisplayableInterface
 from src.view.GUI.UserInteraction.MenuBar import MenuBar
 from src.view.GUI.UserInteraction.Displayable import Displayable
 from src.view.GUI.UserInteraction.MetricBar import MetricBar
@@ -51,11 +52,12 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     visualize_signal: pyqtSignal = pyqtSignal()
     status_signal: pyqtSignal = pyqtSignal()
     change_table_signal: pyqtSignal = pyqtSignal()
-    index_queue: Queue = Queue()
+    index_queue: "Queue[int]" = Queue()
 
-    def __init__(self, shutdown_event: SyncEvent, q_application: QApplication, status_queue: Queue, project_queue: Queue,
-                 error_queue: Queue, load_path_queue: Queue, active_mode_queue: Queue, cancel_event: SyncEvent,
-                 restart_event: SyncEvent, model: ModelReadViewInterface):
+    def __init__(self, shutdown_event: SyncEvent, q_application: QApplication, status_queue: "Queue[StatusSettings]",
+                 project_queue: "Queue[str]", error_queue: "Queue[BaseException]",
+                 load_path_queue: "Queue[str]", active_mode_queue: "Queue[str]", cancel_event: SyncEvent,
+                 restart_event: SyncEvent, model: ModelReadViewInterface) -> None:
         super(MainWindow, self).__init__()
 
         self.central_widget: QWidget = QWidget(self)
@@ -64,11 +66,11 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
         # Queues and events for communication between app and gui
         self.__model = model
-        self.project_queue: Queue = project_queue
+        self.project_queue: "Queue[str]" = project_queue
         self.shutdown_event: SyncEvent = shutdown_event
         self.active_mode_queue = active_mode_queue
-        self.status_queue: Queue = status_queue
-        self.error_queue: Queue = error_queue
+        self.status_queue: "Queue[StatusSettings]" = status_queue
+        self.error_queue: "Queue[BaseException]" = error_queue
 
         # connecting the signals
         self.error_signal.connect(lambda: self.deploy_error())
@@ -76,20 +78,14 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.change_table_signal.connect(lambda: self.toggle_table_vis(self.index_queue.get()))
         self.status_signal.connect(lambda: self.update_statusbar())
         self.HIERARCHY_DEPTH: int = 3
-        self.thread_pool: QThreadPool = QThreadPool.globalInstance()
-        self.thread_pool.setMaxThreadCount(10)
 
         self.setWindowTitle(self.WINDOWTITLE)
         self.resize(self.WINDOWSIZE1, self.WINDOWSIZE2)
 
-        self.select_all_checkbox = QCheckBox(self.SELECT_ALL)
-        self.upper_limit = QSpinBox()
-        self.lower_limit = QSpinBox()
-
         # setting up main components
         self.current_table: TreeWidget = TreeWidget(self.active_mode_queue)
         self.menu_bar: MenuBar = MenuBar(load_path_queue, cancel_event, restart_event, self.project_queue,
-                                         self.visualize_signal, self.index_queue, self.change_table_signal)
+                                         self.visualize_signal, self.index_queue, self.change_table_signal)  # type: ignore[arg-type]
         self.metric_bar: MetricBar = MetricBar()
 
         self.__setup_resource_connections()
@@ -98,7 +94,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         logo_path = os.path.join(images_folder, "CTIEngineLogo.png")
         icon: QIcon = QIcon(logo_path)
         self.setWindowIcon(icon)
-        self.stylesheets = {}
+        self.stylesheets: dict[str, str] = {}
 
         self.ram_graph_widget: GraphWidget = GraphWidget(self.RAM_Y_AXIS)
         self.cpu_graph_widget: GraphWidget = GraphWidget(self.CPU_Y_AXIS)
@@ -131,12 +127,11 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.load_stylesheets()
         gd.setup_ui(self)
 
-
-    def execute(self):
+    def execute(self) -> None:
         self.show()
         self.__q_application.exec()
 
-    def load_stylesheets(self):
+    def load_stylesheets(self) -> None:
         stylesheets_dir = os.path.join(os.path.dirname(__file__), "Stylesheets")
         for stylesheet in os.listdir(stylesheets_dir):
             if stylesheet.endswith(".qss"):
@@ -146,7 +141,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
                     self.menu_bar.switch_style_box.addItem(style_name)
         self.set_stylesheet()
 
-    def set_stylesheet(self):
+    def set_stylesheet(self) -> None:
         selected_style = self.menu_bar.switch_style_box.currentText()
         self.setStyleSheet(self.stylesheets[selected_style])
         self.ram_graph_widget.set_stylesheet(selected_style)
@@ -154,14 +149,14 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.bar_chart_widget.set_stylesheet(selected_style)
         self.menu_bar.set_stylesheet(selected_style)
 
-    def visualize(self):
+    def visualize(self) -> None:
         print(f"[MainWindow]    visualizing...")
         """displays the data contained in that model to the user."""
         project_name: str = self.project_queue.get()
         print(f"[MainWindow]    project visualizing: {project_name}")
-        project = self.__model.get_project_by_name(project_name)
+        project: ProjectReadViewInterface = self.__model.get_project_by_name(project_name)
         self.project_time = project.get_project_time()
-        self.displayed_project: str = project_name
+        self.displayed_project = project_name
         self.__update_project_list()
         # distinguish if active measurement flag was set or not
         if self.current_table.active_started:
@@ -170,7 +165,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         else:
             self.__visualize_passive(project)
 
-    def __visualize_passive(self, project: ProjectReadViewInterface):
+    def __visualize_passive(self, project: ProjectReadViewInterface) -> None:
         """Visualizes data from passive mode."""
         self.__connect_new_table()
         # Select spot for displayables to be inserted into
@@ -190,7 +185,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.status_bar.update_status(StatusSettings.FINISHED, project.get_project_name())
         #self.menu_bar.project_buttons[len(self.menu_bar.project_buttons) - 1].setStyleSheet("background-color: #00FF00")
 
-    def __visualize_active(self, project: ProjectReadViewInterface):
+    def __visualize_active(self, project: ProjectReadViewInterface) -> None:
         """Visualizes data from active mode."""
         # Find file used for active build
         active_row: str = self.current_table.insertion_point
@@ -213,17 +208,13 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.__setup_connections()
         self.status_bar.update_status(StatusSettings.FINISHED, self.current_table.insertion_point)
 
-    def connect_table_from_queue(self):
-        tree_widget: TreeWidget = self.___return_queue.get()
-        self.connect_table(tree_widget)
-
-    def __connect_new_table(self):
+    def __connect_new_table(self) -> None:
         """creates a new table for each loaded project and saves them in a list. That way the already loaded projects
            can be changed quickly"""
         self.select_all_checkbox.setChecked(True)
         time.sleep(4)
         self.select_all_checkbox.setChecked(False)
-        self.current_table: TreeWidget = TreeWidget(self.active_mode_queue)
+        self.current_table = TreeWidget(self.active_mode_queue)
         self.stacked_table_widget.addWidget(self.current_table)
         self.all_tables.append(self.current_table)
         self.select_all_checkbox.disconnect()
@@ -238,20 +229,19 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         # change our gui to the page where the new table is located
         self.stacked_table_widget.setCurrentIndex(self.stacked_table_widget.count() - 1)
 
-    def toggle_table_vis(self, index: int):
+    def toggle_table_vis(self, index: int) -> None:
         """changes the currently displayed table. Deselects all graphs to make sure the change goes flawlessly"""
         self.select_all_checkbox.setChecked(True)
         time.sleep(2)
         self.select_all_checkbox.setChecked(False)
         self.stacked_table_widget.setCurrentIndex(index + 1)
-        self.current_table: TreeWidget = self.all_tables[index + 1]
+        self.current_table = self.all_tables[index + 1]
         self.select_all_checkbox.disconnect()
         # setting up connections for the new table
         self.__setup_connections()
         self.select_all_checkbox.stateChanged.connect(lambda: self.current_table.toggle_all_rows())
 
-
-    def deploy_error(self):
+    def deploy_error(self) -> None:
         """Receives an Exception, displays information regarding that exception to the user."""
         if self.error_queue.empty():
             return
@@ -259,34 +249,24 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         error_window = ErrorWindow(error)
         error_window.show()
 
-    def update_statusbar(self):
+    def update_statusbar(self) -> None:
         """Receives a status string, changes the UI's status string accordingly."""
-        status: StatusBar = self.status_queue.get()
-        if status.value[0] == "measuring":
+        status: StatusSettings = self.status_queue.get()
+        if status.value[0] == "measuring":  # type: ignore[comparison-overlap]
             self.status_bar.update_status(status, self.__model.get_current_project_name())
         elif status.value[0] == "active measuring":
             self.status_bar.update_status(status, self.current_table.insertion_point.split(".o")[0].split("/")[-1])
-        elif status.value[0] == "loading file":
+        elif status.value[0] == "loading file":  # type: ignore[comparison-overlap]
             self.status_bar.update_status(status, self.menu_bar.load_path_name)
         else:
             self.status_bar.update_status(status, "")
-
-    def __get_hierarchy(self, cfile: CFileReadViewInterface, active_row: str) -> CFileReadViewInterface|None:
-        """Finds cfile which started active mode."""
-        if cfile.get_name() == active_row:
-            return cfile
-        elif not cfile.get_headers():
-            return None
-        for header in cfile.get_headers():
-            self.__get_hierarchy(header, active_row)
-        return None
 
     def __create_displayable(self, cfile: CFileReadViewInterface, depth_p: int) -> DisplayableHolder:
         """turns given cfile into displayable"""
         depth = depth_p + 1
         if depth >= self.HIERARCHY_DEPTH or not cfile.get_headers():
             return DisplayableHolder(self.__make_disp(cfile), [])
-        sub_disp_list: List[DisplayableHolder] = list()
+        sub_disp_list: List[DisplayableInterface] = list()
         for header in cfile.get_headers():
             sub_disp_list.append(self.__create_displayable(header, depth))
         return DisplayableHolder(self.__make_disp(cfile), sub_disp_list)
@@ -305,7 +285,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         color: str = self.__generate_random_color()
         ram_plot: Plot = Plot(name, color, x_values, ram_y_values)
         cpu_plot: Plot = Plot(name, color, x_values, cpu_y_values)
-        runtime_plot: Plot = Plot(name, color, None, runtime)
+        runtime_plot: Plot = Plot(name, color, [], runtime)
         return Displayable(name, ram_plot, cpu_plot, runtime_plot, ram_peak, cpu_peak, cfile.has_error())
 
     def __generate_random_color(self) -> str:
@@ -322,12 +302,12 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
         hsv = colorsys.rgb_to_hsv(random_color_rgb[0] / 255.0, random_color_rgb[1] / 255.0, random_color_rgb[2] / 255.0)
         hsv = (hsv[0], min(1.0, hsv[1] * saturation_factor), hsv[2])
-        random_color_rgb = tuple(int(x * 255) for x in colorsys.hsv_to_rgb(*hsv))
+        random_color_rgb = list(int(x * 255) for x in colorsys.hsv_to_rgb(*hsv))
         random_color_hex = "#{:02X}{:02X}{:02X}".format(*random_color_rgb)
 
         return random_color_hex
 
-    def __setup_connections(self):
+    def __setup_connections(self) -> None:
         """Sets up connections between table and graph widgets."""
         for row in self.current_table.rows:
             if not row.connected:
@@ -337,13 +317,13 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
         self.__setup_click_connections()
 
-    def __setup_resource_connections(self):
+    def __setup_resource_connections(self) -> None:
         """Sets up connections between metric bar and graph/bar chart widgets."""
         self.metric_bar.cpu_button.pressed.connect(lambda: self.stacked_widget.setCurrentIndex(1))
         self.metric_bar.ram_button.pressed.connect(lambda: self.stacked_widget.setCurrentIndex(0))
         self.metric_bar.runtime_button.pressed.connect(lambda: self.stacked_widget.setCurrentIndex(2))
 
-    def __reset_graph(self):
+    def __reset_graph(self) -> None:
         for displayable in self.__visible_plots:
             self.__visible_plots.remove(displayable)
             remove_runnable: RemoveRunnable = RemoveRunnable(ram_graph=self.ram_graph_widget,
@@ -352,8 +332,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
                                                              displayable=displayable, mutex=self.mutex)
             self.thread_pool.start(remove_runnable)
 
-
-    def __update_visibility(self, displayable: Displayable):
+    def __update_visibility(self, displayable: Displayable) -> None:
         """Shows or hides plots of given displayable."""
         visibility: bool = False
         for visible_displayable in self.__visible_plots:
@@ -378,7 +357,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
                                                        runtime_graph=self.bar_chart_widget, mutex=self.mutex)
             self.thread_pool.start(plot_runnable)
 
-    def __setup_click_connections(self):
+    def __setup_click_connections(self) -> None:
         """Sets up connections between clicking on graph and highlighting according table row."""
         self.bar_chart_widget.click_signal.connect(
             lambda: self.current_table.highlight_row(self.bar_chart_widget.bar_clicked))
@@ -387,10 +366,10 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.ram_graph_widget.click_signal.connect(
             lambda: self.current_table.highlight_row(self.ram_graph_widget.plot_clicked))
 
-    def __update_project_list(self):
+    def __update_project_list(self) -> None:
         """updates the list displayed in the sidebar, changing the color according to the currently shown project"""
         self.menu_bar.update_scrollbar(self.__model.get_all_project_names())
 
-    def closeEvent(self, event):
+    def closeEvent(self, event: QCloseEvent) -> None:
         self.shutdown_event.set()
         event.accept()

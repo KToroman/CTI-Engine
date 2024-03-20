@@ -9,16 +9,18 @@ from multiprocessing.synchronize import Event as SyncEvent
 
 from click import Option
 
-
+from src.model.DataBaseEntry import DataBaseEntry
 from src.model.Model import Model
 from src.saving.SaveInterface import SaveInterface
+
+
 
 
 class FileSaverThread:
     """Manages the thread which saves projects from model"""
 
     def __init__(self, shutdown_event: SyncEvent, model: Model, saver: SaveInterface, model_lock: SyncLock,
-                 finished_project: SyncEvent, work_queue: Queue):
+                 finished_project: SyncEvent, work_queue: "Queue[str]") -> None:
         self.__thread: Thread
         self.__shutdown = shutdown_event
         self.__saver: SaveInterface = saver
@@ -32,7 +34,7 @@ class FileSaverThread:
         self.__model = model
         self.__model_lock = model_lock
 
-    def __run(self):
+    def __run(self) -> None:
         work_list_index: int = 0
         """is the methode which runs the saving thread"""
         while not self.__shutdown.is_set():
@@ -44,16 +46,16 @@ class FileSaverThread:
                 continue
             work_list_index += 1
             self.__remove_work()
-            print("[FileSaverThread]    now starting to save changes to project: " + work[1])
-            self.__saver.save_project(project_name=work[1])
+            print("[FileSaverThread]    now starting to save changes to project: " + work)
+            self.__saver.save_project(project_name=work)
             time.sleep(10)
 
-    def add_work(self, project_name: str):
+    def add_work(self, project_name: str) -> None:
         """this methode adds a project to the worklist for the saver thread"""
 
         self.__work_list.append(project_name)
 
-    def __remove_work(self):
+    def __remove_work(self) -> None:
         if self.__finished_project.is_set():
             self.__finished_project.clear()
             work = self.__work_list.pop(0)
@@ -64,11 +66,11 @@ class FileSaverThread:
             return self.__work_list[index % len(self.__work_list)]
         return None
 
-    def start(self):
+    def start(self) -> None:
         """this method start the saver thread"""
         print("[FileSaverThread]    started")
         self.__thread = Thread(target=self.__run)
         self.__thread.start()
 
-    def stop(self):
+    def stop(self) -> None:
         self.__thread.join()

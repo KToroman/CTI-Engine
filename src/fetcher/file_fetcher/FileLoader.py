@@ -2,8 +2,7 @@ import os
 from multiprocessing import Manager, Queue
 from multiprocessing.synchronize import Lock as SyncLock
 from posixpath import join
-from typing import Dict, List, Optional, Tuple
-
+from typing import Dict, List, Optional, Tuple, Any
 
 from rocksdict import Rdict, RdictIter
 
@@ -28,7 +27,7 @@ class FileLoader(FetcherInterface):
         model: Model,
         model_lock: SyncLock,
         visualize_signal: pyqtSignal,
-        project_queue: Queue,
+        project_queue: "Queue[str]",
     ):
         self.__model_lock = model_lock
         self.__path = directory_path
@@ -47,14 +46,14 @@ class FileLoader(FetcherInterface):
                 self.__model.add_project(project, None)
                 self.__model.current_project = project
             self.__project_queue.put(project.name)
-            self.__visualize_signal.emit()
+            self.__visualize_signal.emit()  # type: ignore[attr-defined]
             print("[FileLoader]     visualize signal emitted")
             self.__db.close()
             return False
         raise FileNotFoundError(
             "Couldn't find any saved projects on the given path")
 
-    def __insert_values(self, project: Project):
+    def __insert_values(self, project: Project) -> None:
         iter: RdictIter = self.__db.iter()
         iter.seek_to_first()
         while iter.valid():
@@ -64,7 +63,7 @@ class FileLoader(FetcherInterface):
             iter.next()
         print("[FileLoader]     added all entries to model.")
 
-    def __add_to_project(self, key: str, value: List, project: Project):
+    def __add_to_project(self, key: str, value: List[Any], project: Project):
         keys: List[str] = key.split("\n")
         path = keys[0]
         parent_or_compile_command = keys[1]
@@ -88,7 +87,7 @@ class FileLoader(FetcherInterface):
                     parent_or_compile_command, hierarchy, project)
             found_cfile.parent = parent
 
-    def __add_data_entry(self, cfile: CFile, value: List, timestamp):
+    def __add_data_entry(self, cfile: CFile, value: List[Any], timestamp:float):
 
         data_entry = self.__extract_dataentry(
             value=value, cfile_path=cfile.path, timestamp=timestamp)
@@ -102,7 +101,7 @@ class FileLoader(FetcherInterface):
         path: str,
         parent_or_compile_command: str,
         hierarchy: int,
-        value: List,
+        value: List[Any],
         project: Project,
     ) -> CFile:
         '''to be called if no cfile with path==path was found yet. '''
@@ -145,7 +144,7 @@ class FileLoader(FetcherInterface):
         self.__all_cfiles[parent_path] = parent
         return parent
 
-    def __extract_dataentry(self, value: List | None, cfile_path: str, timestamp: float) -> Optional[DataEntry]:
+    def __extract_dataentry(self, value: List[Any] | None, cfile_path: str, timestamp: float) -> Optional[DataEntry]:
         if value is None:
             return None
         metrics: List[Metric] = value

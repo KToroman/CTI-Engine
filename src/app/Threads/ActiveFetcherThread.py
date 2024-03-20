@@ -7,6 +7,7 @@ from multiprocessing.synchronize import Lock as SyncLock
 from PyQt5.QtCore import pyqtSignal
 
 from src.fetcher.process_fetcher.ActiveDataFetcher import ActiveDataFetcher
+from src.model.DataBaseEntry import DataBaseEntry
 from src.model.Model import Model
 
 
@@ -14,43 +15,43 @@ class ActiveFetcherThread:
     def __init__(
         self,
         shutdown_event: SyncEvent,
-        saver_queue: Queue,
+        saver_queue: "Queue[str]",
         save_path: str,
         model: Model,
         model_lock: SyncLock,
-        source_file_name_queue: Queue,
-        error_queue: Queue,
+        source_file_name_queue: "Queue[str]",
+        error_queue: "Queue[BaseException]",
         build_dir_path: str,
         active_measurement_active: SyncEvent,
         visualise_event: pyqtSignal,
-        visualise_project_queue: Queue,
+        visualise_project_queue: "Queue[str]",
     ) -> None:
         self.__thread: Thread
         self.__model: Model = model
         self.__model_lock: SyncLock = model_lock
         self.__shutdown_event: SyncEvent = shutdown_event
-        self.__source_file_name_queue: Queue = source_file_name_queue
-        self.__error_queue: Queue = error_queue
+        self.__source_file_name_queue = source_file_name_queue
+        self.__error_queue = error_queue
         self.__build_dir_path: str = build_dir_path
         self.__active_measurement_active: SyncEvent = active_measurement_active
-        self.__saver_queue: Queue = saver_queue
+        self.__saver_queue = saver_queue
         self.__save_path: str = save_path
-        self.__visualise_signal: pyqtSignal = visualise_event
-        self.__visualise_project_queue: Queue = visualise_project_queue
+        self.__visualise_signal: pyqtSignal = visualise_event  # type: ignore[call-overload]
+        self.__visualise_project_queue = visualise_project_queue
 
-    def start(self):
+    def start(self) -> None:
         print("[ActiveFetcherThread]    started")
         self.__thread = Thread(target=self.__run)
         self.__thread.start()
 
-    def __run(self):
+    def __run(self) -> None:
         while not self.__shutdown_event.is_set():
             if not self.__source_file_name_queue.empty():
                 self.__active_measurement_active.set()
                 self.__start_new_measurement()
             self.__active_measurement_active.clear()
 
-    def __start_new_measurement(self):
+    def __start_new_measurement(self) -> None:
         source_file_name: str = self.__source_file_name_queue.get(True, 10)
         if source_file_name == None:
             timeout_error: TimeoutError = TimeoutError(
@@ -78,15 +79,15 @@ class ActiveFetcherThread:
             if curr_proj is None:
                 return
             try:
-                self.__saver_queue.put((curr_proj.delta_entries, curr_proj.name), block=False)
+                self.__saver_queue.put(curr_proj.name, block=False)
             except queue.Full:
                 print(f"[ActiveFetcherThread]    Couldn't add to saver; Saver unavailable")
         print("[ActiveFetcherThread]   finished active")
         self.__visualise_project_queue.put(curr_proj.get_project_name())
         self.__active_measurement_active.clear()
-        self.__visualise_signal.emit()
+        self.__visualise_signal.emit()  # type: ignore[attr-defined]
 
-    def measure_source_file(self, active_data_fetcher: ActiveDataFetcher):
+    def measure_source_file(self, active_data_fetcher: ActiveDataFetcher) -> None:
         actively_fetching: bool = True
         while (
             self.__active_measurement_active.is_set()
@@ -95,7 +96,7 @@ class ActiveFetcherThread:
         ):
             actively_fetching = active_data_fetcher.update_project()
 
-    def stop(self):
+    def stop(self) -> None:
         print("[ActiveFetcherThread]    stop signal sent.")
         if self.__thread.is_alive():
             self.__thread.join()

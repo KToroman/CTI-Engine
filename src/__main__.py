@@ -2,10 +2,12 @@ import multiprocessing
 from multiprocessing import Queue
 
 import click
+from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QApplication
 
 from src.app.App import App
 from src.model.Model import Model
+from src.model.core.StatusSettings import StatusSettings
 from src.view.UIInterface import UIInterface
 from src.view.CommandLineUI import CommandLineUI
 from src.view.GUI.prepare_gui import prepare_gui
@@ -15,14 +17,14 @@ from src.view.GUI.prepare_gui import prepare_gui
 @click.option("--gui/--nogui", default=True, help="Use --gui or --nogui to run the app with or without gui. Default: gui")
 @click.option("--load-file", "-f", default="", help="provide a file Path to immediately load on app startup.")
 @click.option("--active", "-a", default="", help="provide a header from a loaded project to run active analysis on. Only used with --load-file.")
-def run(gui: bool, load_file: str, active: str):
+def run(gui: bool, load_file: str, active: str) -> None:
     run_with_gui = gui
 
     # init gui
-    ui = initialize_gui(run_with_gui)
-    visualize_signal = ui.visualize_signal
-    status_signal = ui.status_signal
-    error_signal = ui.error_signal
+    ui: UIInterface = initialize_gui(run_with_gui)
+    visualize_signal: pyqtSignal = ui.visualize_signal  # type: ignore[call-overload]
+    status_signal: pyqtSignal = ui.status_signal  # type: ignore[call-overload]
+    error_signal: pyqtSignal = ui.error_signal  # type: ignore[call-overload]
 
     # init app
     app: App = App(shutdown_event=shutdown_event, passive_mode_event=passive_mode_event,
@@ -56,12 +58,13 @@ def run(gui: bool, load_file: str, active: str):
 def initialize_gui(run_with_gui: bool) -> UIInterface:
     if run_with_gui:
         gui: UIInterface = prepare_gui(shutdown_event=shutdown_event, status_queue=status_queue,
-                                       project_queue=project_queue,
-                                       error_queue=error_queue, load_path_queue=load_path_queue, cancel_event=cancel_event,
-                                       active_mode_queue=source_file_name_queue, restart_event=restart_event, model=model)
+                                       project_queue=project_queue, error_queue=error_queue,
+                                       load_path_queue=load_path_queue, cancel_event=cancel_event,
+                                       active_mode_queue=source_file_name_queue, restart_event=restart_event,
+                                       model=model)
     else:
         qapp = QApplication([])
-        gui: UIInterface = CommandLineUI(qapp, error_queue, shutdown_event)
+        gui = CommandLineUI(qapp, error_queue, shutdown_event)  # type: ignore[abstract]
 
     return gui
 
@@ -79,11 +82,11 @@ if __name__ == "__main__":
     load_event = multiprocessing.Event()
 
     # Queues for GUI messages
-    load_path_queue = Queue(3)
-    source_file_name_queue = Queue(1)
-    error_queue: Queue = Queue(4)
-    status_queue = Queue()
-    project_queue = Queue()
+    load_path_queue: "Queue[str]" = Queue(3)
+    source_file_name_queue: "Queue[str]" = Queue(1)
+    error_queue: "Queue[BaseException]" = Queue(4)
+    status_queue: "Queue[StatusSettings]" = Queue()
+    project_queue: "Queue[str]" = Queue()
     cancel_event = multiprocessing.Event()
     restart_event = multiprocessing.Event()
 

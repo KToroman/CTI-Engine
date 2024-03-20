@@ -17,7 +17,7 @@ from src.model.core.ProcessPoint import ProcessPoint
 
 class PassiveDataCollectionThread:
     def __init__(self, process_list: List[psutil.Process], process_list_lock: SyncLock, model: Model, model_lock: SyncLock,
-                 data_observer: DataObserver, process_count, shutdown: SyncEvent, active_event: SyncEvent):
+                 data_observer: DataObserver, process_count: int, shutdown: SyncEvent, active_event: SyncEvent) -> None:
 
         self._thread: Thread
         self._shutdown = shutdown
@@ -35,7 +35,7 @@ class PassiveDataCollectionThread:
 
         self.time_till_false: float = 0
 
-    def _run(self):
+    def _run(self) -> None:
         while self._active_event.is_set() and (not self._shutdown.is_set()):
             for process in self._current_processes:
                 try:
@@ -57,7 +57,7 @@ class PassiveDataCollectionThread:
         with self._process_list_lock:
             self._process_list.clear()
 
-    def add_work(self, process: psutil.Process):
+    def add_work(self, process: psutil.Process) -> None:
         if len(self._current_processes) < self._process_count:
             self._current_processes.append(process)
             if len(self._current_processes) >= self._process_count:
@@ -65,19 +65,19 @@ class PassiveDataCollectionThread:
             else:
                 self._is_full = False
 
-    def start(self):
+    def start(self) -> None:
         print("[FetcherThread]    started")
         self._thread = Thread(target=self._run)
         self._thread.start()
 
-    def stop(self):
+    def stop(self) -> None:
         self._thread.join()
         print("[FetcherThread]  stopped")
 
     def has_work(self) -> bool:
         return self._is_full
 
-    def _add_data_entry(self, data_entry: DataEntry):
+    def _add_data_entry(self, data_entry: DataEntry) -> None:
         time.sleep(0.01)
         with self._model_lock:
             self._model.insert_datapoint(data_entry)

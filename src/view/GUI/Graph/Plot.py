@@ -3,7 +3,7 @@ from typing import List
 
 class Plot:
 
-    def __init__(self, name, color, x_values, y_values):
+    def __init__(self, name: str, color: str, x_values: list[float], y_values: list[float]) -> None:
 
         self.name: str = name
         self.color: str = color

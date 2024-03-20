@@ -1,11 +1,10 @@
+import typing
 from multiprocessing import Queue
 from multiprocessing.synchronize import Event as SyncEvent
 from typing import List
-
-from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import QPushButton, QInputDialog, QTextEdit, QScrollArea, QWidget, QVBoxLayout, QComboBox
-import qtawesome as qta
 
+from src.model.core.ProjectReadViewInterface import ProjectReadViewInterface
 from src.view.AppRequestsInterface import AppRequestsInterface
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QPushButton, QInputDialog, QScrollArea, QWidget, QVBoxLayout
@@ -13,19 +12,20 @@ from src.view.GUI.UserInteraction.ProjectNameButtonWrapper import ProjectNameBut
 
 
 class MenuBar:
-    def __init__(self, load_path_queue: Queue, cancel_event: SyncEvent, restart_event: SyncEvent, project_queue: Queue,
-                 visualize_event: pyqtSignal, index_queue: Queue, change_table_signal: pyqtSignal):
+    def __init__(self, load_path_queue: "Queue[str]", cancel_event: SyncEvent, restart_event: SyncEvent,
+                 project_queue: "Queue[str]", visualize_event: pyqtSignal, index_queue: "Queue[int]",
+                 change_table_signal: pyqtSignal) -> None:
 
-        self.__project_queue = project_queue
-        self.__visualize_event = visualize_event
+        self.__project_queue: "Queue[str]" = project_queue
+        self.__visualize_event: pyqtSignal = visualize_event  # type: ignore[call-overload]
 
-        self.index_queue = index_queue
-        self.change_table_signal = change_table_signal
+        self.index_queue: "Queue[int]" = index_queue
+        self.change_table_signal: pyqtSignal = change_table_signal  # type: ignore[call-overload]
 
-        self.load_path_queue = load_path_queue
+        self.load_path_queue: "Queue[str]" = load_path_queue
         self.load_path_name: str = ""
-        self.cancel_event = cancel_event
-        self.restart_event = restart_event
+        self.cancel_event: SyncEvent = cancel_event
+        self.restart_event: SyncEvent = restart_event
 
         self.load_file_button: QPushButton = QPushButton("Load file")
         self.load_file_button.clicked.connect(lambda: self.__show_input_dialog())
@@ -52,14 +52,14 @@ class MenuBar:
         self.project_buttons: List[QPushButton] = []
 
 
-    def __show_input_dialog(self):
+    def __show_input_dialog(self) -> None:
         """opens an input dialog to enter a path of a project"""
         text, ok = QInputDialog.getText(self.scroll_widget, "File input", 'Enter file name:')
         if ok:
             self.load_path_queue.put(text)
             self.load_path_name = text.split("/")[-1]
 
-    def __toggle_scrollbar(self):
+    def __toggle_scrollbar(self) -> None:
         """change the visibility of the scroll area located in the menu bar"""
         if self.scroll_bar.isHidden():
             self.scroll_bar.setHidden(False)
@@ -67,7 +67,7 @@ class MenuBar:
             self.scroll_bar.setHidden(True)
         self.scroll_bar.update()
 
-    def update_scrollbar(self, project_names: List[str]):
+    def update_scrollbar(self, project_names: List[str]) -> None:
         """updates the scroll area when a new project is about to be visualized so all loaded projects are
             correctly displayed in the scroll area"""
         #delete and disconnect the existing buttons in the scroll area
@@ -78,7 +78,7 @@ class MenuBar:
                 item = self.scroll_layout.takeAt(0)
                 widget = item.widget()
                 if widget is not None:
-                    self.project_buttons.remove(widget)
+                    self.project_buttons.remove(typing.cast(QPushButton, widget))
                     widget.deleteLater()
                     pass
         # split the displayed name to only the last part
@@ -95,7 +95,7 @@ class MenuBar:
             self.scroll_layout.addWidget(new_button)
             self.project_buttons.append(new_button)
 
-    def set_stylesheet(self, style: str):
+    def set_stylesheet(self, style: str) -> None:
         if style == "Dark Mode Purple":
             self.load_file_button.setStyleSheet("background-color: #476eed;")
             self.pause_resume_button.setStyleSheet("background-color: #476eed;")

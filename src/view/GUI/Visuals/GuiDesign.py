@@ -1,14 +1,15 @@
 import os
+from typing import Any
 
 from PyQt5.QtCore import QSize, Qt, QMetaObject
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import (QWidget, QSizePolicy, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QSpacerItem,
                              QSplitter)
 
-import qtawesome as qta
+import qtawesome as qta  # type: ignore[import-untyped]
 
 
-def setup_ui(main_window):
+def setup_ui(main_window: Any) -> None:
     """Sets up all layouts and sizes for the main window so the widgets fit in nicely"""
     main_window.centralwidget = main_window.central_widget
     main_window.sidebar = QWidget(main_window.centralwidget)

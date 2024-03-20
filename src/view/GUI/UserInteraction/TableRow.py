@@ -8,7 +8,7 @@ class TableRow:
     """a custom row for the table, that includes data to:
         1. show in the table
         2. access data that is not shown to the user"""
-    def __init__(self, displayable: Displayable):
+    def __init__(self, displayable: Displayable) -> None:
         self.displayable: Displayable = displayable
         self.children: List[TableRow] = []
         self.checkbox: QCheckBox = QCheckBox()

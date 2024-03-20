@@ -1,6 +1,7 @@
 import os
 import queue
 import time
+import typing
 from datetime import date
 from multiprocessing import Queue, Lock
 from os.path import join
@@ -16,6 +17,7 @@ from psutil import NoSuchProcess, AccessDenied
 from src.fetcher.process_fetcher.Threads.PassiveDataCollectionThread import (
     PassiveDataCollectionThread,
 )
+from src.model.DataBaseEntry import DataBaseEntry
 from src.model.Model import Model
 from src.model.core.Project import Project
 from src.model.core.ProjectFinishedSemaphore import ProjectFinishedSemaphore
@@ -30,18 +32,18 @@ class ProcessCollectorThread:
         model_lock: SyncLock,
         check_for_project: bool,
         fetcher_list: list[PassiveDataCollectionThread],
-        saver_queue: Queue,
-        hierarchy_queue: Queue,
+        saver_queue: "Queue[str]",
+        hierarchy_queue: "Queue[Project]",
         save_path: str,
         shutdown: SyncEvent,
-        project_queue: Queue,
-        finished_event: pyqtSignal,
-        project_finished_event: SyncEvent,
+        project_queue: typing.Optional["Queue[str]"],
+        finished_event: typing.Optional[pyqtSignal],
+        project_finished_event: typing.Optional[SyncEvent],
         active_event: SyncEvent,
     ):
         self.__thread: Thread
         self.__shutdown = shutdown
-        self.__work_queue_lock: Lock = Lock()
+        self.__work_queue_lock: SyncLock = Lock()
         self.__work_queue: list[psutil.Process] = list()
         self.__process_list = process_list
         self.__process_list_lock = process_list_lock
@@ -62,7 +64,7 @@ class ProcessCollectorThread:
         self.__project_finished_event = project_finished_event
         self.current_project: str = ""
 
-    def __run(self):
+    def __run(self) -> None:
         while self.__active_event.is_set() and (not self.__shutdown.is_set()):
             with self.__work_queue_lock:
                 if self.__work_queue:
@@ -80,24 +82,24 @@ class ProcessCollectorThread:
         with self.__work_queue_lock:
             self.__work_queue.clear()
 
-    def start(self):
+    def start(self) -> None:
         print("[ProcessCollectorThread]    started")
         self.__thread = Thread(target=self.__run)
         self.__thread.start()
 
-    def stop(self):
+    def stop(self) -> None:
         if self.__thread.is_alive():
             self.__thread.join(timeout=1)
             if self.__thread.is_alive():
                 print("thread timed out")
         print("[ProcessCollectorThread]    stopped now")
 
-    def add_work(self, process: psutil.Process):
+    def add_work(self, process: psutil.Process) -> None:
         time.sleep(0.01)
         with self.__work_queue_lock:
             self.__work_queue.append(process)
 
-    def __make_process(self, process: psutil.Process):
+    def __make_process(self, process: psutil.Process) -> None:
         # process = self.__create_processes(line)
         if process is not None and not self.__is_process_in_list(process):
 
@@ -110,7 +112,7 @@ class ProcessCollectorThread:
                     name = self.__model.get_current_project_name()
                     project: Project = self.__model.get_project_by_name(name)
                 try:
-                    self.__saver_queue.put((project.delta_entries, name), block=False)
+                    self.__saver_queue.put(name, block=False)
                 except queue.Full:
                     pass
             self.__counter += 1
@@ -137,7 +139,7 @@ class ProcessCollectorThread:
 
         return working_dir.split("build")[0]
 
-    def __project_checker(self, project_name: str):
+    def __project_checker(self, project_name: str) -> None:
         try:
             if self.current_project == project_name:
                 return
@@ -161,6 +163,8 @@ class ProcessCollectorThread:
                             ).new_project_set()
 
                     name = self.__create_project_name(project_name)
+                    if self.__project_queue is None or self.__finished_event is None or self.__project_finished_event is None:
+                        raise Exception
                     semaphore: ProjectFinishedSemaphore = ProjectFinishedSemaphore(
                         project_name,
                         name,
@@ -172,7 +176,7 @@ class ProcessCollectorThread:
                     project = Project(project_name, name, self.__save_path)
                     self.__model.add_project(project, semaphore)
                     self.__hierarchy_queue.put(project)
-                    self.__saver_queue.put((project.delta_entries, project.name))
+                    self.__saver_queue.put(project.name)
                 else:
 
                     return
@@ -181,7 +185,7 @@ class ProcessCollectorThread:
                 if self.__model.projects.__len__() > 1:
                     print("saving...")
                     proj: Project = self.__model.projects[-2]
-                    self.__saver_queue.put((proj.delta_entries, proj.name))
+                    self.__saver_queue.put(proj.name)
         except NoSuchProcess:
             return
 

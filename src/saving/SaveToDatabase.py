@@ -23,7 +23,9 @@ class SaveToDatabase(SaveInterface):
         self.__model_lock = model_lock
         self.__model: Model = model
 
-    def save_project(self, project_name: str):
+    def save_project(self, project_name: str | Project) -> None:
+        if isinstance(project_name, Project):
+            raise Exception
         project = self.__model.get_project_by_name(project_name)
         with self.__model_lock:
             delta: List[DataBaseEntry] = project.delta_entries
@@ -34,14 +36,14 @@ class SaveToDatabase(SaveInterface):
         self.__add_to_data_base(delta)
         print(f"[SaveToDatabase]    saved {len(delta)} new entries")
 
-    def __add_new_project(self, project: Project):
+    def __add_new_project(self, project: Project) -> None:
         self.__current_project_name = project.name
         self.__saves_path = self.__saves_path_prefix + project.path_to_save
         Path(self.__saves_path).mkdir(exist_ok=True, parents=True)
         db: Rdict = Rdict(self.__saves_path)
         db.close()
 
-    def __add_to_data_base(self, delta: List[DataBaseEntry]):
+    def __add_to_data_base(self, delta: List[DataBaseEntry]) -> None:
         db: Rdict = Rdict(self.__saves_path)
         print(f"[SaveToDatabase]    opened Database: {self.__saves_path}")
         for entry in delta:

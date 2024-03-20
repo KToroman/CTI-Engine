@@ -20,7 +20,7 @@ class CompilingTool(BuilderInterface):
                  curr_project_dir: str,
                  source_file: SourceFile,
                  path: str,
-                 header_error_queue: Queue,
+                 header_error_queue: "Queue[str]",
                  header_depth: int = DEFAULT_HEADER_DEPTH) -> None:
         """Compiling tool:
         curr_project_dir    -- The working directory of the project the SourceFile is from
@@ -52,7 +52,7 @@ class CompilingTool(BuilderInterface):
 
     def build_header(self, header: Header) -> None:
         file_path: Path = self.__file_builder.generate_source_file(header)
-        proc: CompletedProcess = self.__compile(file_path)
+        proc: CompletedProcess[bytes] = self.__compile(file_path)
 
         try:
             proc.check_returncode()
@@ -60,10 +60,10 @@ class CompilingTool(BuilderInterface):
             print("[Failed]     " + header.get_name())
             self.__header_error_queue.put(header.get_name())
 
-    def __compile(self, file_name: Path) -> CompletedProcess:
+    def __compile(self, file_name: Path) -> CompletedProcess[bytes]:
         args: list[str] = self.__file_builder.get_compile_command(file_name)
 
-        proc: CompletedProcess = subprocess.run(args=args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        proc: CompletedProcess[bytes] = subprocess.run(args=args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         return proc
 
     def get_next_header(self) -> Header:
