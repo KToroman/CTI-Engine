@@ -19,3 +19,4 @@ class Header(CFile):
         self.build_file_name: str = ""
         self.parent = parent
         self.hierarchy_level: int = hierarchy_level
+        self.sorted_timestamp_list = None

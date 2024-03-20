@@ -57,7 +57,6 @@ class HierarchyFetcher(FetcherInterface):
             else:
                 self.__open_timeout += 1
                 return True
-
         self.source_file_queue.put(SourceFile(self.project.name))
         self.__setup_hierarchy(self.project)
         self.source_file_queue.put(SourceFile("fin"))
@@ -173,6 +172,8 @@ class HierarchyFetcher(FetcherInterface):
         for line in lines_to_append:
             self.__append_header_recursive(line, hierarchy, source_file)
         self.source_file_queue.put(source_file)
+        if len(source_file.get_headers()) > 50:
+            print(f"[HierarchyFetcher]      adding sourcefile with {len(source_file.get_headers())} headers")
         return True
 
     def __append_header_recursive(

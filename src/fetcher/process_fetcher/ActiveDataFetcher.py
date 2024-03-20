@@ -100,7 +100,6 @@ class ActiveDataFetcher(FetcherInterface):
         while self.__building_event.is_set() and not self.__header_error_queue.empty():
             if not self.__header_error_queue.empty():
                 header = self.__header_error_queue.get()
-                print("[ActiveDataThread]   trying to find" + header)
                 model_header = self.__model.current_project.get_header_by_name(header)
                 if model_header is not None:
                     print("[ActiveDataThread]   made true" + header)

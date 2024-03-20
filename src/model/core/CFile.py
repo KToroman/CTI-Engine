@@ -11,11 +11,12 @@ class CFile(CFileReadViewInterface, Protocol):
     """Models CFile and is used for representing a tracked CFile in program"""
 
     data_entries: List[DataEntry]
-    headers: List[CFileReadViewInterface]
+    headers: List[Self]
     path: str
     error: bool
     hierarchy_level: int
     parent: Self|None
+    sorted_timestamp_list: list[float]|None
 
     def __init__(self, path: str) -> None:
         raise NotImplementedError
@@ -23,19 +24,32 @@ class CFile(CFileReadViewInterface, Protocol):
     def get_name(self) -> str:
         return self.path
 
-    def get_total_time(self) -> float:
-        if len(self.data_entries) > 1:
-            print("[CFile]  not zero runtime")
-        sorted_timestamp_list = sorted(
+    def get_min_timestamps(self) -> float:
+        '''returns the first timestamp in CFile's entries'''
+        if self.sorted_timestamp_list is None:
+            self.sorted_timestamp_list = sorted(
             self.data_entries, key=lambda data_entry: data_entry.timestamp
-        )
-        if len(sorted_timestamp_list) > 1:
-            print("[CFile]  not zero runtime")
+            )
+        if len(self.sorted_timestamp_list) > 1:
             return (
-                sorted_timestamp_list[-1].timestamp -
-                sorted_timestamp_list[0].timestamp
+                self.sorted_timestamp_list[0].timestamp
+            )
+        return 0  
+    
+    def get_max_timestamps(self) -> float:
+        '''returns the last timestamp in CFile's entries'''
+        if self.sorted_timestamp_list is None:
+            self.sorted_timestamp_list = sorted(
+            self.data_entries, key=lambda data_entry: data_entry.timestamp
+            )
+        if len(self.sorted_timestamp_list) > 1:
+            return (
+                self.sorted_timestamp_list[-1].timestamp
             )
         return 0
+    
+    def get_total_time(self) -> float:
+        return self.get_max_timestamps() - self.get_min_timestamps()
 
     def get_max(self, metric_name: MetricName) -> float:
         max_entry_value = 0

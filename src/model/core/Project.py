@@ -1,5 +1,6 @@
 import time
 from typing import List, Optional
+import typing
 from src.exceptions.CFileNotFoundError import CFileNotFoundError
 from src.model.DataBaseEntry import DataBaseEntry
 from src.model.core.CFile import CFile
@@ -66,7 +67,7 @@ class Project(ProjectReadViewInterface):
         self.add_to_delta(hierarchy_level=hierarchy_level, path=header_path, parent_or_compile_command=parent_path, data_entry=None)
 
     def update_source_file(self, path, compile_command: str) -> CFile:
-        source_file = self.get_sourcefile(path)
+        source_file = typing.cast(SourceFile, self.get_sourcefile(path))
         source_file.compile_command = compile_command
         self.add_to_delta(hierarchy_level=0, path=path, parent_or_compile_command=compile_command, data_entry=None)
         return source_file
@@ -86,11 +87,15 @@ class Project(ProjectReadViewInterface):
                 data_entry.timestamp,
                 data_entry.metrics,
                 hierarchy_level,
-            )
-        )
+            ))
 
     def get_project_time(self) -> float:
-        return self.project_time
+        '''returns project's first measured timestamp'''
+        starting_points: list[float] = list()
+        for source_file in self.source_files:
+            starting_points.append(source_file.get_min_timestamps())
+        starting_points.sort()
+        return starting_points[0]
 
     def get_project_name(self) -> str:
         return self.name
