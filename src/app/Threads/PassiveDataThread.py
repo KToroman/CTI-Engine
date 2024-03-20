@@ -33,13 +33,10 @@ class PassiveDataThread:
 
 
     def start(self) -> None:
-        print("[PassiveDataThread]    started")
         self.__thread = Thread(target=self.__run)
         self.__data_fetcher.start()
         self.__thread.start()
 
     def stop(self) -> None:
-        print("[PassiveDataThread]  stop signal sent")
         self.__data_fetcher.stop()
         self.__thread.join()
-        print("[PassiveDataThread]  stopped")

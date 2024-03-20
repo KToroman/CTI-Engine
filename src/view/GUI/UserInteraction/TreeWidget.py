@@ -33,8 +33,8 @@ class TreeWidget(QTreeWidget):
         self.items: List[ItemWrapper] = []
         self.setHeaderLabels([self.COLUMN_1_LABEL, self.COLUMN_2_LABEL,
                               self.COLUMN_3_LABEL, self.COLUMN_4_LABEL])
-        #self.header().setStyleSheet("::section{background-color: #292c43; }")
-        #self.header().setStyleSheet("::section{background-color: #23868B; color: black}")
+        # self.header().setStyleSheet("::section{background-color: #292c43; }")
+        # self.header().setStyleSheet("::section{background-color: #23868B; color: black}")
 
         self.insertion_point: str = ""
         self.active_started: bool = False
@@ -53,7 +53,6 @@ class TreeWidget(QTreeWidget):
         self.header().sectionClicked.connect(lambda col: self.__sort_table(col))
 
     def insert_values(self, displayables: List[DisplayableHolder]) -> None:
-        print(len(displayables))
         for displayable in displayables:
             self.insert_data(displayable, self)
 
@@ -92,6 +91,7 @@ class TreeWidget(QTreeWidget):
             if item.name == self.insertion_point:
                 for i in range(item.childCount()):
                     if displayable.displayable.name == item.child(i).name:  # type: ignore[attr-defined]
+                        item.child(i).row.displayable = displayable.displayable
                         values = [displayable.displayable.ram_peak, displayable.displayable.cpu_peak,
                                   displayable.displayable.runtime_plot.y_values[0]]
                         item.child(i).setData(1, 0, round((values[0]), 4))
@@ -99,11 +99,12 @@ class TreeWidget(QTreeWidget):
                         item.child(i).setData(3, 0, round((values[2]), 4))
                         if values[2] != 0:
                             item.child(i).row.checkbox.setDisabled(False)  # type: ignore[attr-defined]
-                            item.child(i).row.connected = False  # type: ignore[attr-defined]
+                        item.child(i).row.connected = False  # type: ignore[attr-defined]
                         if displayable.displayable.failed:
                             item.child(i).row.name_button.setStyleSheet("background-color:  #7F1717")
                     for j in range(item.child(i).childCount()):
                         if displayable.displayable.name == item.child(i).child(j).name:  # type: ignore[attr-defined]
+                            item.child(i).child(j).row.displayable = displayable.displayable
                             values = [displayable.displayable.ram_peak, displayable.displayable.cpu_peak,
                                       displayable.displayable.runtime_plot.y_values[0]]
                             item.child(i).child(j).setData(1, 0, round((values[0]), 4))
@@ -111,7 +112,7 @@ class TreeWidget(QTreeWidget):
                             item.child(i).child(j).setData(3, 0, round((values[2]), 4))
                             if values[2] != 0:
                                 item.child(i).child(j).row.checkbox.setDisabled(False)  # type: ignore[attr-defined]
-                                item.child(i).row.connected = False  # type: ignore[attr-defined]
+                            item.child(i).child(j).row.connected = False  # type: ignore[attr-defined]
                             if displayable.displayable.failed:
                                 item.child(i).child(j).row.name_button.setStyleSheet("background-color:  #7F1717")
         for disp in displayable.get_sub_disp():
@@ -163,9 +164,8 @@ class TreeWidget(QTreeWidget):
         """Receives two limits and selects checkboxes of rows inbetween them."""
         real_lower_limit: int = min(lower_limit, upper_limit)
         real_upper_limit: int = max(lower_limit, upper_limit)
-        if real_upper_limit == real_lower_limit == 0:
-            self.toggle_all_rows()
-            return
+        self.toggle_all_rows()
+        time.sleep(0.3)
         last_checkbox: int = self.__find_last_checkbox()
         if real_upper_limit > last_checkbox:
             real_upper_limit = last_checkbox

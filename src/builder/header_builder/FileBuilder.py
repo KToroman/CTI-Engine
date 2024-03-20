@@ -50,7 +50,7 @@ class FileBuilder:
         try :
             del command[-1]
         except:
-            print(f"[FileBuilder]   out of bounds: {command}")
+            return
         command.append("-I" + self.__curr_project_dir)
         command.append(file_path.resolve().__str__())
         return command

@@ -100,17 +100,18 @@ class ActiveDataFetcher(FetcherInterface):
 
     def update_project(self) -> bool:
         """Main method of the active data fetcher. Returns True if this method should be called again."""
-        if not self.__header_error_queue.empty():
-            self.__building_event.set()
-        while self.__building_event.is_set() and not self.__header_error_queue.empty():
+        #if not self.__header_error_queue.empty():
+        self.__building_event.set()
+        while self.__building_event.is_set() or not self.__header_error_queue.empty():
             if not self.__header_error_queue.empty():
                 header = self.__header_error_queue.get()
+                if header == "ERROR":
+                    self.__finished_event.set()
+                    self.__building_event.clear()
+                    break
                 model_header = self.__model.current_project.get_header_by_name(header)
                 if model_header is not None:
-                    print("[ActiveDataThread]   made true" + header)
                     model_header.error = True
-                else:
-                    print("[ActiveDataThread]   did not find" + header)
             for finder in self.__process_finder_list:
                 if self.__shutdown_event.is_set():
                     break
@@ -183,11 +184,14 @@ class ActiveDataFetcher(FetcherInterface):
             self.__finished_event,
             self.__shutdown_event,
         )
-        if not self.__header_error_queue.empty():
-            self.__finished_event.set()
-        else :
-            self.__building_thread.start()
+        self.__building_thread.start()
         return self
+
+    def get_header(self, name: str, cfile: CFileReadViewInterface) -> CFileReadViewInterface:
+        if name.split("/")[-1].split(".")[0] == cfile.get_name().split("/")[-1].split(".")[0]:
+            return cfile
+        for header in cfile.get_headers():
+            self.get_header(name, header)
 
     def __exit__(self, exc_type: Any, exc_val: Any, traceback: Any) -> typing_extensions.Literal[False]:
         # required threads should be stopped here

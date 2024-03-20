@@ -94,7 +94,6 @@ class Model(ModelReadViewInterface):
             if semaphore is not None:
                 self.semaphore_list.append(semaphore)
             self.current_project = project
-            print(f"[Model]   new project {project}")
 
     def project_in_list(self, name: str) -> bool:
         for p in self.projects:

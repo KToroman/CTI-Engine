@@ -19,7 +19,7 @@ class Project(ProjectReadViewInterface):
     __DEFAULT_PATH_TO_SAVE = ""
 
     def __init__(
-        self, working_dir: str, name: str, path_to_save: str = __DEFAULT_PATH_TO_SAVE
+            self, working_dir: str, name: str, path_to_save: str = __DEFAULT_PATH_TO_SAVE
     ):
         self.source_files: List[SourceFile] = list()
         self.working_dir = working_dir
@@ -39,7 +39,6 @@ class Project(ProjectReadViewInterface):
             self.file_dict.add_file(cfile)
             self.source_files.append(cfile)
         return typing.cast(SourceFile, cfile)
-    
     def get_header_by_name(self, name: str) -> CFile:
         cfile = self.file_dict.get_cfile_by_name(name)
         if cfile is None:
@@ -61,18 +60,18 @@ class Project(ProjectReadViewInterface):
 
     def update_header(self, header_path: str, parent_path: str, hierarchy_level: int):
         header = self.get_header_by_name(header_path)
-        if header.parent is None or header.parent.path != parent_path:
+        if header.parent is not None and header.parent.path != parent_path:
             header = Header(header_path, None, 1)
-            self.count_headers += 1
         parent = self.get_unkown_cfile(
             path=parent_path, hierarchy_level=hierarchy_level-1)
         header.parent = parent
         if header not in parent.headers:
             parent.headers.append(header)
         header.hierarchy_level = hierarchy_level
-        self.add_to_delta(hierarchy_level=hierarchy_level, path=header_path,
-                          parent_or_compile_command=parent_path, data_entry=None)
-        
+        self.add_to_delta(hierarchy_level=hierarchy_level, path=header.path,
+                          parent_or_compile_command=parent.path,
+                          data_entry=None)
+
 
     def update_source_file(self, path, compile_command: str) -> CFile:
         source_file = typing.cast(SourceFile, self.get_sourcefile(path))
@@ -82,7 +81,7 @@ class Project(ProjectReadViewInterface):
         return source_file
 
     def add_to_delta(
-        self, hierarchy_level: int, path: str, parent_or_compile_command: str, data_entry: DataEntry|None
+            self, hierarchy_level: int, path: str, parent_or_compile_command: str, data_entry: DataEntry | None
     ) -> None:
         if data_entry is None:
             self.delta_entries.append(DataBaseEntry(
@@ -104,7 +103,6 @@ class Project(ProjectReadViewInterface):
         for source_file in self.source_files:
             starting_points.append(source_file.get_min_timestamps())
         starting_points.sort()
-        print(f"[Project]    header count: {self.count_headers}")
         return starting_points[0]
 
     def get_project_name(self) -> str:

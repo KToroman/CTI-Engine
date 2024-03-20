@@ -57,18 +57,22 @@ class CompilingTool(BuilderInterface):
         try:
             proc.check_returncode()
         except CalledProcessError:
-            print("[Failed]     " + header.get_name())
             self.__header_error_queue.put(header.get_name())
 
     def __compile(self, file_name: Path) -> CompletedProcess[bytes]:
         args: list[str] = self.__file_builder.get_compile_command(file_name)
-
-        proc: CompletedProcess[bytes] = subprocess.run(args=args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        return proc
+        try:
+            proc: CompletedProcess[bytes] = subprocess.run(args=args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            return proc
+        except TypeError as e:
+            self.__header_error_queue.put("ERROR")
 
     def get_next_header(self) -> Header:
         return self.__header_iterator.get_next_header()
 
     def clear_directory(self) -> None:
-        path: Path = (Path(self.__build_path) / Path(self.__curr_project_dir) /"Active_Mode_Build" / "temp").resolve()
-        shutil.rmtree(path)
+        try:
+            path: Path = (Path(self.__build_path) / Path(self.__curr_project_dir) /"Active_Mode_Build" / "temp").resolve()
+            shutil.rmtree(path)
+        except FileNotFoundError:
+            pass

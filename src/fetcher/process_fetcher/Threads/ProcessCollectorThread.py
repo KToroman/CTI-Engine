@@ -83,7 +83,6 @@ class ProcessCollectorThread:
             self.__work_queue.clear()
 
     def start(self) -> None:
-        print("[ProcessCollectorThread]    started")
         self.__thread = Thread(target=self.__run)
         self.__thread.start()
 
@@ -91,8 +90,7 @@ class ProcessCollectorThread:
         if self.__thread.is_alive():
             self.__thread.join(timeout=1)
             if self.__thread.is_alive():
-                print("thread timed out")
-        print("[ProcessCollectorThread]    stopped now")
+                pass
 
     def add_work(self, process: psutil.Process) -> None:
         time.sleep(0.01)
@@ -116,7 +114,7 @@ class ProcessCollectorThread:
                 except queue.Full:
                     pass
             self.__counter += 1
-            self.time_till_false = time.time() + 45
+            self.time_till_false = time.time() + 60
             with self.__process_list_lock:
                 self.__process_list.append(process)
             if not self.__fetcher[self.__counter % len(self.__fetcher)].has_work():
@@ -183,7 +181,6 @@ class ProcessCollectorThread:
             time.sleep(0.05)
             with self.__model_lock:
                 if self.__model.projects.__len__() > 1:
-                    print("saving...")
                     proj: Project = self.__model.projects[-2]
                     self.__saver_queue.put(proj.name)
         except NoSuchProcess:

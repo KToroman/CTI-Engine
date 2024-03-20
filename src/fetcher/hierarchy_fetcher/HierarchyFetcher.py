@@ -67,9 +67,7 @@ class HierarchyFetcher(FetcherInterface):
     def __setup_hierarchy(self, project: Project) -> None:
         """the main Method of the Hierarchy Fetcher class"""
         source_files: list[SourceFile] = self.__setup_source_files(project)
-        print(
-            f"\033[96m [HierarchyFetcher]     {len(source_files)} Sourcefiles added to Project\033[0m"
-        )
+
         source_files_retry: list[SourceFile] = []
         futures: dict[Future[str], SourceFile] = {}
         failed_source_files: int = 0
@@ -103,9 +101,7 @@ class HierarchyFetcher(FetcherInterface):
             except CalledProcessError as e:
                 source_files_retry.append(futures[future])
 
-        print(
-            f"\033[96m [HierarchyFetcher]     Retry making Hierarchy for {len(source_files_retry)} Sourcefiles\033[0m"
-        )
+
         futures = {}
         for source_file in source_files_retry:
             if (
@@ -146,9 +142,6 @@ class HierarchyFetcher(FetcherInterface):
         for source in failed_list:
             self.source_file_queue.put(source)
 
-        print(
-            f"\033[96m [HierarchyFetcher]     Hierarchy Fetching completed. {failed_source_files} files failed\033[0m"
-        )
 
     def __setup_source_files(self, project: Project) -> typing.List[SourceFile]:
         created_source_files: list[SourceFile] = []
@@ -178,8 +171,7 @@ class HierarchyFetcher(FetcherInterface):
         for line in lines_to_append:
             self.__append_header_recursive(line, hierarchy, source_file)
         self.source_file_queue.put(source_file)
-        if len(source_file.get_headers()) > 50:
-            print(f"[HierarchyFetcher]      adding sourcefile with {len(source_file.get_headers())} headers")
+
         return True
 
     def __append_header_recursive(

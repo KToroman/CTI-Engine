@@ -39,14 +39,12 @@ class FileSaverThread:
         """is the methode which runs the saving thread"""
         while not self.__shutdown.is_set():
             if not self.__work_queue.empty():
-                print("[FileSaverThread]    adding work to work list")
                 self.__work_list.append(self.__work_queue.get())
             work = self.__get_work(work_list_index)
             if work is None:
                 continue
             work_list_index += 1
             self.__remove_work()
-            print("[FileSaverThread]    now starting to save changes to project: " + work)
             self.__saver.save_project(project_name=work)
             time.sleep(10)
 
@@ -59,7 +57,6 @@ class FileSaverThread:
         if self.__finished_project.is_set():
             self.__finished_project.clear()
             work = self.__work_list.pop(0)
-            #print("[FileSaverThread]    work deleted: " + work[1])
 
     def __get_work(self, index: int) -> Optional[str]:
         if self.__work_list:
@@ -68,7 +65,6 @@ class FileSaverThread:
 
     def start(self) -> None:
         """this method start the saver thread"""
-        print("[FileSaverThread]    started")
         self.__thread = Thread(target=self.__run)
         self.__thread.start()
 

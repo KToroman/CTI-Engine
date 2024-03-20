@@ -209,9 +209,7 @@ class App(AppRequestsInterface):
         )
 
     def start(self) -> None:
-        print("[app]    started")
         self.prepare_threads()
-
         self.__status_and_error_thread.start()
         self.passive_thread.start()
         self.file_saver_thread.start()
@@ -231,7 +229,7 @@ class App(AppRequestsInterface):
 
         for q in self.queue_list:
             q.close()
-        print("[App]    stopped")
+        self.hierarchy_fetcher.__del__()
 
     @classmethod
     def __get_config_path(cls) -> str:

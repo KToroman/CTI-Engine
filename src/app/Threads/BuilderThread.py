@@ -38,10 +38,8 @@ class BuilderThread:
 
     def start(self) -> None:
         self.__process.start()
-        print("[Builder Thread]     started.")
 
     def stop(self) -> None:
         self.__shutdown_event.set()
         if self.__process.is_alive():
             self.__process.join()
-        print("[Builder Thread]     stopped")
