@@ -38,8 +38,7 @@ class FileFetcherThread:
                 with self.__model_lock:
                     project: Project = self.__model.get_project_by_name(self.__model.get_current_project_name())
                     for source_file in project.source_files:
-                        if source_file.compile_command == "":
-                            source_file.error = True
+                        source_file.error = True
             except FileNotFoundError as e:
                 self.__error_queue.put(e)
                 print("[FlieFetcherThread]   No file found for path: " )
