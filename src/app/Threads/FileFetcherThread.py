@@ -6,6 +6,7 @@ from multiprocessing.synchronize import Lock as SyncLock
 from PyQt5.QtCore import pyqtSignal
 from src.fetcher.file_fetcher.FileLoader import FileLoader
 from src.model.Model import Model
+from src.model.core.Project import Project
 
 
 class FileFetcherThread:
@@ -34,6 +35,11 @@ class FileFetcherThread:
                 file_loader = FileLoader(work, self.__model, self.__model_lock, self.__visualize_event,
                                          self.__project_queue)
                 file_loader.update_project()
+                with self.__model_lock:
+                    project: Project = self.__model.get_project_by_name(self.__model.get_current_project_name())
+                    for source_file in project.source_files:
+                        if source_file.compile_command == "":
+                            source_file.error = True
             except FileNotFoundError as e:
                 self.__error_queue.put(e)
                 print("[FlieFetcherThread]   No file found for path: " )

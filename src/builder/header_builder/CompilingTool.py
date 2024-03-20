@@ -29,14 +29,18 @@ class CompilingTool(BuilderInterface):
         header_depth        -- Determines how many layers of the include hierarchy should be built.
                                0 means only headers directly included in the source file are built.
                                Default: 1"""
-        self.source_file = source_file
+        self.source_file: SourceFile = source_file
+        self.__header_error_queue = header_error_queue
         self.__build_path = path
+        if self.source_file.compile_command == "":
+            for header in self.source_file.headers:
+                self.__header_error_queue.put(header.get_name())
         self.__file_builder = FileBuilder(curr_project_dir=curr_project_dir,
                                           compile_command=self.source_file.compile_command,
                                           source_file_name=source_file.get_name(),
                                           build_path=path)
         self.__header_iterator = HeaderIterator(self.source_file, header_depth)
-        self.__header_error_queue = header_error_queue
+        
 
     def build(self) -> bool:
         """returns true if there is another header to be built"""

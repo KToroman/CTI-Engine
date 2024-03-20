@@ -37,6 +37,8 @@ class FileBuilder:
         command: list[str] = shlex.split(self.__original_compile_command)
 
         delindex: int = -1
+        if len(command) == 1:
+            raise BaseException
         for i in range(len(command)):
             if command[i] == "-o":
                 command[i+1] = file_path.resolve().__str__() + ".o"
@@ -45,7 +47,10 @@ class FileBuilder:
         if delindex != -1:
             del command[delindex]
 
-        del command[-1]
+        try :
+            del command[-1]
+        except:
+            print(f"[FileBuilder]   out of bounds: {command}")
         command.append("-I" + self.__curr_project_dir)
         command.append(file_path.resolve().__str__())
         return command

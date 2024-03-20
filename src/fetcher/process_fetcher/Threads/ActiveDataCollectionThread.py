@@ -87,3 +87,5 @@ class ActiveDataCollectionThread(PassiveDataCollectionThread):
             return
         except PermissionError:
             return
+        except:
+            return
