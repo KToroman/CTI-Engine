@@ -66,13 +66,11 @@ class PassiveDataCollectionThread:
                 self._is_full = False
 
     def start(self) -> None:
-        print("[FetcherThread]    started")
         self._thread = Thread(target=self._run)
         self._thread.start()
 
     def stop(self) -> None:
         self._thread.join()
-        print("[FetcherThread]  stopped")
 
     def has_work(self) -> bool:
         return self._is_full
@@ -81,7 +79,7 @@ class PassiveDataCollectionThread:
         time.sleep(0.01)
         with self._model_lock:
             self._model.insert_datapoint(data_entry)
-            self.time_till_false = time.time() + 35
+            self.time_till_false = time.time() + 45
 
     def _make_entry(self, process_point: ProcessPoint) -> None:
         try:

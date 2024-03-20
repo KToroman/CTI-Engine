@@ -19,7 +19,6 @@ class SaveToDatabase(SaveInterface):
         self.__current_project_name: str = ""
         self.__saves_path_prefix = saves_path
         self.__saves_path: str = saves_path
-        print("[SaveToDatabase]     " + self.__saves_path)
         self.__model_lock = model_lock
         self.__model: Model = model
 
@@ -34,7 +33,6 @@ class SaveToDatabase(SaveInterface):
             self.__add_new_project(project)
             # project is being saved for the first time
         self.__add_to_data_base(delta)
-        print(f"[SaveToDatabase]    saved {len(delta)} new entries")
 
     def __add_new_project(self, project: Project) -> None:
         self.__current_project_name = project.name
@@ -45,7 +43,6 @@ class SaveToDatabase(SaveInterface):
 
     def __add_to_data_base(self, delta: List[DataBaseEntry]) -> None:
         db: Rdict = Rdict(self.__saves_path)
-        print(f"[SaveToDatabase]    opened Database: {self.__saves_path}")
         for entry in delta:
             if entry.timestamp is None:
                 timestamp = time.time()

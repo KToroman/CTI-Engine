@@ -41,14 +41,12 @@ class FileLoader(FetcherInterface):
         if self.__is_valid_path():
             self.__db = Rdict(self.__path)
             project: Project = self.__create_project()
-            print("[FileLoader]     created new project")
             self.__insert_values(project)
             with self.__model_lock:
                 self.__model.add_project(project, None)
                 self.__model.current_project = project
             self.__project_queue.put(project.name)
             self.__visualize_signal.emit()  # type: ignore[attr-defined]
-            print("[FileLoader]     visualize signal emitted")
             self.__db.close()
             return False
         raise FileNotFoundError(
@@ -62,7 +60,6 @@ class FileLoader(FetcherInterface):
             value = iter.value()
             self.__add_to_project(key, value, project)
             iter.next()
-        print("[FileLoader]     added all entries to model.")
 
     def __add_to_project(self, key: str, value: List[Any], project: Project):
         keys: List[str] = key.split("\n")
@@ -91,7 +88,6 @@ class FileLoader(FetcherInterface):
                     parent_or_compile_command, hierarchy, project)
             found_cfile.parent = parent
 
-<<<<<<< src/fetcher/file_fetcher/FileLoader.py
     def __check_parent(self, found_header: CFile, parent_or_compile_command: str, hierarchy: int, project: Project) -> CFile:
         new_header: CFile = found_header
         parent = self.__all_cfiles.get(parent_or_compile_command, None)

@@ -17,7 +17,7 @@ class CFile(CFileReadViewInterface, Protocol):
     error: bool
     hierarchy_level: int
     parent: typing.Optional["CFile"]
-    sorted_timestamp_list: list[float]|None
+    sorted_timestamp_list: list[float] | None
 
     def __init__(self, path: str) -> None:
         raise NotImplementedError
@@ -27,10 +27,7 @@ class CFile(CFileReadViewInterface, Protocol):
 
     def get_min_timestamps(self) -> float:
         '''returns the first timestamp in CFile's entries'''
-        if self.sorted_timestamp_list is None:
-            self.sorted_timestamp_list = sorted(
-            self.data_entries, key=lambda data_entry: data_entry.timestamp
-            )
+        self.sorted_timestamp_list = sorted(self.data_entries, key=lambda data_entry: data_entry.timestamp)
         if len(self.sorted_timestamp_list) > 1:
             return (
                 self.sorted_timestamp_list[0].timestamp
@@ -39,10 +36,7 @@ class CFile(CFileReadViewInterface, Protocol):
 
     def get_max_timestamps(self) -> float:
         '''returns the last timestamp in CFile's entries'''
-        if self.sorted_timestamp_list is None:
-            self.sorted_timestamp_list = sorted(
-            self.data_entries, key=lambda data_entry: data_entry.timestamp
-            )
+        self.sorted_timestamp_list = sorted(self.data_entries, key=lambda data_entry: data_entry.timestamp)
         if len(self.sorted_timestamp_list) > 1:
             return (
                 self.sorted_timestamp_list[-1].timestamp
@@ -75,7 +69,7 @@ class CFile(CFileReadViewInterface, Protocol):
         return metric_list
 
     def __str__(self) -> str:
-        return f"Path: {self.path} \nHeaders: {[a.get_name()  for a in self.headers]}"
+        return f"Path: {self.path} \nHeaders: {[a.get_name() for a in self.headers]}"
 
     def get_header_by_name(self, name: str) -> Optional[CFileReadViewInterface]:
         for header in self.headers:

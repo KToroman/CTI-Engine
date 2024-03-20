@@ -41,15 +41,12 @@ class FileFetcherThread:
                         source_file.error = True
             except FileNotFoundError as e:
                 self.__error_queue.put(e)
-                print("[FlieFetcherThread]   No file found for path: " )
             self.__load_event.clear()
 
 
     def start(self) -> None:
-        print("[FileFetcherThread]    started")
         self.__thread = Thread(target=self.__run)
         self.__thread.start()
 
     def stop(self) -> None:
         self.__thread.join()
-        print("[FileFetcherThread]  stopped")

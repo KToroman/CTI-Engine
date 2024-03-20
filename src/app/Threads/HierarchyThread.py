@@ -29,6 +29,8 @@ class HierarchyThread:
         self.__hierarchy_work_queue = hierarchy_work_queue
         self.__process_shutdown = process_shutdown
 
+        self.header = 0
+
     def __run_thread(self) -> None:
         current_project: str = ""
         while not self.__shutdown.is_set():
@@ -46,7 +48,7 @@ class HierarchyThread:
                     self.__model.get_semaphore_by_name(self.__current_work).hierarchy_fetcher_set()
                     self.__current_work = ""
                     self.__fetching_hierarchy.clear()
-
+                    print(self.header)
                     self.__process_shutdown.set()
                     self.__process.stop()
 
@@ -64,10 +66,10 @@ class HierarchyThread:
         for header in parent.headers:
             project.update_header(header.get_name(), parent.get_name(), hierarchy_level)
             self.__update_headers(project, typing.cast(SourceFile, header), hierarchy_level + 1)
+            self.header += 1
 
 
     def start(self) -> None:
-        print("[HierarchyThread]    started")
         self.__thread = Thread(target=self.__run_thread)
         self.__thread.start()
 
@@ -75,4 +77,3 @@ class HierarchyThread:
         self.__process_shutdown.set()
         self.__process.stop()
         self.__thread.join()
-        print("[HierarchyThread]  stopped")

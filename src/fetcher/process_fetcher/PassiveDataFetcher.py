@@ -115,7 +115,6 @@ class PassiveDataFetcher(DataFetcher):
         return max_time
 
     def start(self) -> None:
-        print("[PassiveDataFetcher]    sending start signal")
         process_list: List[psutil.Process] = list()
         process_list_lock: SyncLock = Lock()
         # self.__data_fetching_thread.start()
@@ -143,7 +142,6 @@ class PassiveDataFetcher(DataFetcher):
         self.workers_on = True
 
     def stop(self) -> None:
-        print("[PassiveDataFetcher]  stop signal sent...")
         for finder in self.__process_finder:
             finder.stop()
         for collector in self.__process_collector_list:
@@ -151,7 +149,6 @@ class PassiveDataFetcher(DataFetcher):
         for f in self.__fetcher:
             f.stop()
         self.workers_on = False
-        print("[PassiveDataFetcher]  stopped all threads")
 
     def restart_workers(self) -> None:
         for finder in self.__process_finder:

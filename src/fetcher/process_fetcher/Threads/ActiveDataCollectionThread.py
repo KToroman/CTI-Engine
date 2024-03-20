@@ -4,7 +4,6 @@ from multiprocessing.synchronize import Event as SyncEvent
 from multiprocessing.synchronize import Lock as SyncLock
 from typing import List
 
-
 import psutil
 from psutil import NoSuchProcess
 
@@ -24,17 +23,17 @@ from src.model.core.SourceFile import SourceFile
 class ActiveDataCollectionThread(PassiveDataCollectionThread):
 
     def __init__(
-        self,
-        process_list: list[psutil.Process],
-        process_list_lock: SyncLock,
-        model: Model,
-        model_lock: SyncLock,
-        data_observer: DataObserver,
-        process_count: int,
-        shutdown: SyncEvent,
-        source_file: SourceFile,
-        active_event: SyncEvent,
-        saving_queue: "Queue[str]",
+            self,
+            process_list: list[psutil.Process],
+            process_list_lock: SyncLock,
+            model: Model,
+            model_lock: SyncLock,
+            data_observer: DataObserver,
+            process_count: int,
+            shutdown: SyncEvent,
+            source_file: SourceFile,
+            active_event: SyncEvent,
+            saving_queue: "Queue[str]",
     ):
         self._source_file = source_file
         self._saving_queue = saving_queue
@@ -59,9 +58,6 @@ class ActiveDataCollectionThread(PassiveDataCollectionThread):
         try:
             cmdline: List[str] = process_point.process.cmdline()
             path: str = process_point.process.cwd()
-
-            if "cc1plus" not in cmdline:
-                return
 
             has_o: bool = False
             for line in cmdline:

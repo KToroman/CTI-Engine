@@ -54,18 +54,15 @@ class HierarchyProcess:
                     repeat = False
         except KeyboardInterrupt:
             pass
-        self.__data_fetcher.__del__()
+
 
     def start(self) -> None:
-        print("[HierarchyProcess]    started")
         self.__process = Process(target=self.__run_process)
         self.__process.start()
 
     def stop(self) -> None:
-        self.__data_fetcher.__del__()
         if self.__process.is_alive():
             self.__process.join()
-        print("[HierarchyProcess]  stopped")
 
     def is_alive(self) -> bool:
         return self.__process.is_alive()

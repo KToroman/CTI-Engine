@@ -35,7 +35,6 @@ class GUICommunicationManager:
         self.finished_time: float = 0
 
     def start(self) -> None:
-        print("[StatusAndErrorThread]   started.")
         self.__thread = Thread(target=self.__run)
         self.__thread.start()
 
@@ -111,4 +110,3 @@ class GUICommunicationManager:
 
     def stop(self) -> None:
         self.__thread.join()
-        print("[StatusAndErrorThread]   stopped.")

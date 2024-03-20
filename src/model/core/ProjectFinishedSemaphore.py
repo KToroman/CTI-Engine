@@ -45,7 +45,5 @@ class ProjectFinishedSemaphore:
             self.__semaphore_list.remove(self)
 
             self.__project_queue.put(self.project_name)
-            print("project finished " +
-                  self.project_name)
             self.__visualize_event.emit()  # type: ignore[attr-defined]
             self.__project_finished_event.set()

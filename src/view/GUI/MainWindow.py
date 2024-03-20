@@ -150,10 +150,8 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.menu_bar.set_stylesheet(selected_style)
 
     def visualize(self) -> None:
-        print(f"[MainWindow]    visualizing...")
         """displays the data contained in that model to the user."""
         project_name: str = self.project_queue.get()
-        print(f"[MainWindow]    project visualizing: {project_name}")
         project: ProjectReadViewInterface = self.__model.get_project_by_name(project_name)
         self.project_time = project.get_project_time()
         self.displayed_project = project_name
@@ -203,8 +201,8 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         for cfile in cfile_list:
             self.current_table.add_active_data(self.__create_displayable(cfile, 1))
         # Update other Widgets
-        for row in self.current_table.rows:
-            row.connected = False
+        #for row in self.current_table.rows:
+        #    row.connected = False
         self.__setup_connections()
         self.status_bar.update_status(StatusSettings.FINISHED, self.current_table.insertion_point)
 
@@ -281,7 +279,8 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
             x_values.append(c - self.project_time)
         ram_y_values: List[float] = cfile.get_metrics(MetricName.RAM)
         cpu_y_values: List[float] = cfile.get_metrics(MetricName.CPU)
-        runtime: List[float] = [cfile.get_total_time()]
+        runtime: List[float] = list()
+        runtime.append(cfile.get_total_time())
         color: str = self.__generate_random_color()
         ram_plot: Plot = Plot(name, color, x_values, ram_y_values)
         cpu_plot: Plot = Plot(name, color, x_values, cpu_y_values)
@@ -310,7 +309,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     def __setup_connections(self) -> None:
         """Sets up connections between table and graph widgets."""
         for row in self.current_table.rows:
-            if not row.connected:
+            if not row.connected and row.checkbox.isEnabled():
                 row.checkbox.stateChanged.connect(
                     lambda state, current_row=row: self.__update_visibility(current_row.displayable))
                 row.connected = True
@@ -336,7 +335,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         """Shows or hides plots of given displayable."""
         visibility: bool = False
         for visible_displayable in self.__visible_plots:
-            if visible_displayable.name == displayable.name:
+            if visible_displayable.name == displayable.name and displayable.runtime_plot.y_values[0] != 0:
                 visibility = True
                 self.__visible_plots.remove(visible_displayable)
                 remove_runnable: RemoveRunnable = RemoveRunnable(ram_graph=self.ram_graph_widget,

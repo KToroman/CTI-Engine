@@ -21,5 +21,3 @@ class TableRow:
         self.name_button.setFixedWidth(200)
         self.name_button.setToolTip(displayable.name)
         self.connected: bool = False
-
-

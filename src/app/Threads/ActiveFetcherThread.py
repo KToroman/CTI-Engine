@@ -40,7 +40,6 @@ class ActiveFetcherThread:
         self.__visualise_project_queue = visualise_project_queue
 
     def start(self) -> None:
-        print("[ActiveFetcherThread]    started")
         self.__thread = Thread(target=self.__run)
         self.__thread.start()
 
@@ -53,11 +52,12 @@ class ActiveFetcherThread:
 
     def __start_new_measurement(self) -> None:
         source_file_name: str = self.__source_file_name_queue.get(True, 10)
+
         if source_file_name == None:
             timeout_error: TimeoutError = TimeoutError(
                 "[ActiveFetcherThread] Active Fetcher Thread could not access its source-file-queue."
             )
-            self.__error_queue.put(timeout_error, True, 15)
+            self.__error_queue.put(timeout_error, True, 1)
             return
         active_data_fetcher: ActiveDataFetcher
         with ActiveDataFetcher(
@@ -69,35 +69,25 @@ class ActiveFetcherThread:
             model_lock=self.__model_lock,
             hierarchy_queue=Queue(),
         ) as active_data_fetcher:
-            print(f"building {source_file_name}")
             self.measure_source_file(active_data_fetcher)
 
-        print(f"[ActiveFetcherThread]   finished building")
         with self.__model_lock:
-            print("lock acquired")
             curr_proj = self.__model.current_project
             if curr_proj is None:
                 return
             try:
                 self.__saver_queue.put(curr_proj.name, block=False)
             except queue.Full:
-                print(f"[ActiveFetcherThread]    Couldn't add to saver; Saver unavailable")
-        print("[ActiveFetcherThread]   finished active")
+                pass
         self.__visualise_project_queue.put(curr_proj.get_project_name())
         self.__active_measurement_active.clear()
         self.__visualise_signal.emit()  # type: ignore[attr-defined]
 
     def measure_source_file(self, active_data_fetcher: ActiveDataFetcher) -> None:
         actively_fetching: bool = True
-        while (
-            self.__active_measurement_active.is_set()
-            and actively_fetching
-            and (not self.__shutdown_event.is_set())
-        ):
+        while (self.__active_measurement_active.is_set() and actively_fetching and (not self.__shutdown_event.is_set())):
             actively_fetching = active_data_fetcher.update_project()
 
     def stop(self) -> None:
-        print("[ActiveFetcherThread]    stop signal sent.")
         if self.__thread.is_alive():
             self.__thread.join()
-        print("[ActiveFetcherThread]    stopped.")

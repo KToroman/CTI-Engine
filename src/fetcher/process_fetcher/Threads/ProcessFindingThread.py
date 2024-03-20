@@ -45,13 +45,11 @@ class ProcessFindingThread:
         self.__finding_list.clear()
 
     def start(self) -> None:
-        print("[ProcessFindingThread]    started")
         self.__thread = Thread(target=self.__run)
         self.__thread.start()
 
     def stop(self) -> None:
         self.__thread.join()
-        print("[ProcessFindingThread]    stopped")
 
     def set_work(self, pid_list: Optional[List[str]]) -> None:
         with self.__pid_list_lock:
