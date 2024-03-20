@@ -32,9 +32,7 @@ class CompilingTool(BuilderInterface):
         self.source_file: SourceFile = source_file
         self.__header_error_queue = header_error_queue
         self.__build_path = path
-        if self.source_file.compile_command == "":
-            for header in self.source_file.headers:
-                self.__header_error_queue.put(header.get_name())
+        self.__curr_project_dir = curr_project_dir
         self.__file_builder = FileBuilder(curr_project_dir=curr_project_dir,
                                           compile_command=self.source_file.compile_command,
                                           source_file_name=source_file.get_name(),
@@ -72,5 +70,5 @@ class CompilingTool(BuilderInterface):
         return self.__header_iterator.get_next_header()
 
     def clear_directory(self) -> None:
-        path: Path = (Path(self.__build_path) / "Active_Mode_Build" / "temp").resolve()
+        path: Path = (Path(self.__build_path) / Path(self.__curr_project_dir) /"Active_Mode_Build" / "temp").resolve()
         shutil.rmtree(path)

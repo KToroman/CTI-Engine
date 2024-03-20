@@ -221,3 +221,4 @@ class HierarchyFetcher(FetcherInterface):
 
     def __del__(self) -> None:
         self.worker_thread_pool.shutdown(wait=True, cancel_futures=True)
+        print("[HierarchyFetcher]   Workers shut down")

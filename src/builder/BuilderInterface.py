@@ -15,3 +15,7 @@ class BuilderInterface(Protocol):
     def get_next_header(self) -> Header:
         """fetches the next header waiting to be built."""
         raise NotImplementedError
+
+    def clear_directory(self) -> None:
+        """Clears the build directory"""
+        raise NotImplementedError

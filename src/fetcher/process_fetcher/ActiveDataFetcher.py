@@ -205,4 +205,5 @@ class ActiveDataFetcher(FetcherInterface):
         for thread in self.__data_collector_list:
             thread.stop()
         self.__building_thread.stop()
+        self.__compiling_tool.clear_directory()
         return False
