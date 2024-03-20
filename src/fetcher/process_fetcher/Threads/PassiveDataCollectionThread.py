@@ -7,7 +7,7 @@ from multiprocessing.synchronize import Event as SyncEvent
 from multiprocessing.synchronize import Lock as SyncLock
 
 import psutil
-from psutil import NoSuchProcess
+from psutil import NoSuchProcess, AccessDenied
 
 from src.fetcher.process_fetcher.process_observer.metrics_observer.DataObserver import DataObserver
 from src.model.Model import Model
@@ -107,7 +107,8 @@ class PassiveDataCollectionThread:
         except NoSuchProcess:
             return
         except FileNotFoundError:
-
             return
         except PermissionError:
+            return
+        except AccessDenied:
             return

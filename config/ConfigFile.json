@@ -1,8 +1,8 @@
 {
-  "process_finder_count": 1,
-  "process_collector_count": 1,
-  "fetcher_count": 1,
-  "fetcher_process_count": 15,
+  "process_finder_count": 5,
+  "process_collector_count": 10,
+  "fetcher_count": 10,
+  "fetcher_process_count": 10,
   "hierarchy_fetcher_worker_count": 16,
   "active_build_dir_path": null,
   "saves_path": null

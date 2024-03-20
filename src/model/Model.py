@@ -25,7 +25,7 @@ class Model(ModelReadViewInterface):
         self.current_project: Optional[Project] = None
         self.projects: List[Project] = list()
         self.semaphore_list: List[ProjectFinishedSemaphore] = list()
-        self.headers: Dict[str, Header] = dict()
+        
 
     def insert_datapoint(self, data_point: DataEntry):
         """inserts datapoint to sourcefile according to their paths to the current project"""
@@ -34,20 +34,24 @@ class Model(ModelReadViewInterface):
         cfile: CFile = self.current_project.get_sourcefile(data_point.path)
         cfile.data_entries.append(data_point)
         self.current_project.add_to_delta(
-            path=cfile.path, parent_path="", data_entry=data_point, hierarchy_level=0
+            path=cfile.path, parent_or_compile_command="", data_entry=data_point, hierarchy_level=0
         )
 
-    def insert_datapoint_header(self, source_file_path: str, data_entry: DataEntry):
-        path = source_file_path + data_entry.path
-        header = self.headers.get(path, None)
+    def insert_datapoint_header(self, data_entry: DataEntry):
+        if self.current_project is None:
+            raise ProjectNotFoundException
+        header = self.current_project.get_header_by_name(data_entry.path)
         if header is None:
             raise CFileNotFoundError
         header.data_entries.append(data_entry)
         if self.current_project is None:
             raise ProjectNotFoundException
+        parent = header.parent
+        if parent is None:
+            raise CFileNotFoundError
         self.current_project.add_to_delta(
             path=header.path,
-            parent_path=header.parent.path,
+            parent_or_compile_command=parent.path,
             data_entry=data_entry,
             hierarchy_level=header.hierarchy_level,
         )

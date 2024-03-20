@@ -8,14 +8,14 @@ class DataBaseEntry:
     def __init__(
         self,
         path: str,
-        parent: str,
+        parent_or_compile_command: str,
         timestamp: Optional[float],
         metrics: Optional[List[Metric]],
         hierarchy_level: int,
     ):
         self.path: str = path
-        self.parent: str = parent
+        self.parent_or_compile_command: str = parent_or_compile_command
         self.timestamp: Optional[float] = timestamp
         self.metrics: Optional[List[Metric]] = metrics
-        assert hierarchy_level <= 3 and hierarchy_level >= 0
+        assert hierarchy_level < 3 and hierarchy_level >= 0
         self.hierarchy_level: int = hierarchy_level

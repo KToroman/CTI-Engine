@@ -13,3 +13,5 @@ class SourceFile(CFile):
         self.path: str = path
         self.error: bool = False
         self.compile_command: str = ""
+        self.hierarchy_level: int = 0
+        self.parent = None

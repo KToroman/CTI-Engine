@@ -49,6 +49,7 @@ class HierarchyProcess:
                         print("[HierarchyProcess]   could not find the compile-commands.json file for project: " +
                               self.__current_work)
                         repeat = False
+                        self.__data_fetcher.source_file_queue.put(SourceFile("fin"))
                     self.__current_work = ""
                     repeat = False
         except KeyboardInterrupt:

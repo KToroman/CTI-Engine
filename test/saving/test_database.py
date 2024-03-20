@@ -17,8 +17,8 @@ import pytest
 path = "saves/project_name/project_name_DataBase"
 def test_db():
     model = Model()
-    saver = SaveToDatabase("saves", Lock(), model)
-    saver.__saves_path = "saves"
+    saver = SaveToDatabase("test/saves", Lock(), model)
+    saver.__saves_path = "test/saves"
     delta: List[DataBaseEntry] = list()
     metrics: List[Metric] = [Metric(40, MetricName.RAM), Metric(300, MetricName.CPU)]
     delta.append(DataBaseEntry("testfile", "parent", 0.6, metrics, 0))
@@ -26,8 +26,17 @@ def test_db():
     model.add_project(project, None)
     project.delta_entries = delta
     saver.save_project(project.name)
-    saves_path = saver.__saves_path
-    db = Rdict(path)
+    db = Rdict("test/saves/" + project.path_to_save)
+    project_path = "test/saves/" + project.path_to_save
+    iter: RdictIter = db.iter()
+    iter.seek_to_first()
+    while iter.valid():
+        print("next entry")
+        key = iter.key()
+        print(key)
+        value = iter.value()
+        print("new item")
+        iter.next()
     value: Tuple[float, List[Metric]] = db["testfile" + "\n" + "parent" + "\n" + "0"]  # type: ignore
     
     assert value[0] == 0.6
@@ -38,17 +47,19 @@ def test_db():
     print("correct metric was saved")
     db.close()
     print("[basic save test]    passed")
+    return project_path
 
 class SignalMock():
     def emit(self):
         print("signal emitted")
 
 def test_loading():
+    project_path = test_db()
     model = Model()
     model_lock = Lock()
     signal_mock = SignalMock()
     loader = FileLoader(path, model=model, model_lock=model_lock, visualize_signal=signal_mock, project_queue=Queue())
-    loader.__path = path
+    loader.__path = project_path
     assert not loader.update_project()
     print(model.projects[0].name)
     assert model.projects[0].name == "saves/project_name/project_name"
@@ -68,13 +79,6 @@ if __name__ == "__main__":
     test_loading()
     test_split()
     db = Rdict("/common/homes/students/upufw_toroman/PSE/saves/simox_2024-03-18/simox_2024-03-18_DataBase")
-    iter: RdictIter = db.iter()
-    iter.seek_to_first()
-    while iter.valid():
-        print("next entry")
-        key = iter.key()
-        value = iter.value()
-        print("new item")
-        iter.next()
+    
     print("[SaveToDataBaseTest]     concluded tests")
     Rdict.destroy(path)

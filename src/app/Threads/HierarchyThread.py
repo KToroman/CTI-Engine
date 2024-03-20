@@ -6,6 +6,7 @@ from multiprocessing.synchronize import Event as SyncEvent
 from src.app.Threads.HierarchyProcess import HierarchyProcess
 from src.fetcher.hierarchy_fetcher.HierarchyFetcher import HierarchyFetcher
 from src.model.Model import Model
+from src.model.core.CFile import CFile
 from src.model.core.Project import Project
 from src.model.core.SourceFile import SourceFile
 from multiprocessing.synchronize import Lock as SyncLock
@@ -32,9 +33,10 @@ class HierarchyThread:
         while not self.__shutdown.is_set():
             if not self.__hierarchy_work_queue.empty():
                 if not self.__process.is_alive():
+                    self.__process_shutdown.clear()
                     self.__process.start()
             if not self.source_file_queue.empty():
-                data = self.source_file_queue.get()
+                data: SourceFile = self.source_file_queue.get()
                 if self.__current_work == "":
                     self.__current_work = data.path
                     self.__fetching_hierarchy.set()
@@ -50,10 +52,19 @@ class HierarchyThread:
                     continue
                 time.sleep(0.01)
                 with self.__model_lock:
-                    source_file = self.__model.get_project_by_name(self.__current_work).get_sourcefile(data.path)
-                    source_file.headers = data.headers
-                    source_file.compile_command = data.compile_command
+                    proj: Project = self.__model.get_project_by_name(self.__current_work)
+                    source_file: SourceFile = proj.update_source_file(data.path, data.compile_command)
+                    print("[HierarchyThread]    updated source file to project")
+                    self.__update_headers(proj, data, 1)
                     source_file.error = data.error
+
+    def __update_headers(self, project: Project, parent: CFile, hierarchy_level: int) -> None:
+        if hierarchy_level > 2:
+            return
+        for header in parent.headers:
+            project.update_header(header.get_name(), parent.get_name(), hierarchy_level)
+            self.__update_headers(project, header, hierarchy_level + 1)
+
 
     def start(self):
         print("[HierarchyThread]    started")

@@ -68,7 +68,7 @@ class App(AppRequestsInterface):
         self.status_queue: Queue = status_queue
         self.__project_queue: Queue = project_queue
         self.__hierarchy_fetcher_work_queue: Queue = Queue()
-        self.__file_saver_work_queue: Queue = Queue(2)
+        self.__file_saver_work_queue: Queue = Queue()
         self.__pid_queue: Queue = Queue()
         self.queue_list.extend(
             [
