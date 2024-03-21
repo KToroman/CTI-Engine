@@ -1,3 +1,4 @@
+from copy import deepcopy
 from multiprocessing import Queue, Lock
 from threading import Thread
 from multiprocessing.synchronize import Event as SyncEvent

@@ -52,8 +52,10 @@ class FileSaverThread:
                 continue
             work_list_index += 1
             self.__remove_work()
-            project = self.__model.get_project_by_name(work)
-            self.__saver.save_project(project)
+            with self.__model_lock:
+                    project = self.__model.get_project_by_name(self.__model.get_current_project_name())
+                    project_copy = deepcopy(project)
+            self.__saver.save_project(project_copy)
             time.sleep(10)
 
     def add_work(self, project_name: str) -> None:
