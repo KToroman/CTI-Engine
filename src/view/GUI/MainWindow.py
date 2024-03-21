@@ -275,8 +275,11 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         cpu_peak: float = cfile.get_max(MetricName.CPU)
         # Create Graph Plots
         x_values: List[float] = list()
-        for c in cfile.get_timestamps():
-            x_values.append(c - self.project_time)
+        if cfile.parent is not None:
+            pass
+        else:
+            for c in cfile.get_timestamps():
+                x_values.append(c - self.project_time)
         ram_y_values: List[float] = cfile.get_metrics(MetricName.RAM)
         cpu_y_values: List[float] = cfile.get_metrics(MetricName.CPU)
         runtime: List[float] = list()

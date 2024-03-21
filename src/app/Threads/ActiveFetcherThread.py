@@ -62,6 +62,8 @@ class ActiveFetcherThread:
             )
             self.__error_queue.put(timeout_error, True, 1)
             return
+
+        self.__model.current_project.current_sourcefile = source_file_name
         active_data_fetcher: ActiveDataFetcher
         with ActiveDataFetcher(
             source_file_name=source_file_name,

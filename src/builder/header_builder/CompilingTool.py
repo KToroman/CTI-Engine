@@ -14,7 +14,7 @@ from subprocess import CompletedProcess, CalledProcessError
 class CompilingTool(BuilderInterface):
     """Class for building the Header files included in a Source File"""
 
-    DEFAULT_HEADER_DEPTH: int = 1
+    DEFAULT_HEADER_DEPTH: int = 2
 
     def __init__(self,
                  curr_project_dir: str,

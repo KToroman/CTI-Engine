@@ -74,9 +74,11 @@ class ActiveDataCollectionThread(PassiveDataCollectionThread):
                     break
             if not has_o:
                 return
+
             entry: DataEntry = DataEntry(
                 path, process_point.timestamp, process_point.metrics
             )
+            print("entry made for " + path.split("/")[-1])
             self._add_data_entry(entry)
         except NoSuchProcess:
             return

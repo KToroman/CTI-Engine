@@ -110,7 +110,7 @@ class ActiveDataFetcher(FetcherInterface):
                     self.__finished_event.set()
                     self.__building_event.clear()
                     break
-                model_header = self.__model.current_project.get_header_by_name(header)
+                model_header = self.__model.current_project.get_header(header)
                 if model_header is not None:
                     model_header.error = True
             for finder in self.__process_finder_list:
@@ -123,7 +123,8 @@ class ActiveDataFetcher(FetcherInterface):
         else:
             return True
 
-    # enter and exit define a context manager (with). each instance of ActiveDataFetcher should only exist in one with-Context
+    # enter and exit define a context manager (with).
+    # each instance of ActiveDataFetcher should only exist in one with-Context
 
     def __enter__(self) -> Self:
         # required threads should be started here
@@ -187,12 +188,6 @@ class ActiveDataFetcher(FetcherInterface):
         )
         self.__building_thread.start()
         return self
-
-    def get_header(self, name: str, cfile: CFileReadViewInterface) -> CFileReadViewInterface:
-        if name.split("/")[-1].split(".")[0] == cfile.get_name().split("/")[-1].split(".")[0]:
-            return cfile
-        for header in cfile.get_headers():
-            self.get_header(name, header)
 
     def __exit__(self, exc_type: Any, exc_val: Any, traceback: Any) -> typing_extensions.Literal[False]:
         # required threads should be stopped here

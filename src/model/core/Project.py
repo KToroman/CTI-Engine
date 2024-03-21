@@ -32,6 +32,7 @@ class Project(ProjectReadViewInterface):
         self.delta_entries: List[DataBaseEntry] = list()
         self.count_headers = 0
         self.__failed: bool = False
+        self.current_sourcefile: str = ""
 
     def get_sourcefile(self, name: str) -> SourceFile:
         cfile = self.file_dict.get_cfile_by_name(name)
@@ -67,29 +68,17 @@ class Project(ProjectReadViewInterface):
         for source_files in self.source_files:
             source_files.error = True
 
-    def update_header(self, header_path: str, parent_path: str, hierarchy_level: int):
-        header = self.get_header_by_name(header_path)
-        if header.parent is not None and header.parent.path != parent_path:
-            header = Header(header_path, None, 1)
-        parent = self.get_unkown_cfile(
-            path=parent_path, hierarchy_level=hierarchy_level-1)
-        header.parent = parent
-        if parent.headers:
-            if not self.__header_in_parent(header, parent):
-                parent.headers.append(header)
-        else:
-            parent.headers.append(header)
-        header.hierarchy_level = hierarchy_level
-        self.add_to_delta(hierarchy_level=hierarchy_level, path=header.path,
+    def update_headers(self, header: Header, parent: CFile, hierarchy: int):
+        if hierarchy > 2:
+            return
+        new_header = Header(header.path, parent, hierarchy)
+        parent.headers.append(new_header)
+        self.file_dict.add_file(new_header)
+        self.add_to_delta(hierarchy_level=hierarchy, path=new_header.path,
                           parent_or_compile_command=parent.path,
                           data_entry=None)
-
-    def __header_in_parent(self, header_param: CFile, parent: CFile) -> bool:
-        for header in parent.headers:
-            if header.path == header_param.path:
-                return True
-        return False
-
+        for headers in header.headers:
+            self.update_headers(headers, new_header, hierarchy + 1)
 
 
     def update_source_file(self, path, compile_command: str) -> CFile:
@@ -134,3 +123,12 @@ class Project(ProjectReadViewInterface):
 
     def __str__(self) -> str:
         return f"<Project '{self.name}' with dir '{self.working_dir}'>"
+
+    def get_header(self, name: str):
+        for header in self.get_sourcefile(self.current_sourcefile).headers:
+            if header.get_name() == name:
+                return header
+            for headers in header.get_headers():
+                if headers.get_name() == name:
+                    return headers
+
