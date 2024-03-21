@@ -46,7 +46,6 @@ class CompilingTool(BuilderInterface):
         if not self.__header_iterator.has_next_header():
             return False
         header: Header = self.__header_iterator.pop_next_header()
-
         self.build_header(header)
 
         return self.__header_iterator.has_next_header()

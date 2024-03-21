@@ -79,7 +79,7 @@ class PassiveDataCollectionThread:
         time.sleep(0.01)
         with self._model_lock:
             self._model.insert_datapoint(data_entry)
-            self.time_till_false = time.time() + 45
+            self.time_till_false = time.time() + 60
 
     def _make_entry(self, process_point: ProcessPoint) -> None:
         try:

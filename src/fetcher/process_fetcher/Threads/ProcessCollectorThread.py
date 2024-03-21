@@ -114,7 +114,7 @@ class ProcessCollectorThread:
                 except queue.Full:
                     pass
             self.__counter += 1
-            self.time_till_false = time.time() + 60
+            self.time_till_false = time.time() + 90
             with self.__process_list_lock:
                 self.__process_list.append(process)
             if not self.__fetcher[self.__counter % len(self.__fetcher)].has_work():
