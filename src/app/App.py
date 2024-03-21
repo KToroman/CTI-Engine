@@ -101,9 +101,7 @@ class App(AppRequestsInterface):
         self.config: Configuration = Configuration.load(App.__get_config_path())
 
         # Saving
-        self.saver: SaveInterface = SaveToDatabase(
-            self.config.saves_path, self.__model_lock, self.__model
-        )
+        self.saver: SaveInterface = SaveToJSON(self.config.saves_path)
 
         # Passive Fetching:
         self.__passive_data_fetcher: PassiveDataFetcher = PassiveDataFetcher(
@@ -131,14 +129,15 @@ class App(AppRequestsInterface):
             self.fetching_passive_data,
         )
 
-
     def prepare_threads(self) -> None:
         self.hierarchy_process: HierarchyProcess = HierarchyProcess(
             self.hierarchy_process_shutdown,
             self.__error_queue,
             self.__hierarchy_fetcher_work_queue,
-            self.__hierarchy_fetching_event, self.source_file_queue,
-            self.__pid_queue, max_workers=self.config.hierarchy_fetcher_worker_count
+            self.__hierarchy_fetching_event,
+            self.source_file_queue,
+            self.__pid_queue,
+            max_workers=self.config.hierarchy_fetcher_worker_count,
         )
         self.hierarchy_thread: HierarchyThread = HierarchyThread(
             self.shutdown_event,

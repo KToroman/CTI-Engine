@@ -14,13 +14,18 @@ from src.model.Model import Model
 from src.saving.SaveInterface import SaveInterface
 
 
-
-
 class FileSaverThread:
     """Manages the thread which saves projects from model"""
 
-    def __init__(self, shutdown_event: SyncEvent, model: Model, saver: SaveInterface, model_lock: SyncLock,
-                 finished_project: SyncEvent, work_queue: "Queue[str]") -> None:
+    def __init__(
+        self,
+        shutdown_event: SyncEvent,
+        model: Model,
+        saver: SaveInterface,
+        model_lock: SyncLock,
+        finished_project: SyncEvent,
+        work_queue: "Queue[str]",
+    ) -> None:
         self.__thread: Thread
         self.__shutdown = shutdown_event
         self.__saver: SaveInterface = saver
@@ -29,7 +34,9 @@ class FileSaverThread:
 
         self.__finished_project = finished_project
 
-        self.__work_list: List[str] = list()  # TODO endless capacity not very clean for work queues
+        self.__work_list: List[str] = (
+            list()
+        )  # TODO endless capacity not very clean for work queues
 
         self.__model = model
         self.__model_lock = model_lock
@@ -45,7 +52,8 @@ class FileSaverThread:
                 continue
             work_list_index += 1
             self.__remove_work()
-            self.__saver.save_project(project_name=work)
+            project = self.__model.get_project_by_name(work)
+            self.__saver.save_project(project)
             time.sleep(10)
 
     def add_work(self, project_name: str) -> None:
