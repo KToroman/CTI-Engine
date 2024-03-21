@@ -88,19 +88,15 @@ class FileLoader(FetcherInterface):
                     parent_or_compile_command, hierarchy, project)
             found_cfile.parent = parent
 
-    def __check_parent(self, found_header: CFile, parent_or_compile_command: str, hierarchy: int, project: Project) -> CFile:
-        new_header: CFile = found_header
+    def __check_parent(self, found_header: CFile, parent_or_compile_command: str, hierarchy: int, project: Project):
         parent = self.__all_cfiles.get(parent_or_compile_command, None)
         if parent is None:
             parent = self.__add_parent(
                 parent_or_compile_command, hierarchy, project)
         if found_header.hierarchy_level != hierarchy or parent.path != parent_or_compile_command:
-            new_header = Header(found_header.path, parent, hierarchy)
-            parent.headers.append(new_header)
+            parent.headers.append(found_header)
 
     def __add_data_entry(self, cfile: CFile, value: List[Any], timestamp:float):
-
-
         data_entry = self.__extract_dataentry(
             value=value, cfile_path=cfile.path, timestamp=timestamp)
         if data_entry is None:
@@ -126,10 +122,8 @@ class FileLoader(FetcherInterface):
                 if parent is None:
                     parent = self.__add_parent(
                         parent_or_compile_command, hierarchy, project)
-
             new_header = Header(path=path, parent=parent,
                                 hierarchy_level=hierarchy)
-            # TODO append header only when parent path is not ""
             if parent is not None:
                 parent.headers.append(new_header)
                 project.file_dict.add_file(new_header)
