@@ -74,6 +74,8 @@ class Project(ProjectReadViewInterface):
         parent = self.get_unkown_cfile(
             path=parent_path, hierarchy_level=hierarchy_level-1)
         header.parent = parent
+        if parent.get_name().split("/")[-1] == "Model.h":
+            print(header.get_name() + "model parent")
         if not self.__header_in_parent(header, parent):
             parent.headers.append(header)
         header.hierarchy_level = hierarchy_level
@@ -81,9 +83,9 @@ class Project(ProjectReadViewInterface):
                           parent_or_compile_command=parent.path,
                           data_entry=None)
 
-    def __header_in_parent(self, header: CFile, parent: CFile) -> bool:
-        for header in parent.get_headers():
-            if header.get_name() == header.get_name():
+    def __header_in_parent(self, header_param: CFile, parent: CFile) -> bool:
+        for header in parent.headers:
+            if header.path == header_param.path:
                 return True
         return False
 
