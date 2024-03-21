@@ -52,7 +52,6 @@ class Model(ModelReadViewInterface):
         """
         header = self.current_project.get_header(data_entry.path)
         header.data_entries.append(data_entry)
-        print("added entry " + data_entry.path.split("/")[-1])
         self.current_project.add_to_delta(
             path=header.path,
             parent_or_compile_command=header.parent.path,

@@ -174,7 +174,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         displayable_list: List[DisplayableHolder] = []
         for cfile in cfile_list:
             file_count += 1
-            displayable_list.append(self.__create_displayable(cfile, 0))
+            displayable_list.append(self.__create_displayable(cfile, 0, None))
         self.current_table.insert_values(displayables=displayable_list)
         self.lower_limit.setMaximum(file_count)
         self.upper_limit.setMaximum(file_count)
@@ -198,8 +198,11 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         for cfile in active_file.get_headers():
             if cfile.get_headers():
                 cfile_list.extend(cfile.get_headers())
+        for item in self.current_table.items:
+            if item.name == self.current_table.insertion_point:
+                color = item.row.displayable.runtime_plot.color
         for cfile in cfile_list:
-            self.current_table.add_active_data(self.__create_displayable(cfile, 1))
+            self.current_table.add_active_data(self.__create_displayable(cfile, 1, color))
         # Update other Widgets
         #for row in self.current_table.rows:
         #    row.connected = False
@@ -259,24 +262,31 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         else:
             self.status_bar.update_status(status, "")
 
-    def __create_displayable(self, cfile: CFileReadViewInterface, depth_p: int) -> DisplayableHolder:
+    def __create_displayable(self, cfile: CFileReadViewInterface, depth_p: int, color) -> DisplayableHolder:
         """turns given cfile into displayable"""
         depth = depth_p + 1
         if depth >= self.HIERARCHY_DEPTH or not cfile.get_headers():
-            return DisplayableHolder(self.__make_disp(cfile), [])
+            return DisplayableHolder(self.__make_disp(cfile, color), [])
         sub_disp_list: List[DisplayableInterface] = list()
         for header in cfile.get_headers():
-            sub_disp_list.append(self.__create_displayable(header, depth))
-        return DisplayableHolder(self.__make_disp(cfile), sub_disp_list)
+            sub_disp_list.append(self.__create_displayable(header, depth, color))
+        return DisplayableHolder(self.__make_disp(cfile, color), sub_disp_list)
 
-    def __make_disp(self, cfile: CFileReadViewInterface) -> Displayable:
+    def __make_disp(self, cfile: CFileReadViewInterface, color_param) -> Displayable:
         name: str = cfile.get_name()
         ram_peak: float = cfile.get_max(MetricName.RAM)
         cpu_peak: float = cfile.get_max(MetricName.CPU)
         # Create Graph Plots
         x_values: List[float] = list()
         if cfile.parent is not None:
-            pass
+            if cfile.parent.parent is not None:
+                time = cfile.parent.parent.get_min_timestamps()
+            else:
+                time = cfile.parent.get_min_timestamps()
+            x_values.append(time)
+            for i in range(cfile.get_timestamps().__len__()-1):
+                time += (cfile.get_timestamps()[i+1] - cfile.get_timestamps()[i])
+                x_values.append(time)
         else:
             for c in cfile.get_timestamps():
                 x_values.append(c - self.project_time)
@@ -284,7 +294,10 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         cpu_y_values: List[float] = cfile.get_metrics(MetricName.CPU)
         runtime: List[float] = list()
         runtime.append(cfile.get_total_time())
-        color: str = self.__generate_random_color()
+        if color_param is not None:
+            color = color_param
+        else:
+            color: str = self.__generate_random_color()
         ram_plot: Plot = Plot(name, color, x_values, ram_y_values)
         cpu_plot: Plot = Plot(name, color, x_values, cpu_y_values)
         runtime_plot: Plot = Plot(name, color, [], runtime)
