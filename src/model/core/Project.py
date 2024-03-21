@@ -31,6 +31,7 @@ class Project(ProjectReadViewInterface):
         self.path_to_save = f"{path_to_save}/{self.working_dir}/CTI_Engine_{time_stamp_str}"
         self.delta_entries: List[DataBaseEntry] = list()
         self.count_headers = 0
+        self.__failed: bool = False
 
     def get_sourcefile(self, name: str) -> SourceFile:
         cfile = self.file_dict.get_cfile_by_name(name)
@@ -38,7 +39,10 @@ class Project(ProjectReadViewInterface):
             cfile = SourceFile(path=name)
             self.file_dict.add_file(cfile)
             self.source_files.append(cfile)
+            if self.__failed:
+                cfile.error = True
         return typing.cast(SourceFile, cfile)
+
     def get_header_by_name(self, name: str) -> CFile:
         cfile = self.file_dict.get_cfile_by_name(name)
         if cfile is None:
@@ -58,6 +62,11 @@ class Project(ProjectReadViewInterface):
                 self.file_dict.add_file(cfile)
         return cfile
 
+    def set_failed(self):
+        self.__failed = True
+        for source_files in self.source_files:
+            source_files.error = True
+
     def update_header(self, header_path: str, parent_path: str, hierarchy_level: int):
         header = self.get_header_by_name(header_path)
         if header.parent is not None and header.parent.path != parent_path:
@@ -65,12 +74,19 @@ class Project(ProjectReadViewInterface):
         parent = self.get_unkown_cfile(
             path=parent_path, hierarchy_level=hierarchy_level-1)
         header.parent = parent
-        if header not in parent.headers:
+        if not self.__header_in_parent(header, parent):
             parent.headers.append(header)
         header.hierarchy_level = hierarchy_level
         self.add_to_delta(hierarchy_level=hierarchy_level, path=header.path,
                           parent_or_compile_command=parent.path,
                           data_entry=None)
+
+    def __header_in_parent(self, header: CFile, parent: CFile) -> bool:
+        for header in parent.get_headers():
+            if header.get_name() == header.get_name():
+                return True
+        return False
+
 
 
     def update_source_file(self, path, compile_command: str) -> CFile:

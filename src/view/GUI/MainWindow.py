@@ -181,7 +181,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         # Update other Widgets
         self.__setup_connections()
         self.status_bar.update_status(StatusSettings.FINISHED, project.get_project_name())
-        #self.menu_bar.project_buttons[len(self.menu_bar.project_buttons) - 1].setStyleSheet("background-color: #00FF00")
+        self.menu_bar.project_buttons[len(self.menu_bar.project_buttons) - 1].setStyleSheet("background-color: #00FF00")
 
     def __visualize_active(self, project: ProjectReadViewInterface) -> None:
         """Visualizes data from active mode."""

@@ -115,7 +115,8 @@ class Model(ModelReadViewInterface):
     def get_all_project_names(self) -> List[str]:
         return_list: List[str] = list()
         for project in self.projects:
-            return_list.append(project.name)
+            if not self.__project_name_in_semaphore(project.name):
+                return_list.append(project.name)
         return return_list
 
     def wait_for_project(self) -> None:
@@ -127,3 +128,9 @@ class Model(ModelReadViewInterface):
         if self.current_project is None:
             raise ProjectNotFoundException
         return self.current_project.name
+
+    def __project_name_in_semaphore(self, name: str) -> bool:
+        for semaphore in self.semaphore_list:
+            if semaphore.project_name == name:
+                return True
+        return False

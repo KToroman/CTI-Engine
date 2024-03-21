@@ -15,7 +15,8 @@ from multiprocessing.synchronize import Lock as SyncLock
 
 class HierarchyThread:
     def __init__(self, shutdown_event: SyncEvent, fetching_hierarchy: SyncEvent, source_file_queue: "Queue[SourceFile]",
-                 model: Model, model_lock: SyncLock, hierarchy_process: HierarchyProcess, hierarchy_work_queue: "Queue[Project]",
+                 model: Model, model_lock: SyncLock, hierarchy_process: HierarchyProcess,
+                 hierarchy_work_queue: "Queue[Project]",
                  process_shutdown: SyncEvent):
 
         self.__thread: Thread
@@ -48,10 +49,17 @@ class HierarchyThread:
                     self.__model.get_semaphore_by_name(self.__current_work).hierarchy_fetcher_set()
                     self.__current_work = ""
                     self.__fetching_hierarchy.clear()
-                    print(self.header)
                     self.__process_shutdown.set()
                     self.__process.stop()
-
+                    continue
+                if data.path == "ERROR":
+                    with self.__model_lock:
+                        self.__model.get_project_by_name(self.__current_work).set_failed()
+                    self.__model.get_semaphore_by_name(self.__current_work).hierarchy_fetcher_set()
+                    self.__current_work = ""
+                    self.__fetching_hierarchy.clear()
+                    self.__process_shutdown.set()
+                    self.__process.stop()
                     continue
                 time.sleep(0.01)
                 with self.__model_lock:
@@ -68,12 +76,13 @@ class HierarchyThread:
             self.__update_headers(project, typing.cast(SourceFile, header), hierarchy_level + 1)
             self.header += 1
 
-
     def start(self) -> None:
         self.__thread = Thread(target=self.__run_thread)
         self.__thread.start()
 
     def stop(self) -> None:
         self.__process_shutdown.set()
-        self.__process.stop()
-        self.__thread.join()
+        if self.__process.is_alive():
+            self.__process.stop()
+        if self.__thread.is_alive():
+            self.__thread.join()

@@ -67,6 +67,7 @@ class ActiveDataFetcher(FetcherInterface):
             )
         if model.current_project is None:
             raise ProjectNotFoundException
+
         self.__compiling_tool: BuilderInterface = CompilingTool(
             curr_project_dir=model.current_project.working_dir,
             source_file=self.__source_file,

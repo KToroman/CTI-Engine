@@ -52,7 +52,8 @@ class ActiveFetcherThread:
 
     def __start_new_measurement(self) -> None:
         source_file_name: str = self.__source_file_name_queue.get(True, 10)
-
+        if not source_file_name.endswith(".o"):
+            self.__error_queue.put(Exception("You can not build a single header!"))
         if source_file_name == None:
             timeout_error: TimeoutError = TimeoutError(
                 "[ActiveFetcherThread] Active Fetcher Thread could not access its source-file-queue."

@@ -12,16 +12,20 @@ from multiprocessing.synchronize import Lock as SyncLock
 
 
 class HierarchyProcess:
-    def __init__(self, shutdown_event: SyncEvent, data_fetcher: HierarchyFetcher, error_queue: "Queue[BaseException]",
-                 work_queue: "Queue[Project]", hierarchy_fetching_event: SyncEvent):
+    def __init__(self, shutdown_event: SyncEvent, error_queue: "Queue[BaseException]",
+                 work_queue: "Queue[Project]", hierarchy_fetching_event: SyncEvent,
+                 source_file_queue: "Queue[SourceFile]", pid_queue: "Queue[str]", max_workers: int):
         self.__process: Process = Process(target=self.__run_process)
         self.__shutdown = shutdown_event
-        self.__data_fetcher = data_fetcher
+        self.__data_fetcher = HierarchyFetcher
         self.__work_queue = work_queue
         self.__error_queue = error_queue
         self.__current_work: str = ""
         self.project: Project
         self.__hierarchy_fetching_event = hierarchy_fetching_event
+        self.max_workers = max_workers
+        self.__pid_queue = pid_queue
+        self.source_file_queue = source_file_queue
 
     def __run_process(self) -> None:
         try:
@@ -36,7 +40,7 @@ class HierarchyProcess:
                         if not self.__hierarchy_fetching_event.is_set():
                             if self.__current_work != "":
                                 self.__data_fetcher.source_file_queue.put(SourceFile(self.__current_work))
-                                self.__data_fetcher.source_file_queue.put(SourceFile("fin"))
+                                self.__data_fetcher.source_file_queue.put(SourceFile("ERROR"))
                             self.__current_work = ""
                             repeat = False
                             continue
@@ -57,11 +61,20 @@ class HierarchyProcess:
 
 
     def start(self) -> None:
+        self.__data_fetcher = HierarchyFetcher(
+            self.__hierarchy_fetching_event,
+            self.__shutdown,
+            self.source_file_queue,
+            self.__pid_queue,
+            max_workers=self.max_workers,
+        )
         self.__process = Process(target=self.__run_process)
         self.__process.start()
 
     def stop(self) -> None:
         if self.__process.is_alive():
+            self.__data_fetcher.__del__()
+
             self.__process.join()
 
     def is_alive(self) -> bool:

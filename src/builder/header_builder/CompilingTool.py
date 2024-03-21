@@ -33,6 +33,7 @@ class CompilingTool(BuilderInterface):
         self.__header_error_queue = header_error_queue
         self.__build_path = path
         self.__curr_project_dir = curr_project_dir
+
         self.__file_builder = FileBuilder(curr_project_dir=curr_project_dir,
                                           compile_command=self.source_file.compile_command,
                                           source_file_name=source_file.get_name(),
