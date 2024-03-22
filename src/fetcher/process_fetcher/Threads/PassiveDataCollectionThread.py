@@ -43,7 +43,8 @@ class PassiveDataCollectionThread:
                         self._make_entry(self._data_observer.observe(process))
                     else:
                         with self._process_list_lock:
-                            self._process_list.remove(process)
+                            if self._process_list:
+                                self._process_list.remove(process)
                         self._current_processes.remove(process)
                         self._is_full = False
                 except NoSuchProcess:

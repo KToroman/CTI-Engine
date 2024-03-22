@@ -26,7 +26,7 @@ class PassiveDataThread:
                 else:
                     self.__found_project.clear()
             else:
-                self.__data_fetcher.finish_fetching()
+                self.__data_fetcher.cancel()
                 self.__found_project.clear()
                 if self.__data_fetcher.workers_on:
                     self.__data_fetcher.stop()

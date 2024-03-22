@@ -5,7 +5,7 @@ import threading
 import time
 from typing import List
 
-from PyQt5.QtCore import QThreadPool, Qt, QObject, pyqtSignal, QThread
+from PyQt5.QtCore import QThreadPool, Qt, QObject, pyqtSignal, QThread, QPoint
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QInputDialog, QWidget, QHBoxLayout, QHeaderView, QTreeWidget, QLineEdit, QApplication
 
@@ -50,7 +50,7 @@ class TreeWidget(QTreeWidget):
         self.setSortingEnabled(True)
         self.sortByColumn(0, Qt.DescendingOrder)
         self.table_list: List[QTreeWidget] = list()
-        #self.header().sectionClicked.connect(lambda col: self.__sort_table(col))
+        self.header().sectionClicked.connect(lambda col: self.__sort_table(col))
 
     def insert_values(self, displayables: List[DisplayableHolder]) -> None:
         for displayable in displayables:
@@ -122,10 +122,10 @@ class TreeWidget(QTreeWidget):
 
     def highlight_row(self, name: str) -> None:
         """select the row for the given input string to highlight it in the table"""
-        for row in self.rows:
-            if (row.displayable.name == name.split("#")[0] and row.displayable.parent == name.split("#")[1] and
-                    row.displayable.source == name.split("#")[2]):
-                self.setCurrentItem(self.items[self.rows.index(row)])
+        for item in self.items:
+            if (item.row.displayable.name == name.split("#")[0] and item.row.displayable.parent == name.split("#")[1] and
+                    item.row.displayable.source == name.split("#")[2]):
+                self.setCurrentItem(item)
                 self.scrollToItem(self.currentItem())
                 break
 
@@ -138,7 +138,6 @@ class TreeWidget(QTreeWidget):
             if row.displayable.runtime_plot.y_values[0] != 0:
                 if row_count == last_checkbox:
                     self.in_row_loop = False
-                    break
                 row_count += 1
                 if not self.all_selected:
                     try:
@@ -156,7 +155,7 @@ class TreeWidget(QTreeWidget):
         """Receives two limits and selects checkboxes of rows inbetween them."""
         real_lower_limit: int = min(lower_limit, upper_limit)
         real_upper_limit: int = max(lower_limit, upper_limit)
-        self.toggle_all_rows()
+        #self.toggle_all_rows()
         time.sleep(0.3)
         last_checkbox: int = self.__find_last_checkbox()
         if real_upper_limit > last_checkbox:

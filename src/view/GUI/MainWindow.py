@@ -289,10 +289,13 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         # Create Graph Plots
         x_values: List[float] = list()
         if cfile.parent is not None:
+            time: float = 0
             if cfile.parent.parent is not None:
-                time = cfile.parent.parent.get_min_timestamps()
+                time = cfile.parent.parent.get_min_timestamps() - self.project_time
             else:
-                time = cfile.parent.get_min_timestamps()
+                time = cfile.parent.get_min_timestamps() - self.project_time
+            if time <= 0:
+                time = 0
             x_values.append(time)
             for i in range(cfile.get_timestamps().__len__() - 1):
                 time += (cfile.get_timestamps()[i + 1] - cfile.get_timestamps()[i])

@@ -50,7 +50,9 @@ class HierarchyFetcher(FetcherInterface):
             self.command_getter = CompileCommandGetter(self.project.working_dir)
             self.__open_timeout = 0
         except FileNotFoundError as e:
-            time.sleep(15)
+            timer: float = (time.time() + 15)
+            while not (time.time() > timer or self.__shutdown_event.is_set()) and self.__hierarchy_fetching_event.is_set():
+                time.sleep(0.1)
             if self.__open_timeout > 2:
                 self.__open_timeout = 0
                 raise e

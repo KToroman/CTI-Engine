@@ -66,7 +66,8 @@ class Project(ProjectReadViewInterface):
     def set_failed(self):
         self.__failed = True
         for source_files in self.source_files:
-            source_files.error = True
+            if source_files.compile_command == "":
+                source_files.error = True
 
     def update_headers(self, header: Header, parent: CFile, hierarchy: int):
         if hierarchy > 2:
@@ -109,8 +110,10 @@ class Project(ProjectReadViewInterface):
         '''returns project's first measured timestamp'''
         starting_points: list[float] = list()
         for source_file in self.source_files:
-            starting_points.append(source_file.get_min_timestamps())
+            if source_file.get_min_timestamps() > 0:
+                starting_points.append(source_file.get_min_timestamps())
         starting_points.sort()
+
         if starting_points:
             return starting_points[0]
         else:

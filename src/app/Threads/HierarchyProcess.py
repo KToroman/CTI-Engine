@@ -39,7 +39,11 @@ class HierarchyProcess:
                         if not self.__hierarchy_fetching_event.is_set():
                             if self.__current_work != "":
                                 self.source_file_queue.put(SourceFile(self.__current_work))
-                                self.source_file_queue.put(SourceFile("fin"))
+                                self.source_file_queue.put(SourceFile("cancel"))
+                                self.__current_work = ""
+                                if self.__work_queue.empty():
+                                    return
+
                             repeat = False
                             continue
                         self.__data_fetcher.project = self.project
