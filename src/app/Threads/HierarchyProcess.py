@@ -3,7 +3,6 @@ from multiprocessing import Queue, Process
 from threading import Thread
 from multiprocessing.synchronize import Event as SyncEvent
 
-
 from src.fetcher.hierarchy_fetcher.HierarchyFetcher import HierarchyFetcher
 from src.model.Model import Model
 from src.model.core.Project import Project
@@ -39,42 +38,41 @@ class HierarchyProcess:
 
                         if not self.__hierarchy_fetching_event.is_set():
                             if self.__current_work != "":
-                                self.__data_fetcher.source_file_queue.put(SourceFile(self.__current_work))
-                                self.__data_fetcher.source_file_queue.put(SourceFile("ERROR"))
-                            self.__current_work = ""
+                                self.source_file_queue.put(SourceFile(self.__current_work))
+                                self.source_file_queue.put(SourceFile("fin"))
                             repeat = False
                             continue
                         self.__data_fetcher.project = self.project
                         repeat = self.__data_fetcher.update_project()
                         if repeat:
-                              continue
+                            continue
                     except FileNotFoundError as e:
                         self.__error_queue.put(FileNotFoundError("could not find the compile-commands.json file"))
                         print("[HierarchyProcess]   could not find the compile-commands.json file for project: " +
                               self.__current_work)
                         repeat = False
-                        self.__data_fetcher.source_file_queue.put(SourceFile("fin"))
-                    self.__current_work = ""
+                        self.source_file_queue.put(SourceFile(self.__current_work))
+                        self.source_file_queue.put(SourceFile("ERROR"))
+
                     repeat = False
         except KeyboardInterrupt:
             pass
 
-
     def start(self) -> None:
-        self.__data_fetcher = HierarchyFetcher(
+        self.__data_fetcher: HierarchyFetcher = HierarchyFetcher(
             self.__hierarchy_fetching_event,
             self.__shutdown,
             self.source_file_queue,
             self.__pid_queue,
             max_workers=self.max_workers,
         )
-        self.__process = Process(target=self.__run_process)
+        self.__process = Process(target=self.__run_process, daemon=True)
         self.__process.start()
 
     def stop(self) -> None:
+        self.__current_work = ""
         if self.__process.is_alive():
             self.__data_fetcher.__del__()
-
             self.__process.join()
 
     def is_alive(self) -> bool:

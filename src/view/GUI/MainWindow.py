@@ -85,7 +85,8 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         # setting up main components
         self.current_table: TreeWidget = TreeWidget(self.active_mode_queue)
         self.menu_bar: MenuBar = MenuBar(load_path_queue, cancel_event, restart_event, self.project_queue,
-                                         self.visualize_signal, self.index_queue, self.change_table_signal)  # type: ignore[arg-type]
+                                         self.visualize_signal, self.index_queue,
+                                         self.change_table_signal)  # type: ignore[arg-type]
         self.metric_bar: MetricBar = MetricBar()
 
         self.__setup_resource_connections()
@@ -204,7 +205,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         for cfile in cfile_list:
             self.current_table.add_active_data(self.__create_displayable(cfile, 1, color))
         # Update other Widgets
-        #for row in self.current_table.rows:
+        # for row in self.current_table.rows:
         #    row.connected = False
         self.__setup_connections()
         self.status_bar.update_status(StatusSettings.FINISHED, self.current_table.insertion_point)
@@ -264,15 +265,24 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
     def __create_displayable(self, cfile: CFileReadViewInterface, depth_p: int, color) -> DisplayableHolder:
         """turns given cfile into displayable"""
+        parent: str = ""
+        source: str = ""
+        if cfile.parent is not None:
+            parent = cfile.parent.get_name()
+            if cfile.parent.parent is not None:
+                source = cfile.parent.parent.get_name()
+            else:
+                source = parent
+
         depth = depth_p + 1
         if depth >= self.HIERARCHY_DEPTH or not cfile.get_headers():
-            return DisplayableHolder(self.__make_disp(cfile, color), [])
+            return DisplayableHolder(self.__make_disp(cfile, color, parent, source), [])
         sub_disp_list: List[DisplayableInterface] = list()
         for header in cfile.get_headers():
             sub_disp_list.append(self.__create_displayable(header, depth, color))
-        return DisplayableHolder(self.__make_disp(cfile, color), sub_disp_list)
+        return DisplayableHolder(self.__make_disp(cfile, color, parent, source), sub_disp_list)
 
-    def __make_disp(self, cfile: CFileReadViewInterface, color_param) -> Displayable:
+    def __make_disp(self, cfile: CFileReadViewInterface, color_param, parent: str, source: str) -> Displayable:
         name: str = cfile.get_name()
         ram_peak: float = cfile.get_max(MetricName.RAM)
         cpu_peak: float = cfile.get_max(MetricName.CPU)
@@ -284,8 +294,8 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
             else:
                 time = cfile.parent.get_min_timestamps()
             x_values.append(time)
-            for i in range(cfile.get_timestamps().__len__()-1):
-                time += (cfile.get_timestamps()[i+1] - cfile.get_timestamps()[i])
+            for i in range(cfile.get_timestamps().__len__() - 1):
+                time += (cfile.get_timestamps()[i + 1] - cfile.get_timestamps()[i])
                 x_values.append(time)
         else:
             for c in cfile.get_timestamps():
@@ -298,10 +308,11 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
             color = color_param
         else:
             color: str = self.__generate_random_color()
-        ram_plot: Plot = Plot(name, color, x_values, ram_y_values)
-        cpu_plot: Plot = Plot(name, color, x_values, cpu_y_values)
-        runtime_plot: Plot = Plot(name, color, [], runtime)
-        return Displayable(name, ram_plot, cpu_plot, runtime_plot, ram_peak, cpu_peak, cfile.has_error())
+        ram_plot: Plot = Plot(name + "#" + parent + "#" + source, color, x_values, ram_y_values)
+        cpu_plot: Plot = Plot(name + "#" + parent + "#" + source, color, x_values, cpu_y_values)
+        runtime_plot: Plot = Plot(name + "#" + parent + "#" + source, color, [], runtime)
+        return Displayable(name, ram_plot, cpu_plot, runtime_plot, ram_peak, cpu_peak, cfile.has_error(), parent,
+                           source)
 
     def __generate_random_color(self) -> str:
         """Generates random saturated color between light blue and pink."""
@@ -351,7 +362,8 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         """Shows or hides plots of given displayable."""
         visibility: bool = False
         for visible_displayable in self.__visible_plots:
-            if visible_displayable.name == displayable.name and displayable.runtime_plot.y_values[0] != 0:
+            if (displayable.source == visible_displayable.source and visible_displayable.name == displayable.name and
+                    displayable.parent == visible_displayable.parent and displayable.runtime_plot.y_values[0] != 0):
                 visibility = True
                 self.__visible_plots.remove(visible_displayable)
                 remove_runnable: RemoveRunnable = RemoveRunnable(ram_graph=self.ram_graph_widget,

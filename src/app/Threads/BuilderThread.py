@@ -18,7 +18,7 @@ class BuilderThread:
         self.__grep_command_queue: "Queue[str]" = grep_command_queue
         self.__finished_event: SyncEvent = finished_event
 
-        self.__process: multiprocessing.Process = multiprocessing.Process(target=self.__run)
+        self.__process: multiprocessing.Process = multiprocessing.Process(target=self.__run, daemon=True)
 
     def __run(self) -> None:
         while not self.__shutdown_event.is_set():

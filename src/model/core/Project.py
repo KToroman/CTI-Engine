@@ -111,7 +111,10 @@ class Project(ProjectReadViewInterface):
         for source_file in self.source_files:
             starting_points.append(source_file.get_min_timestamps())
         starting_points.sort()
-        return starting_points[0]
+        if starting_points:
+            return starting_points[0]
+        else:
+            return 0
 
     def get_project_name(self) -> str:
         return self.name

@@ -54,13 +54,14 @@ class HierarchyThread:
                     self.__process.stop()
                     continue
                 if data.path == "ERROR":
+                    self.__process_shutdown.set()
                     with self.__model_lock:
                         self.__model.get_project_by_name(self.__current_work).set_failed()
                     self.__model.get_semaphore_by_name(self.__current_work).hierarchy_fetcher_set()
                     self.__current_work = ""
                     self.__fetching_hierarchy.clear()
-                    self.__process_shutdown.set()
                     self.__process.stop()
+                    time.sleep(1)
                     continue
                 time.sleep(0.01)
                 with self.__model_lock:

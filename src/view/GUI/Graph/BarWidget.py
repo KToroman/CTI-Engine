@@ -72,6 +72,7 @@ class BarWidget(QWidget):
 
     def on_pick(self, event: PickEvent) -> None:
         """Reacts to click on bar."""
+
         self.bar_clicked = event.artist.get_label().__str__()
         self.click_signal.emit()
 

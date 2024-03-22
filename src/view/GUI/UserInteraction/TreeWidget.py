@@ -48,9 +48,9 @@ class TreeWidget(QTreeWidget):
         self.header().setSectionResizeMode(0, QHeaderView.ResizeToContents)
         self.displayed_project: str = ""
         self.setSortingEnabled(True)
-        self.sortByColumn(0, Qt.AscendingOrder)
+        self.sortByColumn(0, Qt.DescendingOrder)
         self.table_list: List[QTreeWidget] = list()
-        self.header().sectionClicked.connect(lambda col: self.__sort_table(col))
+        #self.header().sectionClicked.connect(lambda col: self.__sort_table(col))
 
     def insert_values(self, displayables: List[DisplayableHolder]) -> None:
         for displayable in displayables:
@@ -88,35 +88,24 @@ class TreeWidget(QTreeWidget):
 
     def add_active_data(self, displayable: DisplayableHolder) -> None:
         for item in self.items:
-            if item.name == self.insertion_point:
-                for i in range(item.childCount()):
-                    if displayable.displayable.name == item.child(i).name:  # type: ignore[attr-defined]
-                        item.child(i).row.displayable = displayable.displayable
-                        values = [displayable.displayable.ram_peak, displayable.displayable.cpu_peak,
-                                  displayable.displayable.runtime_plot.y_values[0]]
-                        item.child(i).setData(1, 0, round((values[0]), 4))
-                        item.child(i).setData(2, 0, round((values[1]), 4))
-                        item.child(i).setData(3, 0, round((values[2]), 4))
-                        if values[2] != 0:
-                            item.child(i).row.checkbox.setDisabled(False)  # type: ignore[attr-defined]
-                        item.child(i).row.connected = False  # type: ignore[attr-defined]
-                        if displayable.displayable.failed:
-                            item.child(i).row.name_button.setStyleSheet("background-color:  #7F1717")
-                    for j in range(item.child(i).childCount()):
-                        if displayable.displayable.name == item.child(i).child(j).name:  # type: ignore[attr-defined]
-                            item.child(i).child(j).row.displayable = displayable.displayable
-                            values = [displayable.displayable.ram_peak, displayable.displayable.cpu_peak,
-                                      displayable.displayable.runtime_plot.y_values[0]]
-                            item.child(i).child(j).setData(1, 0, round((values[0]), 4))
-                            item.child(i).child(j).setData(2, 0, round((values[1]), 4))
-                            item.child(i).child(j).setData(3, 0, round((values[2]), 4))
-                            if values[2] != 0:
-                                item.child(i).child(j).row.checkbox.setDisabled(False)  # type: ignore[attr-defined]
-                            item.child(i).child(j).row.connected = False  # type: ignore[attr-defined]
-                            if displayable.displayable.failed:
-                                item.child(i).child(j).row.name_button.setStyleSheet("background-color:  #7F1717")
-        for disp in displayable.get_sub_disp():
-            self.add_active_data(typing.cast(DisplayableHolder, disp))
+            if (item.row.displayable.name == displayable.displayable.name and
+                    item.row.displayable.parent == displayable.displayable.parent and
+                    item.row.displayable.source == displayable.displayable.source):
+
+                item.row.displayable = displayable.displayable
+                values = [displayable.displayable.ram_peak, displayable.displayable.cpu_peak,
+                          displayable.displayable.runtime_plot.y_values[0]]
+                item.setData(1, 0, round((values[0]), 4))
+                item.setData(2, 0, round((values[1]), 4))
+                item.setData(3, 0, round((values[2]), 4))
+                if values[2] == 0:
+                    item.row.checkbox.setDisabled(True)  # type: ignore[attr-defined]
+                else:
+                    item.row.checkbox.setDisabled(False)  # type: ignore[attr-defined]
+                item.row.connected = False  # type: ignore[attr-defined]
+                if displayable.displayable.failed:
+                    item.row.name_button.setStyleSheet("background-color:  #7F1717")
+                    return
 
     def start_active_measurement(self, name: str) -> None:
         """entry point for an active measurement."""
@@ -126,14 +115,16 @@ class TreeWidget(QTreeWidget):
 
     def __show_input_dialog_active(self, name: str) -> None:
         """shows an input window, where the user can see and edit the path for the active measurement"""
-        text, ok = QInputDialog.getText(None, "Active measurement", 'Start active measurement with following file?: ',  # type: ignore[arg-type]
+        text, ok = QInputDialog.getText(None, "Active measurement", 'Start active measurement with following file?: ',
+                                        # type: ignore[arg-type]
                                         text=name)
         if ok: self.start_active_measurement(text)
 
     def highlight_row(self, name: str) -> None:
         """select the row for the given input string to highlight it in the table"""
         for row in self.rows:
-            if row.displayable.name == name:
+            if (row.displayable.name == name.split("#")[0] and row.displayable.parent == name.split("#")[1] and
+                    row.displayable.source == name.split("#")[2]):
                 self.setCurrentItem(self.items[self.rows.index(row)])
                 self.scrollToItem(self.currentItem())
                 break
@@ -147,6 +138,7 @@ class TreeWidget(QTreeWidget):
             if row.displayable.runtime_plot.y_values[0] != 0:
                 if row_count == last_checkbox:
                     self.in_row_loop = False
+                    break
                 row_count += 1
                 if not self.all_selected:
                     try:

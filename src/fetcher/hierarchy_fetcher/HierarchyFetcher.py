@@ -53,7 +53,6 @@ class HierarchyFetcher(FetcherInterface):
             time.sleep(15)
             if self.__open_timeout > 2:
                 self.__open_timeout = 0
-                self.source_file_queue.put(SourceFile(self.project.name))
                 raise e
             else:
                 self.__open_timeout += 1
