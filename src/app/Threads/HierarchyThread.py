@@ -47,7 +47,9 @@ class HierarchyThread:
                     self.__fetching_hierarchy.set()
                     continue
                 if data.path == "cancel":
-                    self.__model.get_semaphore_by_name(self.__current_work).hierarchy_fetcher_set()
+                    if self.__current_work != "":
+                        with self.__model_lock:
+                            self.__model.get_semaphore_by_name(self.__current_work).hierarchy_fetcher_set()
                     time.sleep(0.5)
                     while not self.source_file_queue.empty():
                         data = self.source_file_queue.get()
