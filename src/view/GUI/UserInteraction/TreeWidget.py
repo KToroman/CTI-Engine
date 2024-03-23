@@ -134,19 +134,19 @@ class TreeWidget(QTreeWidget):
         last_checkbox: int = self.__find_last_checkbox()
         row_count: int = 1
         self.in_row_loop = True
-        for row in self.rows:
-            if row.displayable.runtime_plot.y_values[0] != 0:
+        for item in self.items:
+            if item.row.displayable.runtime_plot.y_values[0] != 0:
                 if row_count == last_checkbox:
                     self.in_row_loop = False
                 row_count += 1
                 if not self.all_selected:
                     try:
-                        row.checkbox.setChecked(True)
+                        item.row.checkbox.setChecked(True)
                     except RuntimeError as e:
                         pass
                 else:
                     try:
-                        row.checkbox.setChecked(False)
+                        item.row.checkbox.setChecked(False)
                     except RuntimeError as r:
                         pass
         self.all_selected = not self.all_selected
@@ -162,13 +162,13 @@ class TreeWidget(QTreeWidget):
             real_upper_limit = last_checkbox
         row_count: int = 1
         self.in_row_loop = True
-        for row in self.rows:
-            if row.displayable.runtime_plot.y_values[0] != 0:
+        for item in self.items:
+            if item.row.displayable.runtime_plot.y_values[0] != 0:
                 if real_lower_limit <= row_count <= real_upper_limit:
                     if row_count == real_upper_limit:
                         self.in_row_loop = False
                     try:
-                        row.checkbox.setChecked(True)
+                        item.row.checkbox.setChecked(True)
                     except RuntimeError as e:
                         pass
                     self.in_row_loop = True
@@ -176,7 +176,7 @@ class TreeWidget(QTreeWidget):
                     if row_count == last_checkbox:
                         self.in_row_loop = False
                     try:
-                        row.checkbox.setChecked(False)
+                        item.row.checkbox.setChecked(False)
                     except RuntimeError as r:
                         pass
                 row_count += 1
@@ -184,10 +184,10 @@ class TreeWidget(QTreeWidget):
 
     def __find_last_checkbox(self) -> int:
         last_checkbox: int = 0
-        for row in self.rows:
-            if row.displayable.runtime_plot.y_values[0] != 0:
+        for item in self.items:
+            if item.row.displayable.runtime_plot.y_values[0] != 0:
                 try:
-                    row.checkbox.isWidgetType()
+                    item.row.checkbox.isEnabled()
                     last_checkbox += 1
                 except RuntimeError as e:
                     pass
@@ -225,3 +225,4 @@ class TreeWidget(QTreeWidget):
                     for subsubrow in subrow.children:
                         out_list.append(subsubrow)
         self.rows = out_list
+

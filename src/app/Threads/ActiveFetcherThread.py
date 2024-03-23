@@ -61,18 +61,25 @@ class ActiveFetcherThread:
                 "[ActiveFetcherThread] Active Fetcher Thread could not access its source-file-queue."
             )
             self.__error_queue.put(timeout_error, True, 1)
+            self.__active_measurement_active.clear()
+            return
+        with self.__model_lock:
+            compile_command = self.__model.current_project.get_sourcefile(source_file_name).compile_command
+        if compile_command == "":
+            self.__error_queue.put(Exception("This SourceFile has not compile_command!"))
+            self.__active_measurement_active.clear()
             return
 
         self.__model.current_project.current_sourcefile = source_file_name
         active_data_fetcher: ActiveDataFetcher
         with ActiveDataFetcher(
-            source_file_name=source_file_name,
-            model=self.__model,
-            saver_queue=self.__saver_queue,
-            save_path=self.__save_path,
-            build_dir_path=self.__build_dir_path,
-            model_lock=self.__model_lock,
-            hierarchy_queue=Queue(),
+                source_file_name=source_file_name,
+                model=self.__model,
+                saver_queue=self.__saver_queue,
+                save_path=self.__save_path,
+                build_dir_path=self.__build_dir_path,
+                model_lock=self.__model_lock,
+                hierarchy_queue=Queue(),
         ) as active_data_fetcher:
             self.measure_source_file(active_data_fetcher)
 

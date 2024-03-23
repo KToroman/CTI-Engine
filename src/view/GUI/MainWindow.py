@@ -338,11 +338,11 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
     def __setup_connections(self) -> None:
         """Sets up connections between table and graph widgets."""
-        for row in self.current_table.rows:
-            if not row.connected and row.checkbox.isEnabled():
-                row.checkbox.stateChanged.connect(
-                    lambda state, current_row=row: self.__update_visibility(current_row.displayable))
-                row.connected = True
+        for item in self.current_table.items:
+            if not item.row.connected and item.row.checkbox.isEnabled():
+                item.row.checkbox.stateChanged.connect(
+                    lambda state, current_row=item.row: self.__update_visibility(current_row.displayable))
+                item.row.connected = True
 
         self.__setup_click_connections()
 
