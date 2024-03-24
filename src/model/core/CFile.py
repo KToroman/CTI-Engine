@@ -91,3 +91,6 @@ class CFile(CFileReadViewInterface, Protocol):
 
     def has_error(self) -> bool:
         return self.error
+
+    def get_parent(self) -> typing.Optional["CFile"]:
+        return self.parent

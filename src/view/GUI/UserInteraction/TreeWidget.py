@@ -24,6 +24,9 @@ class TreeWidget(QTreeWidget):
     COLUMN_3_LABEL = "Peak CPU (%)"
     COLUMN_4_LABEL = "Runtime"
 
+    graph_signal: pyqtSignal = pyqtSignal()
+    deselect_signal: pyqtSignal = pyqtSignal()
+
     def __init__(self, active_mode_queue: "Queue[str]") -> None:
         super().__init__()
 
@@ -50,8 +53,9 @@ class TreeWidget(QTreeWidget):
         self.setSortingEnabled(True)
         self.sortByColumn(0, Qt.DescendingOrder)
         self.table_list: List[QTreeWidget] = list()
-        self.header().sectionClicked.connect(lambda col: self.__sort_table(col))
         self.row_count: int = 1
+        self.last_checkbox: int = 0
+        self.run_count: int = 0
 
     def insert_values(self, displayables: List[DisplayableHolder]) -> None:
         for displayable in displayables:
@@ -89,10 +93,15 @@ class TreeWidget(QTreeWidget):
 
     def add_active_data(self, displayable: DisplayableHolder) -> None:
         for item in self.items:
-            if (item.row.displayable.name == displayable.displayable.name and
-                    item.row.displayable.parent == displayable.displayable.parent and
-                    item.row.displayable.source == displayable.displayable.source):
-
+            if item.row.displayable.parent_list.__len__() != displayable.displayable.parent_list.__len__():
+                continue
+            if displayable.displayable.name != item.row.displayable.name:
+                continue
+            equal: bool = True
+            for i in range(item.row.displayable.parent_list.__len__()):
+                if item.row.displayable.parent_list[i] != displayable.displayable.parent_list[i]:
+                    equal = False
+            if equal:
                 item.row.displayable = displayable.displayable
                 values = [displayable.displayable.ram_peak, displayable.displayable.cpu_peak,
                           displayable.displayable.runtime_plot.y_values[0]]
@@ -124,101 +133,98 @@ class TreeWidget(QTreeWidget):
     def highlight_row(self, name: str) -> None:
         """select the row for the given input string to highlight it in the table"""
         for item in self.items:
-            if (item.row.displayable.name == name.split("#")[0] and item.row.displayable.parent == name.split("#")[
-                1] and
-                    item.row.displayable.source == name.split("#")[2]):
+            if item.row.displayable.parent_list.__len__() != (name.split("#").__len__() - 1):
+                continue
+            if item.row.displayable.name != name.split("#")[0]:
+                continue
+            equal: bool = True
+            for i in range(item.row.displayable.parent_list.__len__()):
+                if item.row.displayable.parent_list[i] != name.split("#")[i+1]:
+                    equal = False
+            if equal:
                 self.setCurrentItem(item)
                 self.scrollToItem(self.currentItem())
                 break
 
     def toggle_all_rows(self) -> None:
         """Selects or deselects checkboxes of all rows."""
-        last_checkbox: int = self.__find_last_checkbox()
+        self.__find_last_checkbox()
         self.row_count: int = 1
         self.in_row_loop = True
         for item in self.items:
             if item.row.displayable.runtime_plot.y_values[0] != 0:
-                if self.row_count == last_checkbox:
-                    self.in_row_loop = False
-                self.row_count += 1
                 if not self.all_selected:
-                    try:
-                        item.row.checkbox.setChecked(True)
-                    except RuntimeError as e:
-                        pass
+                    item.row.checkbox.setChecked(True)
                 else:
-                    try:
-                        item.row.checkbox.setChecked(False)
-                    except RuntimeError as r:
-                        pass
+                    item.row.checkbox.setChecked(False)
         self.all_selected = not self.all_selected
+        self.in_row_loop = False
+        self.graph_signal.emit()
 
     def toggle_custom_amount(self, lower_limit: int, upper_limit: int) -> None:
         """Receives two limits and selects checkboxes of rows inbetween them."""
+        self.deselect_signal.emit()
+        self.run_count += 1
+        if self.run_count <= 2:
+            return
+        self.run_count = 0
+        self.all_selected = False
         real_lower_limit: int = min(lower_limit, upper_limit)
         real_upper_limit: int = max(lower_limit, upper_limit)
         # self.toggle_all_rows()
-        time.sleep(0.3)
         self.row_count = 1
-        last_checkbox: int = self.__find_last_checkbox()
-        if real_upper_limit > last_checkbox:
-            real_upper_limit = last_checkbox
+        self.__find_last_checkbox()
+        if real_upper_limit > self.last_checkbox:
+            real_upper_limit = self.last_checkbox
         self.in_row_loop = True
         for i in range(self.topLevelItemCount()):
             item = self.topLevelItem(i)
             if item.row.displayable.runtime_plot.y_values[0] != 0:
                 if real_lower_limit <= self.row_count <= real_upper_limit:
-                    if self.row_count == upper_limit:
-                        self.in_row_loop = False
-                    try:
-                        item.row.checkbox.setChecked(True)
-                    except RuntimeError as e:
-                        pass
-                    self.in_row_loop = True
+                    item.row.checkbox.setChecked(True)
                 else:
-                    if self.row_count == last_checkbox:
-                        self.in_row_loop = False
-                    try:
-                        item.row.checkbox.setChecked(False)
-                    except RuntimeError as r:
-                        pass
-            self.row_count += 1
-            self.__select_subs(real_lower_limit, real_upper_limit, item, self.row_count, last_checkbox)
-
+                    item.row.checkbox.setChecked(False)
+                self.row_count += 1
+            self.__select_subs(real_lower_limit, real_upper_limit, item)
         self.in_row_loop = False
+        self.graph_signal.emit()
 
-    def __select_subs(self, lower_limit: int, upper_limit: int, parent, row_count: int, last_checkbox: int):
+    def __select_subs(self, lower_limit: int, upper_limit: int, parent):
         for i in range(parent.childCount()):
             item = parent.child(i)
             if item.row.displayable.runtime_plot.y_values[0] != 0:
                 if lower_limit <= self.row_count <= upper_limit:
-                    if row_count == upper_limit:
-                        self.in_row_loop = False
-                    try:
-                        item.row.checkbox.setChecked(True)
-                    except RuntimeError as e:
-                        pass
-                    self.in_row_loop = True
+                    item.row.checkbox.setChecked(True)
                 else:
-                    if self.row_count == last_checkbox:
-                        self.in_row_loop = False
-                    try:
-                        item.row.checkbox.setChecked(False)
-                    except RuntimeError as r:
-                        pass
-            row_count += 1
-            self.__select_subs(lower_limit, upper_limit, item, self.row_count, last_checkbox)
+                    item.row.checkbox.setChecked(False)
+                self.row_count += 1
+            self.__select_subs(lower_limit, upper_limit, item)
 
-    def __find_last_checkbox(self) -> int:
-        last_checkbox: int = 0
-        for item in self.items:
+    def __find_last_checkbox(self) -> None:
+        self.last_checkbox: int = 0
+        for i in range(self.topLevelItemCount()):
+            item = self.topLevelItem(i)
             if item.row.displayable.runtime_plot.y_values[0] != 0:
                 try:
-                    item.row.checkbox.isEnabled()
-                    last_checkbox += 1
+                    #item.row.checkbox.isEnabled()
+                    self.last_checkbox += 1
+                    self.__get_sub_count(item)
                 except RuntimeError as e:
                     pass
-        return last_checkbox
+
+    def __get_sub_count(self, parent):
+        for i in range(parent.childCount()):
+            item = parent.child(i)
+            if item.row.displayable.runtime_plot.y_values[0] != 0:
+                try:
+                    #item.row.checkbox.isEnabled()
+                    self.last_checkbox += 1
+                    self.__get_sub_count(item)
+                except RuntimeError as e:
+                    pass
+
+
+
 
     def search_item(self, line_edit: QLineEdit) -> None:
         """searches the table for a user input in order to select and highlight the found items"""
@@ -238,17 +244,3 @@ class TreeWidget(QTreeWidget):
                     self.expandItem(parent)
                     parent = parent.parent()
 
-    def __sort_table(self, column: int) -> None:
-        """Sorts table according to a given parameter."""
-        out_list = []
-        key_list = [lambda obj: obj.displayable.ram_peak, lambda obj: obj.displayable.cpu_peak, lambda obj:
-        obj.displayable.runtime_plot.y_values[0]]
-        sorted_objects = sorted(self.rows, key=key_list[column - 1], reverse=True)
-        for row in sorted_objects:
-            if row.displayable.name.endswith(".o"):
-                out_list.append(row)
-                for subrow in row.children:
-                    out_list.append(subrow)
-                    for subsubrow in subrow.children:
-                        out_list.append(subsubrow)
-        self.rows = out_list

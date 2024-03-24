@@ -53,7 +53,7 @@ class ActiveFetcherThread:
     def __start_new_measurement(self) -> None:
         source_file_name: str = self.__source_file_name_queue.get(True, 10)
         if not source_file_name.endswith(".o"):
-            self.__error_queue.put(Exception("You can not build a single header!"))
+            self.__error_queue.put(Exception("[ActiveFetcherThread] You can not build a single header!"))
             self.__active_measurement_active.clear()
             return
         if source_file_name == None:
@@ -65,8 +65,8 @@ class ActiveFetcherThread:
             return
         with self.__model_lock:
             compile_command = self.__model.current_project.get_sourcefile(source_file_name).compile_command
-        if compile_command == "":
-            self.__error_queue.put(Exception("This SourceFile has not compile_command!"))
+        if compile_command.strip() == "":
+            self.__error_queue.put(Exception("[ActiveFetcherThread] This SourceFile has not compile_command!"))
             self.__active_measurement_active.clear()
             return
 

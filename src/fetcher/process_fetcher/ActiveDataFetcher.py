@@ -106,13 +106,25 @@ class ActiveDataFetcher(FetcherInterface):
         while self.__building_event.is_set() or not self.__header_error_queue.empty():
             if not self.__header_error_queue.empty():
                 header = self.__header_error_queue.get()
+                if header == "fin":
+                    time.sleep(0.01)
+                    header = self.__header_error_queue.get()
+                    print(header)
+                    with self.__model_lock:
+                        model_header = self.__model.current_project.get_header(header,
+                                                                           self.__model.current_project.get_sourcefile(
+                                                                                self.__model.current_project.current_sourcefile))
+                        model_header.has_been_build = True
+                    continue
                 if header == "ERROR":
                     self.__finished_event.set()
                     self.__building_event.clear()
                     break
-                model_header = self.__model.current_project.get_header(header)
+                with self.__model_lock:
+                    model_header = self.__model.current_project.get_header(header, self.__model.current_project.get_sourcefile(self.__model.current_project.current_sourcefile))
                 if model_header is not None:
                     model_header.error = True
+                    model_header.has_been_build = True
             for finder in self.__process_finder_list:
                 if self.__shutdown_event.is_set():
                     break

@@ -227,7 +227,11 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.lower_limit.editingFinished.connect(
             lambda: self.current_table.toggle_custom_amount(self.lower_limit.value(), self.upper_limit.value()))
         self.search_button.clicked.connect(lambda: self.current_table.search_item(self.line_edit))
+        self.current_table.graph_signal.connect(lambda: self.__draw_graph())
+        self.current_table.deselect_signal.connect(lambda: self.__deselect())
+        self.current_table.run_count = 0
         self.__setup_connections()
+
         # change our gui to the page where the new table is located
         self.stacked_table_widget.setCurrentIndex(self.stacked_table_widget.count() - 1)
 
@@ -243,11 +247,25 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.__setup_connections()
         self.select_all_checkbox.stateChanged.connect(lambda: self.current_table.toggle_all_rows())
 
+    def __deselect(self):
+        self.upper_limit.clearFocus()
+        self.lower_limit.clearFocus()
+        if self.select_all_checkbox.isChecked():
+            self.select_all_checkbox.disconnect()
+            self.select_all_checkbox.setChecked(False)
+            self.select_all_checkbox.stateChanged.connect(lambda: self.current_table.toggle_all_rows())
+
     def deploy_error(self) -> None:
         """Receives an Exception, displays information regarding that exception to the user."""
         if self.error_queue.empty():
             return
+
         error = self.error_queue.get()
+        if (error.__str__() == "[ActiveFetcherThread] This SourceFile has not compile_command!" or
+                error.__str__() == "[ActiveFetcherThread] Active Fetcher Thread could not access its source-file-queue."
+                or error.__str__() == "[ActiveFetcherThread] You can not build a single header!"):
+            self.current_table.active_started = False
+
         error_window = ErrorWindow(error)
         error_window.show()
 
@@ -265,35 +283,34 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
     def __create_displayable(self, cfile: CFileReadViewInterface, depth_p: int, color) -> DisplayableHolder:
         """turns given cfile into displayable"""
-        parent: str = ""
-        source: str = ""
-        if cfile.parent is not None:
-            parent = cfile.parent.get_name()
-            if cfile.parent.parent is not None:
-                source = cfile.parent.parent.get_name()
-            else:
-                source = parent
+        parent_list: List[CFileReadViewInterface] = list()
+        self.__get_parent_list(cfile, parent_list)
 
         depth = depth_p + 1
         if depth >= self.HIERARCHY_DEPTH or not cfile.get_headers():
-            return DisplayableHolder(self.__make_disp(cfile, color, parent, source), [])
+            return DisplayableHolder(self.__make_disp(cfile, color, parent_list), [])
         sub_disp_list: List[DisplayableInterface] = list()
         for header in cfile.get_headers():
             sub_disp_list.append(self.__create_displayable(header, depth, color))
-        return DisplayableHolder(self.__make_disp(cfile, color, parent, source), sub_disp_list)
+        return DisplayableHolder(self.__make_disp(cfile, color, parent_list), sub_disp_list)
 
-    def __make_disp(self, cfile: CFileReadViewInterface, color_param, parent: str, source: str) -> Displayable:
+    def __get_parent_list(self, cfile: CFileReadViewInterface, parent_list: List[CFileReadViewInterface]) -> List[
+        CFileReadViewInterface]:
+        if cfile.get_parent() is not None:
+            parent_list.append(cfile.get_parent())
+            self.__get_parent_list(cfile.get_parent(), parent_list)
+        else:
+            return parent_list
+
+    def __make_disp(self, cfile: CFileReadViewInterface, color_param,
+                    parent_list: List[CFileReadViewInterface]) -> Displayable:
         name: str = cfile.get_name()
         ram_peak: float = cfile.get_max(MetricName.RAM)
         cpu_peak: float = cfile.get_max(MetricName.CPU)
         # Create Graph Plots
         x_values: List[float] = list()
-        if cfile.parent is not None:
-            time: float = 0
-            if cfile.parent.parent is not None:
-                time = cfile.parent.parent.get_min_timestamps() - self.project_time
-            else:
-                time = cfile.parent.get_min_timestamps() - self.project_time
+        if parent_list:
+            time: float = parent_list[-1].get_min_timestamps() - self.project_time
             if time <= 0:
                 time = 0
             x_values.append(time)
@@ -311,11 +328,17 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
             color = color_param
         else:
             color: str = self.__generate_random_color()
-        ram_plot: Plot = Plot(name + "#" + parent + "#" + source, color, x_values, ram_y_values)
-        cpu_plot: Plot = Plot(name + "#" + parent + "#" + source, color, x_values, cpu_y_values)
-        runtime_plot: Plot = Plot(name + "#" + parent + "#" + source, color, [], runtime)
-        return Displayable(name, ram_plot, cpu_plot, runtime_plot, ram_peak, cpu_peak, cfile.has_error(), parent,
-                           source)
+        parent_name_list: List[str] = list()
+        plot_name: str = cfile.get_name()
+        for parent in parent_list:
+            parent_name_list.append(parent.get_name())
+            plot_name += "#" + parent.get_name()
+
+        ram_plot: Plot = Plot(plot_name, color, x_values, ram_y_values)
+        cpu_plot: Plot = Plot(plot_name, color, x_values, cpu_y_values)
+        runtime_plot: Plot = Plot(plot_name, color, [], runtime)
+        return Displayable(name, ram_plot, cpu_plot, runtime_plot, ram_peak, cpu_peak, cfile.has_error(),
+                           parent_name_list)
 
     def __generate_random_color(self) -> str:
         """Generates random saturated color between light blue and pink."""
@@ -365,8 +388,15 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         """Shows or hides plots of given displayable."""
         visibility: bool = False
         for visible_displayable in self.__visible_plots:
-            if (displayable.source == visible_displayable.source and visible_displayable.name == displayable.name and
-                    displayable.parent == visible_displayable.parent and displayable.runtime_plot.y_values[0] != 0):
+            if displayable.parent_list.__len__() != visible_displayable.parent_list.__len__():
+                continue
+            if displayable.name != visible_displayable.name:
+                continue
+            equal: bool = True
+            for i in range(displayable.parent_list.__len__()):
+                if displayable.parent_list[i] != visible_displayable.parent_list[i]:
+                    equal = False
+            if equal and displayable.runtime_plot.y_values[0] != 0:
                 visibility = True
                 self.__visible_plots.remove(visible_displayable)
                 remove_runnable: RemoveRunnable = RemoveRunnable(ram_graph=self.ram_graph_widget,
@@ -386,6 +416,11 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
             plot_runnable: PlotRunnable = PlotRunnable(ram_graph=self.ram_graph_widget, cpu_graph=self.cpu_graph_widget,
                                                        runtime_graph=self.bar_chart_widget, mutex=self.mutex)
             self.thread_pool.start(plot_runnable)
+
+    def __draw_graph(self):
+        plot_runnable: PlotRunnable = PlotRunnable(ram_graph=self.ram_graph_widget, cpu_graph=self.cpu_graph_widget,
+                                                   runtime_graph=self.bar_chart_widget, mutex=self.mutex)
+        self.thread_pool.start(plot_runnable)
 
     def __setup_click_connections(self) -> None:
         """Sets up connections between clicking on graph and highlighting according table row."""

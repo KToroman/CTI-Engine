@@ -7,10 +7,9 @@ from src.view.GUI.Graph.Plot import Plot
 class Displayable:
 
     def __init__(self, name: str, ram_plot: Plot, cpu_plot: Plot, runtime_plot: Plot, ram_peak: float, cpu_peak: float,
-                 failed: bool, parent: str, source: str) -> None:
+                 failed: bool, parent_list: List[str]) -> None:
 
-        self.source: str = source
-        self.parent: str = parent
+        self.parent_list: List[str] = parent_list
         self.name: str = name
         self.ram_plot: Plot = ram_plot
         self.cpu_plot: Plot = cpu_plot

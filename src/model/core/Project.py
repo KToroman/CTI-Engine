@@ -130,11 +130,11 @@ class Project(ProjectReadViewInterface):
     def __str__(self) -> str:
         return f"<Project '{self.name}' with dir '{self.working_dir}'>"
 
-    def get_header(self, name: str):
-        for header in self.get_sourcefile(self.current_sourcefile).headers:
-            if header.get_name() == name:
+    def get_header(self, name: str, parent: CFile):
+        for header in parent.headers:
+            if header.get_name() == name and not header.has_been_build:
                 return header
-            for headers in header.get_headers():
-                if headers.get_name() == name:
-                    return headers
+            temp = self.get_header(name, header)
+            if temp is not None:
+                return temp
 

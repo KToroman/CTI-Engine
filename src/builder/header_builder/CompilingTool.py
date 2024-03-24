@@ -47,6 +47,9 @@ class CompilingTool(BuilderInterface):
             return False
         header: Header = self.__header_iterator.pop_next_header()
         self.build_header(header)
+        if not header.error:
+            self.__header_error_queue.put("fin")
+            self.__header_error_queue.put(header.get_name())
 
         return self.__header_iterator.has_next_header()
 
@@ -57,6 +60,7 @@ class CompilingTool(BuilderInterface):
         try:
             proc.check_returncode()
         except CalledProcessError:
+            header.error = True
             self.__header_error_queue.put(header.get_name())
 
     def __compile(self, file_name: Path) -> CompletedProcess[bytes]:

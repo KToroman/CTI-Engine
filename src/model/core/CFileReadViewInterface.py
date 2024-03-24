@@ -1,3 +1,4 @@
+import typing
 from typing import Protocol, List, Self
 
 from src.model.core.MetricName import MetricName
@@ -39,4 +40,8 @@ class CFileReadViewInterface(Protocol):
 
     def has_error(self) -> bool:
         """Returns true if there is an error in this CFile."""
+        raise NotImplementedError
+
+    def get_parent(self) -> typing.Optional["CFile"]:
+        """Returns parent of cfile"""
         raise NotImplementedError

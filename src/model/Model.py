@@ -50,7 +50,8 @@ class Model(ModelReadViewInterface):
         if parent is None:
             raise CFileNotFoundError
         """
-        header = self.current_project.get_header(data_entry.path)
+        header = self.current_project.get_header(data_entry.path,
+                                                 self.current_project.get_sourcefile(self.current_project.current_sourcefile))
         header.data_entries.append(data_entry)
         self.current_project.add_to_delta(
             path=header.path,
