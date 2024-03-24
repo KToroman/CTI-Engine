@@ -109,7 +109,6 @@ class ActiveDataFetcher(FetcherInterface):
                 if header == "fin":
                     time.sleep(0.01)
                     header = self.__header_error_queue.get()
-                    print(header)
                     with self.__model_lock:
                         model_header = self.__model.current_project.get_header(header,
                                                                            self.__model.current_project.get_sourcefile(
