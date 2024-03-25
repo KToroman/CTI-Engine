@@ -66,8 +66,9 @@ class PassiveDataFetcher(DataFetcher):
 
     def update_project(self) -> bool:
         current_project = ""
-        if self.__model.current_project is not None:
-            current_project = self.__model.current_project.working_dir
+        with self.__model_lock:
+            if self.__model.current_project is not None and self.__model.project_in_semaphore_list(self.__model.current_project.working_dir):
+                current_project = self.__model.current_project.working_dir
         while not self.__pid_queue.empty():
             item = self.__pid_queue.get()
             self.__pid_list.append(item)

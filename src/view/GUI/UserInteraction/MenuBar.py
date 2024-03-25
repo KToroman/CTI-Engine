@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QPushButton, QInputDialog, QTextEdit, QScrollArea, Q
 
 from src.model.core.ProjectReadViewInterface import ProjectReadViewInterface
 from src.view.AppRequestsInterface import AppRequestsInterface
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtWidgets import QPushButton, QInputDialog, QScrollArea, QWidget, QVBoxLayout
 from src.view.GUI.UserInteraction.ProjectNameButtonWrapper import ProjectNameButton
 
@@ -42,6 +42,7 @@ class MenuBar:
 
         self.scroll_widget: QWidget = QWidget()
         self.scroll_layout: QVBoxLayout = QVBoxLayout(self.scroll_widget)
+        self.scroll_layout.setAlignment(Qt.AlignTop)
         self.scroll_layout.setSpacing(2)
         self.scroll_bar.setWidget(self.scroll_widget)
 
@@ -83,16 +84,11 @@ class MenuBar:
                     pass
         # split the displayed name to only the last part
         for name in project_names:
-            if name.split(" ").__len__() > 2:
-                show_name = name.split(" ")[0] + " " + name.split(" ")[-1]
-            else:
-                show_name = name.split(" ")[0]
+            show_name = name.split("__")[0]
             # put new buttons in
-            if name.split("/").__len__() > 2:
-                show_name = name.split("/")[-2] + " " + name.split("/")[-1]
             new_button = ProjectNameButton(self.project_buttons, show_name, name, self.__project_queue,
                                            self.__visualize_event, self.index_queue, self.change_table_signal)
-            self.scroll_layout.addWidget(new_button)
+            self.scroll_layout.addWidget(new_button, alignment=Qt.AlignTop)
             self.project_buttons.append(new_button)
 
     def set_stylesheet(self, style: str) -> None:
@@ -101,13 +97,16 @@ class MenuBar:
             self.pause_resume_button.setStyleSheet("background-color: #476eed;")
             self.cancel_button.setStyleSheet("background-color: #476eed;")
             self.scroll_button.setStyleSheet("background-color: #476eed;")
+            self.scroll_widget.setStyleSheet("background-color: #252526;")
         if style == "Dark Mode" or style == "Basic":
             self.load_file_button.setStyleSheet("background-color: #23868B;")
             self.pause_resume_button.setStyleSheet("background-color: #23868B;")
             self.cancel_button.setStyleSheet("background-color: #23868B;")
             self.scroll_button.setStyleSheet("background-color: #23868B;")
+            self.scroll_widget.setStyleSheet("background-color: #252526;")
         if style == "Light Mode":
             self.load_file_button.setStyleSheet("background-color: #8D9FD0;")
             self.pause_resume_button.setStyleSheet("background-color: #8D9FD0;")
             self.cancel_button.setStyleSheet("background-color: #8D9FD0;")
             self.scroll_button.setStyleSheet("background-color: #8D9FD0;")
+            self.scroll_widget.setStyleSheet("background-color: #252526;")

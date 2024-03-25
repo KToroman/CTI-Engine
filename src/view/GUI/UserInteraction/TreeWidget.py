@@ -39,7 +39,7 @@ class TreeWidget(QTreeWidget):
         # self.header().setStyleSheet("::section{background-color: #292c43; }")
         # self.header().setStyleSheet("::section{background-color: #23868B; color: black}")
 
-        self.insertion_point: str = ""
+        self.insertion_point: List[str] = []
         self.active_started: bool = False
         self.all_selected: bool = False
         self.in_row_loop: bool = False
@@ -120,7 +120,7 @@ class TreeWidget(QTreeWidget):
     def start_active_measurement(self, name: str) -> None:
         """entry point for an active measurement."""
         self.active_started = True
-        self.insertion_point = name
+        self.insertion_point.append(name)
         self.active_mode_queue.put(name)
 
     def __show_input_dialog_active(self, name: str) -> None:

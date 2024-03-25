@@ -156,19 +156,17 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         project: ProjectReadViewInterface = self.__model.get_project_by_name(project_name)
         self.project_time = project.get_project_time()
         self.displayed_project = project_name
-        self.__update_project_list()
         # distinguish if active measurement flag was set or not
-        if self.current_table.active_started:
+        if self.current_table.active_started or self.current_table.insertion_point:
             self.__visualize_active(project)
             self.current_table.active_started = False
         else:
+            self.__update_project_list()
             self.__visualize_passive(project)
 
     def __visualize_passive(self, project: ProjectReadViewInterface) -> None:
         """Visualizes data from passive mode."""
         self.__connect_new_table()
-        # Select spot for displayables to be inserted into
-        self.current_table.insertion_point = project.get_project_name()
         # Update TableWidget for each cfile
         cfile_list: List[CFileReadViewInterface] = project.get_cfiles()
         file_count: int = 1
@@ -187,7 +185,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     def __visualize_active(self, project: ProjectReadViewInterface) -> None:
         """Visualizes data from active mode."""
         # Find file used for active build
-        active_row: str = self.current_table.insertion_point
+        active_row: str = self.current_table.insertion_point[0]
         active_file: CFileReadViewInterface
         for cfile in project.get_cfiles():
             if cfile.get_name() == active_row:
@@ -200,15 +198,14 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
             if cfile.get_headers():
                 cfile_list.extend(cfile.get_headers())
         for item in self.current_table.items:
-            if item.name == self.current_table.insertion_point:
+            if item.name == self.current_table.insertion_point[0]:
                 color = item.row.displayable.runtime_plot.color
         for cfile in cfile_list:
             self.current_table.add_active_data(self.__create_displayable(cfile, 1, color))
         # Update other Widgets
-        # for row in self.current_table.rows:
-        #    row.connected = False
         self.__setup_connections()
-        self.status_bar.update_status(StatusSettings.FINISHED, self.current_table.insertion_point)
+        self.status_bar.update_status(StatusSettings.FINISHED, self.current_table.insertion_point[0])
+        self.current_table.insertion_point.pop(0)
 
     def __connect_new_table(self) -> None:
         """creates a new table for each loaded project and saves them in a list. That way the already loaded projects
@@ -273,9 +270,10 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         """Receives a status string, changes the UI's status string accordingly."""
         status: StatusSettings = self.status_queue.get()
         if status.value[0] == "measuring":  # type: ignore[comparison-overlap]
-            self.status_bar.update_status(status, self.__model.get_current_project_name())
+            self.status_bar.update_status(status, self.__model.get_current_project_name().split("__")[0])
         elif status.value[0] == "active measuring":
-            self.status_bar.update_status(status, self.current_table.insertion_point.split(".o")[0].split("/")[-1])
+            if self.current_table.insertion_point:
+                self.status_bar.update_status(status, self.current_table.insertion_point[0].split(".o")[0].split("/")[-1])
         elif status.value[0] == "loading file":  # type: ignore[comparison-overlap]
             self.status_bar.update_status(status, self.menu_bar.load_path_name)
         else:

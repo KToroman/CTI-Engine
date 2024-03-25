@@ -53,6 +53,7 @@ class PassiveDataCollectionThread:
                     self._current_processes.remove(process)
                     self._is_full = False
                     continue
+        self.time_till_false = 0
 
         self._current_processes.clear()
         with self._process_list_lock:
@@ -72,6 +73,7 @@ class PassiveDataCollectionThread:
 
     def stop(self) -> None:
         self._thread.join()
+        self.time_till_false = 0
 
     def has_work(self) -> bool:
         return self._is_full

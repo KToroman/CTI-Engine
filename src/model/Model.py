@@ -52,13 +52,13 @@ class Model(ModelReadViewInterface):
         """
         header = self.current_project.get_header(data_entry.path,
                                                  self.current_project.get_sourcefile(self.current_project.current_sourcefile))
-        header.data_entries.append(data_entry)
-        self.current_project.add_to_delta(
-            path=header.path,
-            parent_or_compile_command=header.parent.path,
-            data_entry=data_entry,
-            hierarchy_level=header.hierarchy_level,
-        )
+        if header is not None:
+            header.data_entries.append(data_entry)
+            self.current_project.add_to_delta(
+                path=header.path,
+                parent_or_compile_command=header.parent.path,
+                data_entry=data_entry,
+                hierarchy_level=header.hierarchy_level)
 
     def project_in_semaphore_list(self, project_dir: str) -> bool:
         for semaphore in self.semaphore_list:
@@ -90,15 +90,14 @@ class Model(ModelReadViewInterface):
             self, project: Project, semaphore: Optional[ProjectFinishedSemaphore]
     ) -> None:
         """adds new project to model"""
-
-        if (
-                not self.project_in_list(project.name)
-                and os.getcwd().split("/")[-1] not in project.working_dir
-        ):
+        if (not self.project_in_semaphore_list(project.working_dir)
+                and os.getcwd().split("/")[-1] not in project.working_dir):
             self.projects.append(project)
             if semaphore is not None:
                 self.semaphore_list.append(semaphore)
             self.current_project = project
+            print("[Model]  new project")
+
 
     def project_in_list(self, name: str) -> bool:
         for p in self.projects:

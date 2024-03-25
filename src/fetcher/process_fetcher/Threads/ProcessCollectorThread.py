@@ -25,21 +25,21 @@ from src.model.core.ProjectFinishedSemaphore import ProjectFinishedSemaphore
 
 class ProcessCollectorThread:
     def __init__(
-        self,
-        process_list: list[psutil.Process],
-        process_list_lock: SyncLock,
-        model: Model,
-        model_lock: SyncLock,
-        check_for_project: bool,
-        fetcher_list: list[PassiveDataCollectionThread],
-        saver_queue: "Queue[str]",
-        hierarchy_queue: "Queue[Project]",
-        save_path: str,
-        shutdown: SyncEvent,
-        project_queue: typing.Optional["Queue[str]"],
-        finished_event: typing.Optional[pyqtSignal],
-        project_finished_event: typing.Optional[SyncEvent],
-        active_event: SyncEvent,
+            self,
+            process_list: list[psutil.Process],
+            process_list_lock: SyncLock,
+            model: Model,
+            model_lock: SyncLock,
+            check_for_project: bool,
+            fetcher_list: list[PassiveDataCollectionThread],
+            saver_queue: "Queue[str]",
+            hierarchy_queue: "Queue[Project]",
+            save_path: str,
+            shutdown: SyncEvent,
+            project_queue: typing.Optional["Queue[str]"],
+            finished_event: typing.Optional[pyqtSignal],
+            project_finished_event: typing.Optional[SyncEvent],
+            active_event: SyncEvent,
     ):
         self.__thread: Thread
         self.__shutdown = shutdown
@@ -81,6 +81,8 @@ class ProcessCollectorThread:
                 continue
         with self.__work_queue_lock:
             self.__work_queue.clear()
+        self.current_project = ""
+        self.time_till_false = 0
 
     def start(self) -> None:
         self.__thread = Thread(target=self.__run)
@@ -91,6 +93,8 @@ class ProcessCollectorThread:
             self.__thread.join(timeout=1)
             if self.__thread.is_alive():
                 pass
+        self.current_project = ""
+        self.time_till_false = 0
 
     def add_work(self, process: psutil.Process) -> None:
         time.sleep(0.01)
@@ -143,22 +147,12 @@ class ProcessCollectorThread:
                 return
 
             with self.__model_lock:
-                if (
-                    project_name != self.__model.get_current_working_directory()
-                    or not self.__model.project_in_semaphore_list(project_name)
-                ):
-                    if (
-                        self.__model.current_project is not None
-                        and self.__model.project_in_semaphore_list(
-                            self.__model.get_current_working_directory()
-                        )
-                    ):
-                        with self.__model.get_semaphore_by_name(
-                            self.__model.current_project.name
-                        ).set_lock:
-                            self.__model.get_semaphore_by_name(
-                                self.__model.current_project.name
-                            ).new_project_set()
+                if (project_name != self.__model.get_current_working_directory()
+                        or not self.__model.project_in_semaphore_list(project_name)):
+                    if (self.__model.current_project is not None and self.__model.project_in_semaphore_list(
+                            self.__model.get_current_working_directory())):
+                        with self.__model.get_semaphore_by_name(self.__model.current_project.name).set_lock:
+                            self.__model.get_semaphore_by_name(self.__model.current_project.name).new_project_set()
 
                     name = self.__create_project_name(project_name)
                     if self.__project_queue is None or self.__finished_event is None or self.__project_finished_event is None:
@@ -205,13 +199,9 @@ class ProcessCollectorThread:
             name = project_name_split[-2]
 
         name = name + "_" + time_date.__str__()
-        if os.path.exists(join(self.__save_path, name)):
-            for i in range(1, 10):
-                name_temp = f"{name}_{i}"
-                if not os.path.exists(join(self.__save_path, name_temp)):
-                    return name_temp
 
-            name = f"{name}_{int(time.time())}"
-            return name
 
+        name = f"{name}__{int(time.time())}"
         return name
+
+

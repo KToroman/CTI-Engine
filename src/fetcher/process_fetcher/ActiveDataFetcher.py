@@ -113,7 +113,8 @@ class ActiveDataFetcher(FetcherInterface):
                         model_header = self.__model.current_project.get_header(header,
                                                                            self.__model.current_project.get_sourcefile(
                                                                                 self.__model.current_project.current_sourcefile))
-                        model_header.has_been_build = True
+                        if model_header is not None:
+                            model_header.has_been_build = True
                     continue
                 if header == "ERROR":
                     self.__finished_event.set()

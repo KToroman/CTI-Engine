@@ -23,11 +23,13 @@ class BarWidget(QWidget):
         self.categories: List[str] = []
         self.values: List[float] = []
         self.colors: List[str] = []
+        self.count: List[int] = []
         self.clear_flag: bool = True
         self.bar_clicked: str = ""
-
         self.figure: Figure = Figure(figsize=(5, 4), dpi=100)
         self.canvas: FigureCanvas = FigureCanvas(self.figure)
+        self.counter: int = 0
+        self.style: str = ""
 
         layout: QVBoxLayout = QVBoxLayout(self)
         self.toolbar: CustomToolbar = CustomToolbar(self.canvas, self)  # type: ignore[no-untyped-call]
@@ -43,12 +45,19 @@ class BarWidget(QWidget):
         self.categories.append(plot.name)
         self.values.append(plot.y_values[0])
         self.colors.append(plot.color)
+        self.count.append(self.counter)
+        self.counter += 1
+
 
     def remove_bar(self, plot: Plot) -> None:
         """Removes bar from bar chart."""
+        if plot.name not in self.categories:
+            return
         self.categories.remove(plot.name)
         self.values.remove(plot.y_values[0])
         self.colors.remove(plot.color)
+        self.count.pop(-1)
+        self.counter -= 1
 
     def plot_bar_chart(self) -> None:
         """(Re)draws bar chart."""
@@ -57,14 +66,17 @@ class BarWidget(QWidget):
         # Create subplot for bar chart
         self.ax = self.figure.add_subplot(111)
         # Create bar chart
-        bars = self.ax.bar(self.categories, self.values, color=self.colors, label=self.categories)
+        #bars = self.ax.bar(self.categories, self.values, color=self.colors, label=self.categories)
+        bars = self.ax.bar(self.count, self.values, color=self.colors, label=self.categories)
         self.ax.set_xticks([])
         # Add title and labels for axes
         self.ax.set_xlabel(self.X_AXIS)
         self.ax.set_ylabel(self.Y_AXIS)
 
+        self.set_stylesheet(self.style)
+
         # Draw diagram on canvas
-        self.canvas.draw()  # type: ignore[no-untyped-call]
+        #self.canvas.draw()  # type: ignore[no-untyped-call]
 
         # Set the clickable property for each bar
         for bar in bars:
@@ -77,6 +89,7 @@ class BarWidget(QWidget):
         self.click_signal.emit()
 
     def set_stylesheet(self, style: str) -> None:
+        self.style = style
         if style == "Dark Mode Purple":
             self.figure.set_facecolor("#3f4361")
             self.ax.set_facecolor("#292c43")
