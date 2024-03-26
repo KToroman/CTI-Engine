@@ -1,6 +1,5 @@
 from typing import List, Optional
 
-from src.model.core.DataEntry import DataEntry
 from src.model.core.Metric import Metric
 
 
@@ -17,5 +16,5 @@ class DataBaseEntry:
         self.parent_or_compile_command: str = parent_or_compile_command
         self.timestamp: Optional[float] = timestamp
         self.metrics: Optional[List[Metric]] = metrics
-        assert hierarchy_level < 3 and hierarchy_level >= 0
+        assert 3 > hierarchy_level >= 0
         self.hierarchy_level: int = hierarchy_level

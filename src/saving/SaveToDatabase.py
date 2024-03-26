@@ -8,7 +8,6 @@ from multiprocessing.synchronize import Lock as SyncLock
 from src.model.DataBaseEntry import DataBaseEntry
 from src.model.Model import Model
 
-
 from src.model.core.Project import Project
 from src.saving.SaveInterface import SaveInterface
 

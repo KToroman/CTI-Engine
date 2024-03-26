@@ -1,15 +1,10 @@
 import typing
 from multiprocessing import Queue
 import multiprocessing
-import threading
-import time
 from typing import List
 
-from PyQt5.QtCore import QThreadPool, Qt, QObject, pyqtSignal, QThread, QPoint
-from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QInputDialog, QWidget, QHBoxLayout, QHeaderView, QTreeWidget, QLineEdit, QApplication
-
-from src.view.GUI.Graph.Plot import Plot
+from PyQt5.QtCore import QThreadPool, Qt, pyqtSignal
+from PyQt5.QtWidgets import QInputDialog, QWidget, QHBoxLayout, QHeaderView, QTreeWidget, QLineEdit
 from src.view.GUI.UserInteraction.Displayable import Displayable
 from src.view.GUI.UserInteraction.DisplayableHolder import DisplayableHolder
 from src.view.GUI.UserInteraction.ItemWrapper import ItemWrapper
@@ -136,7 +131,7 @@ class TreeWidget(QTreeWidget):
 
     def __show_input_dialog_active(self, name: str) -> None:
         """shows an input window, where the user can see and edit the path for the active measurement"""
-        text, ok = QInputDialog.getText(None, "Active measurement", 'Start active measurement with following file?: ',
+        text, ok = QInputDialog.getText(None, "Active measurement", "Start active measurement with following file?: ",
                                         # type: ignore[arg-type]
                                         text=name)
         if ok: self.start_active_measurement(text)
@@ -150,7 +145,7 @@ class TreeWidget(QTreeWidget):
                 continue
             equal: bool = True
             for i in range(item.row.displayable.parent_list.__len__()):
-                if item.row.displayable.parent_list[i] != name.split("#")[i+1]:
+                if item.row.displayable.parent_list[i] != name.split("#")[i + 1]:
                     equal = False
             if equal:
                 self.setCurrentItem(item)
@@ -212,15 +207,15 @@ class TreeWidget(QTreeWidget):
             self.__select_subs(lower_limit, upper_limit, item)
 
     def __find_last_checkbox(self) -> None:
-        self.last_checkbox: int = 0
+        self.last_checkbox = 0
         for i in range(self.topLevelItemCount()):
             item = self.topLevelItem(i)
             if item.row.displayable.runtime_plot.y_values[0] != 0:
                 try:
-                    #item.row.checkbox.isEnabled()
+                    # item.row.checkbox.isEnabled()
                     self.last_checkbox += 1
                     self.__get_sub_count(item)
-                except RuntimeError as e:
+                except RuntimeError:
                     pass
 
     def __get_sub_count(self, parent):
@@ -228,14 +223,11 @@ class TreeWidget(QTreeWidget):
             item = parent.child(i)
             if item.row.displayable.runtime_plot.y_values[0] != 0:
                 try:
-                    #item.row.checkbox.isEnabled()
+                    # item.row.checkbox.isEnabled()
                     self.last_checkbox += 1
                     self.__get_sub_count(item)
-                except RuntimeError as e:
+                except RuntimeError:
                     pass
-
-
-
 
     def search_item(self, line_edit: QLineEdit) -> None:
         """searches the table for a user input in order to select and highlight the found items"""
@@ -254,4 +246,3 @@ class TreeWidget(QTreeWidget):
                 while parent:
                     self.expandItem(parent)
                     parent = parent.parent()
-

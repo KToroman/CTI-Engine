@@ -1,16 +1,13 @@
-import typing
-from multiprocessing import Event, Queue
-from multiprocessing import Event
-from typing import Protocol, Optional
+from multiprocessing import Queue
+from typing import Protocol
 
 from PyQt5.QtCore import pyqtSignal
-
-from src.model.ModelReadViewInterface import ModelReadViewInterface
 from src.model.core.StatusSettings import StatusSettings
 
 
 class UIInterface(Protocol):
-    """provides an Interface for Implemetations of a User Interface. All contained Methods must be implemented by subclasses."""
+    """provides an Interface for Implementations of a User Interface. All contained Methods must be implemented by
+    subclasses."""
 
     project_queue: "Queue[str]"
     status_queue: "Queue[StatusSettings]"

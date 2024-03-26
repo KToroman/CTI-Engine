@@ -1,4 +1,3 @@
-import os
 import queue
 import time
 import typing
@@ -17,7 +16,6 @@ from psutil import NoSuchProcess, AccessDenied
 from src.fetcher.process_fetcher.Threads.PassiveDataCollectionThread import (
     PassiveDataCollectionThread,
 )
-from src.model.DataBaseEntry import DataBaseEntry
 from src.model.Model import Model
 from src.model.core.Project import Project
 from src.model.core.ProjectFinishedSemaphore import ProjectFinishedSemaphore
@@ -200,8 +198,5 @@ class ProcessCollectorThread:
 
         name = name + "_" + time_date.__str__()
 
-
         name = f"{name}__{int(time.time())}"
         return name
-
-

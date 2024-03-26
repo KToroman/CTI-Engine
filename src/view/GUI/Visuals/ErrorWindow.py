@@ -1,6 +1,7 @@
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QMessageBox
 
+
 class ErrorWindow(QMessageBox):
 
     WINDOW_TITLE: str = "Error"

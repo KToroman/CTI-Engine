@@ -1,5 +1,4 @@
 from typing import Protocol, List
-
 from src.view.GUI.UserInteraction.Displayable import Displayable
 
 

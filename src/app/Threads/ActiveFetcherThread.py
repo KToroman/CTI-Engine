@@ -7,7 +7,6 @@ from multiprocessing.synchronize import Lock as SyncLock
 from PyQt5.QtCore import pyqtSignal
 
 from src.fetcher.process_fetcher.ActiveDataFetcher import ActiveDataFetcher
-from src.model.DataBaseEntry import DataBaseEntry
 from src.model.Model import Model
 
 

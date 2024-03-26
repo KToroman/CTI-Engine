@@ -1,12 +1,9 @@
 import os
-from multiprocessing import Manager, Queue
+from multiprocessing import Queue
 from multiprocessing.synchronize import Lock as SyncLock
-from posixpath import join
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, List, Optional, Any
 
 from rocksdict import Rdict, RdictIter
-
-from src.exceptions.CFileNotFoundError import CFileNotFoundError
 from src.fetcher.FetcherInterface import FetcherInterface
 from src.model.Model import Model
 from src.model.core.CFile import CFile
@@ -17,7 +14,6 @@ from src.model.core.Project import Project
 from PyQt5.QtCore import pyqtSignal
 
 from src.model.core.SourceFile import SourceFile
-from src.view.GUI.UserInteraction.ProjectNameButtonWrapper import ProjectNameButton
 
 
 class FileLoader(FetcherInterface):

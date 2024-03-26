@@ -1,8 +1,6 @@
 import time
+from typing import List
 import typing
-from typing import List, Optional
-import typing
-from src.exceptions.CFileNotFoundError import CFileNotFoundError
 from src.model.DataBaseEntry import DataBaseEntry
 from src.model.core.CFile import CFile
 from src.model.core.CFileReadViewInterface import CFileReadViewInterface
@@ -81,7 +79,6 @@ class Project(ProjectReadViewInterface):
         for headers in header.headers:
             self.update_headers(headers, new_header, hierarchy + 1)
 
-
     def update_source_file(self, path, compile_command: str) -> CFile:
         source_file = typing.cast(SourceFile, self.get_sourcefile(path))
         source_file.compile_command = compile_command
@@ -107,7 +104,7 @@ class Project(ProjectReadViewInterface):
             )
 
     def get_project_time(self) -> float:
-        '''returns project's first measured timestamp'''
+        """returns project's first measured timestamp"""
         starting_points: list[float] = list()
         for source_file in self.source_files:
             if source_file.get_min_timestamps() > 0:
@@ -137,4 +134,3 @@ class Project(ProjectReadViewInterface):
             temp = self.get_header(name, header)
             if temp is not None:
                 return temp
-

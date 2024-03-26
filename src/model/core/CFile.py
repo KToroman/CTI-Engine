@@ -1,5 +1,3 @@
-import datetime
-import time
 import typing
 from typing import List, Optional, Protocol, Self
 
@@ -26,7 +24,7 @@ class CFile(CFileReadViewInterface, Protocol):
         return self.path
 
     def get_min_timestamps(self) -> float:
-        '''returns the first timestamp in CFile's entries'''
+        """returns the first timestamp in CFile's entries"""
         self.sorted_timestamp_list = sorted(self.data_entries, key=lambda data_entry: data_entry.timestamp)
         if len(self.sorted_timestamp_list) > 1:
             return (

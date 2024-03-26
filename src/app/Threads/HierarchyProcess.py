@@ -1,13 +1,9 @@
-import time
 from multiprocessing import Queue, Process
-from threading import Thread
 from multiprocessing.synchronize import Event as SyncEvent
 
 from src.fetcher.hierarchy_fetcher.HierarchyFetcher import HierarchyFetcher
-from src.model.Model import Model
 from src.model.core.Project import Project
 from src.model.core.SourceFile import SourceFile
-from multiprocessing.synchronize import Lock as SyncLock
 
 
 class HierarchyProcess:

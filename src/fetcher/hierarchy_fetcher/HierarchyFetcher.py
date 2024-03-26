@@ -1,18 +1,15 @@
 import concurrent.futures
-import threading
 import time
 import typing
 from multiprocessing import Queue
 from subprocess import CalledProcessError
 from concurrent.futures import ThreadPoolExecutor, Future
 from multiprocessing.synchronize import Event as SyncEvent
-from multiprocessing.synchronize import Lock as SyncLock
 
 from src.exceptions.ProjectNotFoundException import ProjectNotFoundException
 from src.fetcher.FetcherInterface import FetcherInterface
 from src.fetcher.hierarchy_fetcher.GCCCommandExecutor import GCCCommandExecutor
 from src.fetcher.hierarchy_fetcher.CompileCommandGetter import CompileCommandGetter
-from src.model.Model import Model
 from src.model.core.Project import Project
 from src.model.core.SourceFile import SourceFile
 from src.model.core.CFile import CFile

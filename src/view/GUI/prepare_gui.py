@@ -1,6 +1,5 @@
 from multiprocessing import Queue
 import sys
-from multiprocessing import Event
 from multiprocessing.synchronize import Event as SyncEvent
 
 

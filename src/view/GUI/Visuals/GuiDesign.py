@@ -2,7 +2,7 @@ import os
 from typing import Any
 
 from PyQt5.QtCore import QSize, Qt, QMetaObject
-from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QWidget, QSizePolicy, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QSpacerItem,
                              QSplitter)
 
@@ -150,8 +150,6 @@ def setup_ui(main_window: Any) -> None:
     main_window.project_scroll_button.setIcon(menu_icon)
     search_icon = qta.icon("fa.search")
     main_window.search_button.setIcon(search_icon)
-
-    #main_window.current_table.setStyleSheet("::section{Background-color: #4095a1}")
     main_window.sidebar.setStyleSheet(u"background-color: #252526")
 
 

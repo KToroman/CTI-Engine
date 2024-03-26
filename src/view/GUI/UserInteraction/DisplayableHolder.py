@@ -1,5 +1,4 @@
 from typing import List
-
 from src.view.GUI.UserInteraction.Displayable import Displayable
 from src.view.GUI.UserInteraction.DisplayableInterface import DisplayableInterface
 

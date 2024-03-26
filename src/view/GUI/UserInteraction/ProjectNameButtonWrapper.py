@@ -29,5 +29,3 @@ class ProjectNameButton(QPushButton):
         self.setStyleSheet("background-color: #00FF00")
         self.index_queue.put(index)
         self.change_table_signal.emit()  # type: ignore[attr-defined]
-
-

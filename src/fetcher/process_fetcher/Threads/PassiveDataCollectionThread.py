@@ -2,7 +2,7 @@ import os
 import time
 from os.path import join
 from threading import Thread
-from typing import List, Optional
+from typing import List
 from multiprocessing.synchronize import Event as SyncEvent
 from multiprocessing.synchronize import Lock as SyncLock
 
@@ -16,7 +16,8 @@ from src.model.core.ProcessPoint import ProcessPoint
 
 
 class PassiveDataCollectionThread:
-    def __init__(self, process_list: List[psutil.Process], process_list_lock: SyncLock, model: Model, model_lock: SyncLock,
+    def __init__(self, process_list: List[psutil.Process], process_list_lock: SyncLock, model: Model,
+                 model_lock: SyncLock,
                  data_observer: DataObserver, process_count: int, shutdown: SyncEvent, active_event: SyncEvent) -> None:
 
         self._thread: Thread
@@ -30,8 +31,6 @@ class PassiveDataCollectionThread:
         self._data_observer = data_observer
         self._process_count = process_count
         self._active_event = active_event
-
-
 
         self.time_till_false: float = 0
 

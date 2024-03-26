@@ -1,6 +1,4 @@
 from typing import List
-
-from src.view.GUI.Graph.Plot import Plot
 from src.view.GUI.Graph.Plot import Plot
 
 
@@ -17,4 +15,3 @@ class Displayable:
         self.ram_peak: float = ram_peak
         self.cpu_peak: float = cpu_peak
         self.failed: bool = failed
-

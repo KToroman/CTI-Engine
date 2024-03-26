@@ -1,6 +1,6 @@
 import typing
 from typing import List
-from PyQt5.QtCore import pyqtSignal, pyqtSlot
+from PyQt5.QtCore import pyqtSignal
 from matplotlib.backend_bases import PickEvent
 from matplotlib.backends.backend_template import FigureCanvas
 from PyQt5.QtWidgets import QVBoxLayout, QWidget
@@ -12,7 +12,6 @@ from src.view.GUI.Graph.Plot import Plot
 
 
 class BarWidget(QWidget):
-
     X_AXIS: str = "Sourcefiles"
     Y_AXIS: str = "Runtime (in sec)"
     click_signal: pyqtSignal = pyqtSignal()
@@ -48,7 +47,6 @@ class BarWidget(QWidget):
         self.count.append(self.counter)
         self.counter += 1
 
-
     def remove_bar(self, plot: Plot) -> None:
         """Removes bar from bar chart."""
         if plot.name not in self.categories:
@@ -66,7 +64,7 @@ class BarWidget(QWidget):
         # Create subplot for bar chart
         self.ax = self.figure.add_subplot(111)
         # Create bar chart
-        #bars = self.ax.bar(self.categories, self.values, color=self.colors, label=self.categories)
+        # bars = self.ax.bar(self.categories, self.values, color=self.colors, label=self.categories)
         bars = self.ax.bar(self.count, self.values, color=self.colors, label=self.categories)
         self.ax.set_xticks([])
         # Add title and labels for axes
@@ -74,9 +72,6 @@ class BarWidget(QWidget):
         self.ax.set_ylabel(self.Y_AXIS)
 
         self.set_stylesheet(self.style)
-
-        # Draw diagram on canvas
-        #self.canvas.draw()  # type: ignore[no-untyped-call]
 
         # Set the clickable property for each bar
         for bar in bars:

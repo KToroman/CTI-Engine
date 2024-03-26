@@ -1,12 +1,10 @@
 import time
 import typing
-from multiprocessing import Queue, Process
+from multiprocessing import Queue
 from threading import Thread
 from multiprocessing.synchronize import Event as SyncEvent
 
 from src.app.Threads.HierarchyProcess import HierarchyProcess
-from src.exceptions.SemaphoreNotFoundException import SemaphoreNotFoundException
-from src.fetcher.hierarchy_fetcher.HierarchyFetcher import HierarchyFetcher
 from src.model.Model import Model
 from src.model.core.CFile import CFile
 from src.model.core.Header import Header

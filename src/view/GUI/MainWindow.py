@@ -1,20 +1,15 @@
 import colorsys
-
 import os
-
 import random
 import time
 
 from PyQt5.QtCore import pyqtSignal, QThreadPool, QMutex
 from typing import List
-from multiprocessing import Queue, Event
+from multiprocessing import Queue
 from multiprocessing.synchronize import Event as SyncEvent
-
-from PyQt5.QtWidgets import (QMainWindow, QStackedWidget, QApplication, QCheckBox, QSpinBox, QLineEdit, QPushButton,
-                             QWidget)
 from PyQt5.QtGui import QIcon, QCloseEvent
 from PyQt5.QtWidgets import (QMainWindow, QStackedWidget, QApplication, QCheckBox, QSpinBox, QLineEdit,
-                             QPushButton)
+                             QPushButton, QWidget)
 
 from src.model.core.ProjectReadViewInterface import ProjectReadViewInterface
 from src.view.GUI.Threading.PlotRunnable import PlotRunnable
@@ -83,9 +78,9 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.resize(self.WINDOWSIZE1, self.WINDOWSIZE2)
 
         # setting up main components
-        self.current_table: TreeWidget = TreeWidget(self.active_mode_queue, self.error_queue, self.error_signal)
+        self.current_table: TreeWidget = TreeWidget(self.active_mode_queue, self.error_queue, self.error_signal)  # type: ignore[arg-type]
         self.menu_bar: MenuBar = MenuBar(load_path_queue, cancel_event, restart_event, self.project_queue,
-                                         self.visualize_signal, self.index_queue,
+                                         self.visualize_signal, self.index_queue,  # type: ignore[arg-type]
                                          self.change_table_signal)  # type: ignore[arg-type]
         self.metric_bar: MetricBar = MetricBar()
 
@@ -151,7 +146,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.menu_bar.set_stylesheet(selected_style)
 
     def visualize(self) -> None:
-        """displays the data contained in that model to the user."""
+        """displays the data contained in model to the user."""
 
         project_name: str = self.project_queue.get()
         project: ProjectReadViewInterface = self.__model.get_project_by_name(project_name)
@@ -166,7 +161,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
             self.__visualize_passive(project)
 
     def __visualize_passive(self, project: ProjectReadViewInterface) -> None:
-        """Visualizes data from passive mode."""
+        """visualizes data from passive mode."""
         self.__connect_new_table()
         # Update TableWidget for each cfile
         cfile_list: List[CFileReadViewInterface] = project.get_cfiles()
@@ -186,7 +181,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.menu_bar.project_buttons[len(self.menu_bar.project_buttons) - 1].setStyleSheet("background-color: #00FF00")
 
     def __visualize_active(self, project: ProjectReadViewInterface) -> None:
-        """Visualizes data from active mode."""
+        """visualizes data from active mode."""
         # Find file used for active build
         active_row: str = self.current_table.insertion_point[0]
         active_file: CFileReadViewInterface
@@ -216,7 +211,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.select_all_checkbox.setChecked(True)
         time.sleep(4)
         self.select_all_checkbox.setChecked(False)
-        self.current_table = TreeWidget(self.active_mode_queue, self.error_queue, self.error_signal)
+        self.current_table = TreeWidget(self.active_mode_queue, self.error_queue, self.error_signal)  # type: ignore[arg-type]
         self.stacked_table_widget.addWidget(self.current_table)
         self.all_tables.append(self.current_table)
         self.select_all_checkbox.disconnect()
@@ -255,6 +250,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.select_all_checkbox.stateChanged.connect(lambda: self.current_table.toggle_all_rows())
 
     def __deselect(self):
+        """resets select all checkbox and deselects spinboxes."""
         self.upper_limit.clearFocus()
         self.lower_limit.clearFocus()
         if self.select_all_checkbox.isChecked():
@@ -263,7 +259,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
             self.select_all_checkbox.stateChanged.connect(lambda: self.current_table.toggle_all_rows())
 
     def deploy_error(self) -> None:
-        """Receives an Exception, displays information regarding that exception to the user."""
+        """gets an Exception, displays information regarding that exception to the user."""
         if self.error_queue.empty():
             return
         error = self.error_queue.get()
@@ -275,7 +271,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         error_window.show()
 
     def update_statusbar(self) -> None:
-        """Receives a status string, changes the UI's status string accordingly."""
+        """gets a status string, changes the UI's status string accordingly."""
         status: StatusSettings = self.status_queue.get()
         self.current_table.status = status.value[0]
         if status.value[0] == "measuring":  # type: ignore[comparison-overlap]
@@ -311,10 +307,12 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
     def __make_disp(self, cfile: CFileReadViewInterface, color_param,
                     parent_list: List[CFileReadViewInterface]) -> Displayable:
+        """creates a displayable according to a given cfile, color and parent list."""
         name: str = cfile.get_name()
         ram_peak: float = cfile.get_max(MetricName.RAM)
         cpu_peak: float = cfile.get_max(MetricName.CPU)
-        # Create Graph Plots
+
+        # Collect data for Plots
         x_values: List[float] = list()
         if parent_list:
             time: float = parent_list[-1].get_min_timestamps() - self.project_time
@@ -331,10 +329,11 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         cpu_y_values: List[float] = cfile.get_metrics(MetricName.CPU)
         runtime: List[float] = list()
         runtime.append(cfile.get_total_time())
+        color: str
         if color_param is not None:
             color = color_param
         else:
-            color: str = self.__generate_random_color()
+            color = self.__generate_random_color()
         parent_name_list: List[str] = list()
         plot_name: str = cfile.get_name()
         for parent in parent_list:
@@ -348,7 +347,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
                            parent_name_list)
 
     def __generate_random_color(self) -> str:
-        """Generates random saturated color between light blue and pink."""
+        """generates random saturated color between light blue and pink."""
         light_blue_rgb = (173, 216, 230)  # Light Blue
         pink_rgb = (255, 182, 193)  # Pink
         saturation_factor = 2.1
@@ -367,7 +366,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         return random_color_hex
 
     def __setup_connections(self) -> None:
-        """Sets up connections between table and graph widgets."""
+        """sets up connections between table and graph widgets."""
         for item in self.current_table.items:
             if not item.row.connected and item.row.checkbox.isEnabled():
                 item.row.checkbox.stateChanged.connect(
@@ -377,19 +376,10 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.__setup_click_connections()
 
     def __setup_resource_connections(self) -> None:
-        """Sets up connections between metric bar and graph/bar chart widgets."""
+        """sets up connections between metric bar and graph/bar chart widgets."""
         self.metric_bar.cpu_button.pressed.connect(lambda: self.stacked_widget.setCurrentIndex(1))
         self.metric_bar.ram_button.pressed.connect(lambda: self.stacked_widget.setCurrentIndex(0))
         self.metric_bar.runtime_button.pressed.connect(lambda: self.stacked_widget.setCurrentIndex(2))
-
-    def __reset_graph(self) -> None:
-        for displayable in self.__visible_plots:
-            self.__visible_plots.remove(displayable)
-            remove_runnable: RemoveRunnable = RemoveRunnable(ram_graph=self.ram_graph_widget,
-                                                             cpu_graph=self.cpu_graph_widget,
-                                                             runtime_graph=self.bar_chart_widget,
-                                                             displayable=displayable, mutex=self.mutex)
-            self.thread_pool.start(remove_runnable)
 
     def __update_visibility(self, displayable: Displayable) -> None:
         """Shows or hides plots of given displayable."""
@@ -430,7 +420,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.thread_pool.start(plot_runnable)
 
     def __setup_click_connections(self) -> None:
-        """Sets up connections between clicking on graph and highlighting according table row."""
+        """sets up connections between clicking on graph and highlighting according table row."""
         self.bar_chart_widget.click_signal.connect(
             lambda: self.current_table.highlight_row(self.bar_chart_widget.bar_clicked))
         self.cpu_graph_widget.click_signal.connect(

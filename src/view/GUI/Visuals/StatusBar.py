@@ -1,9 +1,7 @@
-import time
 from typing import Optional
 
-from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QLabel, QWidget, QHBoxLayout, QBoxLayout, QVBoxLayout, QGridLayout
+from PyQt5.QtWidgets import QLabel, QWidget, QHBoxLayout, QVBoxLayout
 from src.model.core.StatusSettings import StatusSettings
 
 

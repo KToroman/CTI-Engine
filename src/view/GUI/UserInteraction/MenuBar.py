@@ -2,10 +2,7 @@ import typing
 from multiprocessing import Queue
 from multiprocessing.synchronize import Event as SyncEvent
 from typing import List
-from PyQt5.QtWidgets import QPushButton, QInputDialog, QTextEdit, QScrollArea, QWidget, QVBoxLayout, QComboBox
-
-from src.model.core.ProjectReadViewInterface import ProjectReadViewInterface
-from src.view.AppRequestsInterface import AppRequestsInterface
+from PyQt5.QtWidgets import QComboBox
 from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtWidgets import QPushButton, QInputDialog, QScrollArea, QWidget, QVBoxLayout
 from src.view.GUI.UserInteraction.ProjectNameButtonWrapper import ProjectNameButton
@@ -52,7 +49,6 @@ class MenuBar:
 
         self.project_buttons: List[QPushButton] = []
 
-
     def __show_input_dialog(self) -> None:
         """opens an input dialog to enter a path of a project"""
         text, ok = QInputDialog.getText(self.scroll_widget, "File input", 'Enter file name:')
@@ -71,7 +67,7 @@ class MenuBar:
     def update_scrollbar(self, project_names: List[str]) -> None:
         """updates the scroll area when a new project is about to be visualized so all loaded projects are
             correctly displayed in the scroll area"""
-        #delete and disconnect the existing buttons in the scroll area
+        # delete and disconnect the existing buttons in the scroll area
         if self.scroll_layout.count() > 0:
             for i in range(self.scroll_layout.count()):
                 self.scroll_layout.itemAt(i).widget().disconnect()

@@ -1,11 +1,8 @@
 import multiprocessing
 from multiprocessing.synchronize import Event as SyncEvent
-import threading
 from multiprocessing import Queue
 
 from src.builder.BuilderInterface import BuilderInterface
-from src.builder.header_builder.CompilingTool import CompilingTool
-from src.model.core.SourceFile import SourceFile
 
 
 class BuilderThread:

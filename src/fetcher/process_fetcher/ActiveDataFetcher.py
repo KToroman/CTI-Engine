@@ -1,4 +1,3 @@
-import threading
 import multiprocessing
 import time
 from multiprocessing import Queue
@@ -23,11 +22,7 @@ from src.fetcher.process_fetcher.Threads.ActiveDataCollectionThread import (
 from src.fetcher.process_fetcher.process_observer.metrics_observer.DataObserver import (
     DataObserver,
 )
-from src.model.DataBaseEntry import DataBaseEntry
 from src.model.Model import Model
-from src.model.core.CFile import CFile
-from src.model.core.CFileReadViewInterface import CFileReadViewInterface
-from src.model.core.Project import Project
 from src.model.core.SourceFile import SourceFile
 from src.fetcher.process_fetcher.Threads.ProcessFindingThread import (
     ProcessFindingThread,
@@ -44,18 +39,18 @@ class ActiveDataFetcher(FetcherInterface):
     __seconds__to_move_on = 3
 
     def __init__(
-        self,
-        source_file_name: str,
-        model: Model,
-        build_dir_path: str,
-        saver_queue: "multiprocessing.Queue[str]",
-        save_path: str,
-        hierarchy_queue: "multiprocessing.Queue[Any]",
-        model_lock: SyncLock,
-        fetcher_count: int = 5,
-        fetcher_process_count: int = 10,
-        process_collector_count: int = 20,
-        process_finder_count: int = 15,
+            self,
+            source_file_name: str,
+            model: Model,
+            build_dir_path: str,
+            saver_queue: "multiprocessing.Queue[str]",
+            save_path: str,
+            hierarchy_queue: "multiprocessing.Queue[Any]",
+            model_lock: SyncLock,
+            fetcher_count: int = 5,
+            fetcher_process_count: int = 10,
+            process_collector_count: int = 20,
+            process_finder_count: int = 15,
     ) -> None:
         self.__model = model
         self.__model_lock = model_lock
@@ -101,7 +96,7 @@ class ActiveDataFetcher(FetcherInterface):
 
     def update_project(self) -> bool:
         """Main method of the active data fetcher. Returns True if this method should be called again."""
-        #if not self.__header_error_queue.empty():
+        # if not self.__header_error_queue.empty():
         self.__building_event.set()
         while self.__building_event.is_set() or not self.__header_error_queue.empty():
             if not self.__header_error_queue.empty():
@@ -111,8 +106,8 @@ class ActiveDataFetcher(FetcherInterface):
                     header = self.__header_error_queue.get()
                     with self.__model_lock:
                         model_header = self.__model.current_project.get_header(header,
-                                                                           self.__model.current_project.get_sourcefile(
-                                                                                self.__model.current_project.current_sourcefile))
+                                                                               self.__model.current_project.get_sourcefile(
+                                                                                   self.__model.current_project.current_sourcefile))
                         if model_header is not None:
                             model_header.has_been_build = True
                     continue
@@ -121,7 +116,9 @@ class ActiveDataFetcher(FetcherInterface):
                     self.__building_event.clear()
                     break
                 with self.__model_lock:
-                    model_header = self.__model.current_project.get_header(header, self.__model.current_project.get_sourcefile(self.__model.current_project.current_sourcefile))
+                    model_header = self.__model.current_project.get_header(header,
+                                                                           self.__model.current_project.get_sourcefile(
+                                                                               self.__model.current_project.current_sourcefile))
                 if model_header is not None:
                     model_header.error = True
                     model_header.has_been_build = True

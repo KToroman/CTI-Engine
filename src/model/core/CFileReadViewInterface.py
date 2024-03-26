@@ -1,5 +1,5 @@
 import typing
-from typing import Protocol, List, Self
+from typing import Protocol, List
 
 from src.model.core.MetricName import MetricName
 
@@ -12,15 +12,15 @@ class CFileReadViewInterface(Protocol):
         raise NotImplementedError
 
     def get_total_time(self) -> float:
-        '''returns total time the cfile was building'''
+        """returns total time the cfile was building"""
         raise NotImplementedError
 
     def get_min_timestamps(self) -> float:
-        '''returns the first timestamp in CFile's entries'''
+        """returns the first timestamp in CFile's entries"""
         raise NotImplementedError
 
     def get_max_timestamps(self) -> float:
-        '''returns the last timestamp in CFile's entries'''
+        """returns the last timestamp in CFile's entries"""
         raise NotImplementedError
 
     def get_max(self, metric: MetricName) -> float:
@@ -42,6 +42,6 @@ class CFileReadViewInterface(Protocol):
         """Returns true if there is an error in this CFile."""
         raise NotImplementedError
 
-    def get_parent(self) -> typing.Optional["CFile"]:
+    def get_parent(self) -> typing.Optional["CFile"]:  # type: ignore
         """Returns parent of cfile"""
         raise NotImplementedError

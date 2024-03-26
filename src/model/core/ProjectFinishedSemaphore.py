@@ -7,8 +7,6 @@ from typing import List
 
 from PyQt5.QtCore import pyqtSignal
 
-from src.model.core.Project import Project
-
 
 class ProjectFinishedSemaphore:
 

@@ -1,13 +1,10 @@
-
-
 from typing import List
 
 from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtGui import QIcon
 from matplotlib import pyplot as plt
 from PyQt5.QtWidgets import QVBoxLayout, QWidget
 from matplotlib.backend_bases import PickEvent
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas # type: ignore[attr-defined]
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas  # type: ignore[attr-defined]
 from matplotlib.lines import Line2D
 
 from src.view.GUI.Graph.CustomToolbar import CustomToolbar

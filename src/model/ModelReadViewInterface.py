@@ -1,7 +1,5 @@
-
 from typing import List, Protocol
 
-from src.model.core.CFileReadViewInterface import CFileReadViewInterface
 from src.model.core.Project import Project
 
 
@@ -18,4 +16,3 @@ class ModelReadViewInterface(Protocol):
 
     def set_visible_project(self, name: str):
         raise NotImplementedError
-

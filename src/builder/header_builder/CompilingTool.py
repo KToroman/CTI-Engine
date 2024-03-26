@@ -1,14 +1,14 @@
-import subprocess, shutil, threading
+import shutil
+import subprocess
 from multiprocessing import Queue
 from pathlib import Path
+from subprocess import CompletedProcess, CalledProcessError
 
 from src.builder.BuilderInterface import BuilderInterface
-from src.model.core.SourceFile import SourceFile
-from src.model.core.Header import Header
 from src.builder.header_builder.FileBuilder import FileBuilder
 from src.builder.header_builder.HeaderIterator import HeaderIterator
-
-from subprocess import CompletedProcess, CalledProcessError
+from src.model.core.Header import Header
+from src.model.core.SourceFile import SourceFile
 
 
 class CompilingTool(BuilderInterface):
@@ -39,7 +39,6 @@ class CompilingTool(BuilderInterface):
                                           source_file_name=source_file.get_name(),
                                           build_path=path)
         self.__header_iterator = HeaderIterator(self.source_file, header_depth)
-        
 
     def build(self) -> bool:
         """returns true if there is another header to be built"""
@@ -76,7 +75,8 @@ class CompilingTool(BuilderInterface):
 
     def clear_directory(self) -> None:
         try:
-            path: Path = (Path(self.__build_path) / Path(self.__curr_project_dir) /"Active_Mode_Build" / "temp").resolve()
+            path: Path = (Path(self.__build_path) / Path(
+                self.__curr_project_dir) / "Active_Mode_Build" / "temp").resolve()
             shutil.rmtree(path)
         except FileNotFoundError:
             pass

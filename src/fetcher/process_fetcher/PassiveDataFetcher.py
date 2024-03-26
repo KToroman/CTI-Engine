@@ -1,9 +1,5 @@
-import multiprocessing
-import os.path
-import threading
 import time
 from multiprocessing import Queue, Lock
-from os.path import join
 from multiprocessing.synchronize import Lock as SyncLock
 from typing import List
 from multiprocessing.synchronize import Event as SyncEvent
@@ -17,7 +13,6 @@ from src.fetcher.process_fetcher.Threads.ProcessCollectorThread import ProcessCo
 from src.fetcher.process_fetcher.Threads.ProcessFindingThread import ProcessFindingThread
 
 from src.fetcher.process_fetcher.process_observer.metrics_observer.DataObserver import DataObserver
-from src.model.DataBaseEntry import DataBaseEntry
 from src.model.Model import Model
 from src.model.core.Project import Project
 
@@ -27,7 +22,8 @@ class PassiveDataFetcher(DataFetcher):
     def __init__(self, model: Model, model_lock: SyncLock, saver_queue: "Queue[str]", hierarchy_queue: "Queue[Project]",
                  shutdown: SyncEvent, save_path: str, project_queue: "Queue[str]", finished_event: pyqtSignal,
                  project_finished_event: SyncEvent, passive_mode_event: SyncEvent, pid_queue: "Queue[str]",
-                 process_finder_count: int = 2, process_collector_count: int = 2, fetcher_count: int = 2, fetcher_process_count: int = 15) -> None:
+                 process_finder_count: int = 2, process_collector_count: int = 2, fetcher_count: int = 2,
+                 fetcher_process_count: int = 15) -> None:
 
         self.__model = model
         self.__model_lock = model_lock
