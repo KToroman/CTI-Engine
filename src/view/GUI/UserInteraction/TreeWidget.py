@@ -27,7 +27,8 @@ class TreeWidget(QTreeWidget):
     graph_signal: pyqtSignal = pyqtSignal()
     deselect_signal: pyqtSignal = pyqtSignal()
 
-    def __init__(self, active_mode_queue: "Queue[str]") -> None:
+    def __init__(self, active_mode_queue: "Queue[str]", error_queue: "Queue[BaseException]",
+                 error_signale: pyqtSignal) -> None:
         super().__init__()
 
         self.active_mode_queue: "Queue[str]" = active_mode_queue
@@ -43,6 +44,8 @@ class TreeWidget(QTreeWidget):
         self.active_started: bool = False
         self.all_selected: bool = False
         self.in_row_loop: bool = False
+        self.error_queue = error_queue
+        self.error_signal = error_signale
 
         self.__shutdown: SyncEvent = multiprocessing.Event()
 
@@ -56,6 +59,8 @@ class TreeWidget(QTreeWidget):
         self.row_count: int = 1
         self.last_checkbox: int = 0
         self.run_count: int = 0
+        self.project_name: str = ""
+        self.status: str = ""
 
     def insert_values(self, displayables: List[DisplayableHolder]) -> None:
         for displayable in displayables:
@@ -119,6 +124,12 @@ class TreeWidget(QTreeWidget):
 
     def start_active_measurement(self, name: str) -> None:
         """entry point for an active measurement."""
+        if self.status == "measuring" or self.status == "making file hierarchy":
+            self.error_queue.put(BaseException("Can not start active measurement while fetching a project. " +
+                                               "Please cancel the fetching or wait till project is finished!"))
+            self.error_signal.emit()
+            return
+
         self.active_started = True
         self.insertion_point.append(name)
         self.active_mode_queue.put(name)

@@ -83,7 +83,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.resize(self.WINDOWSIZE1, self.WINDOWSIZE2)
 
         # setting up main components
-        self.current_table: TreeWidget = TreeWidget(self.active_mode_queue)
+        self.current_table: TreeWidget = TreeWidget(self.active_mode_queue, self.error_queue, self.error_signal)
         self.menu_bar: MenuBar = MenuBar(load_path_queue, cancel_event, restart_event, self.project_queue,
                                          self.visualize_signal, self.index_queue,
                                          self.change_table_signal)  # type: ignore[arg-type]
@@ -152,6 +152,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
     def visualize(self) -> None:
         """displays the data contained in that model to the user."""
+
         project_name: str = self.project_queue.get()
         project: ProjectReadViewInterface = self.__model.get_project_by_name(project_name)
         self.project_time = project.get_project_time()
@@ -180,6 +181,8 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         # Update other Widgets
         self.__setup_connections()
         self.status_bar.update_status(StatusSettings.FINISHED, project.get_project_name())
+        self.current_table.project_name = project.get_project_name()
+        self.__model.set_visible_project(self.current_table.project_name)
         self.menu_bar.project_buttons[len(self.menu_bar.project_buttons) - 1].setStyleSheet("background-color: #00FF00")
 
     def __visualize_active(self, project: ProjectReadViewInterface) -> None:
@@ -213,7 +216,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.select_all_checkbox.setChecked(True)
         time.sleep(4)
         self.select_all_checkbox.setChecked(False)
-        self.current_table = TreeWidget(self.active_mode_queue)
+        self.current_table = TreeWidget(self.active_mode_queue, self.error_queue, self.error_signal)
         self.stacked_table_widget.addWidget(self.current_table)
         self.all_tables.append(self.current_table)
         self.select_all_checkbox.disconnect()
@@ -234,6 +237,10 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
     def toggle_table_vis(self, index: int) -> None:
         """changes the currently displayed table. Deselects all graphs to make sure the change goes flawlessly"""
+        if self.current_table.status == "active measuring":
+            self.error_queue.put(BaseException("Can not change table while making active measurement"))
+            self.error_signal.emit()
+            return
         self.select_all_checkbox.setChecked(True)
         time.sleep(2)
         self.select_all_checkbox.setChecked(False)
@@ -242,6 +249,9 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         self.select_all_checkbox.disconnect()
         # setting up connections for the new table
         self.__setup_connections()
+        self.__model.set_visible_project(self.current_table.project_name)
+        self.lower_limit.setMaximum(self.current_table.last_checkbox)
+        self.upper_limit.setMaximum(self.current_table.last_checkbox)
         self.select_all_checkbox.stateChanged.connect(lambda: self.current_table.toggle_all_rows())
 
     def __deselect(self):
@@ -267,6 +277,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     def update_statusbar(self) -> None:
         """Receives a status string, changes the UI's status string accordingly."""
         status: StatusSettings = self.status_queue.get()
+        self.current_table.status = status.value[0]
         if status.value[0] == "measuring":  # type: ignore[comparison-overlap]
             self.status_bar.update_status(status, self.__model.get_current_project_name().split("__")[0])
         elif status.value[0] == "active measuring":
@@ -434,3 +445,4 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     def closeEvent(self, event: QCloseEvent) -> None:
         self.shutdown_event.set()
         event.accept()
+

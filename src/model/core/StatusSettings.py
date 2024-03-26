@@ -12,3 +12,4 @@ class StatusSettings(Enum):
     LOADING = "loading file", "	#add8e6"  # Lightblue
     HIERARCHY = "making file hierarchy", "#90EE90"  # Light green
     ACTIVE = "active measuring", "#FF3659"
+    VISUALIZING = "visualizing (this may take a while)", "#54B2BD"  # blue

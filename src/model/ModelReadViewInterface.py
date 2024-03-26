@@ -15,3 +15,7 @@ class ModelReadViewInterface(Protocol):
 
     def get_current_project_name(self) -> str:
         raise NotImplementedError
+
+    def set_visible_project(self, name: str):
+        raise NotImplementedError
+

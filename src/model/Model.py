@@ -25,6 +25,7 @@ class Model(ModelReadViewInterface):
         self.current_project: Optional[Project] = None
         self.projects: List[Project] = list()
         self.semaphore_list: List[ProjectFinishedSemaphore] = list()
+        self.visible_project: str = ""
 
     def insert_datapoint(self, data_point: DataEntry) -> None:
         """inserts datapoint to sourcefile according to their paths to the current project"""
@@ -138,3 +139,6 @@ class Model(ModelReadViewInterface):
             if semaphore.project_name == name:
                 return True
         return False
+
+    def set_visible_project(self, name: str):
+        self.visible_project = name

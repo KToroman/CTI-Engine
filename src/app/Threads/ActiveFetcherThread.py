@@ -55,6 +55,8 @@ class ActiveFetcherThread:
 
     def __start_new_measurement(self) -> None:
         self.is_measuring = True
+        with self.__model_lock:
+            self.__model.current_project = self.__model.get_project_by_name(self.__model.visible_project)
         source_file_name: str = self.__source_file_name_queue.get(True, 10)
         if not source_file_name.endswith(".o"):
             self.__error_queue.put(Exception("[ActiveFetcherThread] You can not build a single header!"))

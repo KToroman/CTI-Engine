@@ -20,6 +20,7 @@ class ProjectNameButton(QPushButton):
         self.index_queue: "Queue[int]" = index_queue
         self.change_table_signal: pyqtSignal = change_table_signal  # type: ignore[assignment]
         self.setToolTip(project_name)
+        self.setMinimumWidth(40)
 
     def __show_project_name_input(self, index: int) -> None:
         """opens an input dialog to confirm the project you are about to load"""
