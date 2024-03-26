@@ -73,9 +73,7 @@ class HierarchyFetcher(FetcherInterface):
         futures: dict[Future[str], SourceFile] = {}
         failed_source_files: int = 0
         for source_file in source_files:
-            if (
-                not self.__hierarchy_fetching_event.is_set()
-            ) or self.__shutdown_event.is_set():
+            if (not self.__hierarchy_fetching_event.is_set()) or self.__shutdown_event.is_set():
                 return
             try:
                 self.__set_compile_command(source_file)

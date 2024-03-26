@@ -5,6 +5,7 @@ from threading import Thread
 from multiprocessing.synchronize import Event as SyncEvent
 
 from src.app.Threads.HierarchyProcess import HierarchyProcess
+from src.exceptions.SemaphoreNotFoundException import SemaphoreNotFoundException
 from src.fetcher.hierarchy_fetcher.HierarchyFetcher import HierarchyFetcher
 from src.model.Model import Model
 from src.model.core.CFile import CFile
@@ -39,6 +40,7 @@ class HierarchyThread:
             if not self.__hierarchy_work_queue.empty():
                 if not self.__process.is_alive():
                     self.__process_shutdown.clear()
+                    time.sleep(2)
                     self.__process.start()
             if not self.source_file_queue.empty():
                 data: SourceFile = self.source_file_queue.get()
@@ -47,38 +49,32 @@ class HierarchyThread:
                     self.__fetching_hierarchy.set()
                     continue
                 if data.path == "cancel":
+                    self.__process_shutdown.set()
                     if self.__current_work != "":
                         with self.__model_lock:
                             self.__model.get_semaphore_by_name(self.__current_work).hierarchy_fetcher_set()
-                    time.sleep(0.5)
-                    while not self.source_file_queue.empty():
-                        data = self.source_file_queue.get()
-                        if data.path != "cancel":
-                            self.__model.get_project_by_name(data.path).set_failed()
-                            self.__model.get_semaphore_by_name(data.path).hierarchy_fetcher_set()
+                            self.__model.get_project_by_name(self.__current_work).set_failed()
                     self.__current_work = ""
                     self.__fetching_hierarchy.clear()
-                    self.__process_shutdown.set()
                     self.__process.stop()
                     continue
                 if data.path == "fin":
-                    self.__model.get_semaphore_by_name(self.__current_work).hierarchy_fetcher_set()
+                    self.__process_shutdown.set()
+                    with self.__model_lock:
+                        self.__model.get_semaphore_by_name(self.__current_work).hierarchy_fetcher_set()
                     self.__current_work = ""
                     self.__fetching_hierarchy.clear()
-                    self.__process_shutdown.set()
                     self.__process.stop()
                     continue
                 if data.path == "ERROR":
                     self.__process_shutdown.set()
                     with self.__model_lock:
                         self.__model.get_project_by_name(self.__current_work).set_failed()
-                    self.__model.get_semaphore_by_name(self.__current_work).hierarchy_fetcher_set()
+                        self.__model.get_semaphore_by_name(self.__current_work).hierarchy_fetcher_set()
                     self.__current_work = ""
                     self.__fetching_hierarchy.clear()
                     self.__process.stop()
-                    time.sleep(1)
                     continue
-                time.sleep(0.01)
                 with self.__model_lock:
                     proj: Project = self.__model.get_project_by_name(self.__current_work)
                     source_file: SourceFile = proj.update_source_file(data.path, data.compile_command)

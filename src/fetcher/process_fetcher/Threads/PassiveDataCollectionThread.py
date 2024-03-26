@@ -58,6 +58,7 @@ class PassiveDataCollectionThread:
         self._current_processes.clear()
         with self._process_list_lock:
             self._process_list.clear()
+        self._current_processes.clear()
 
     def add_work(self, process: psutil.Process) -> None:
         if len(self._current_processes) < self._process_count:
@@ -82,7 +83,7 @@ class PassiveDataCollectionThread:
         time.sleep(0.01)
         with self._model_lock:
             self._model.insert_datapoint(data_entry)
-            self.time_till_false = time.time() + 60
+            self.time_till_false = time.time() + 90
 
     def _make_entry(self, process_point: ProcessPoint) -> None:
         try:

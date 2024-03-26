@@ -1,3 +1,4 @@
+from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QMessageBox
 
 class ErrorWindow(QMessageBox):
@@ -11,5 +12,10 @@ class ErrorWindow(QMessageBox):
         self.setIcon(QMessageBox.Critical)
         self.setWindowTitle(self.WINDOW_TITLE)
         self.addButton(QMessageBox.Ok)
+
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.close)
+        self.timer.start(30000)
+
         # Show immediately
         self.exec_()

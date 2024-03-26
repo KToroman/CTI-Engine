@@ -84,7 +84,7 @@ if __name__ == "__main__":
     # Queues for GUI messages
     load_path_queue: "Queue[str]" = Queue(3)
     source_file_name_queue: "Queue[str]" = Queue(10)
-    error_queue: "Queue[BaseException]" = Queue(4)
+    error_queue: "Queue[BaseException]" = Queue(10)
     status_queue: "Queue[StatusSettings]" = Queue()
     project_queue: "Queue[str]" = Queue()
     cancel_event = multiprocessing.Event()

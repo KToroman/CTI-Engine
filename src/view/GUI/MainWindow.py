@@ -256,13 +256,11 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         """Receives an Exception, displays information regarding that exception to the user."""
         if self.error_queue.empty():
             return
-
         error = self.error_queue.get()
         if (error.__str__() == "[ActiveFetcherThread] This SourceFile has not compile_command!" or
                 error.__str__() == "[ActiveFetcherThread] Active Fetcher Thread could not access its source-file-queue."
                 or error.__str__() == "[ActiveFetcherThread] You can not build a single header!"):
             self.current_table.active_started = False
-
         error_window = ErrorWindow(error)
         error_window.show()
 
