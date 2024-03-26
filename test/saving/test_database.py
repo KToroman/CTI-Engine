@@ -1,18 +1,13 @@
 from multiprocessing import Lock, Queue
 from typing import List, Tuple
-from unittest.mock import MagicMock
-from PyQt5.QtCore import pyqtSignal
-from qtpy import QT5
 from rocksdict import Rdict, RdictIter
 from src.fetcher.file_fetcher.FileLoader import FileLoader
 from src.model.DataBaseEntry import DataBaseEntry
 from src.model.Model import Model
-from src.model.core.Header import Header
 from src.model.core.Metric import Metric
 from src.model.core.MetricName import MetricName
 from src.model.core.Project import Project
 from src.saving.SaveToDatabase import SaveToDatabase
-import pytest
 
 path = "saves/project_name/project_name_DataBase"
 def test_db():

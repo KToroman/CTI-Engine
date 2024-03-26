@@ -4,14 +4,9 @@ import unittest
 from io import StringIO
 from unittest.mock import Mock, MagicMock
 from multiprocessing import Event, Queue
-from multiprocessing.synchronize import Event as SyncEvent, Lock as SyncLock
 import random
 
-import psutil
-
 from src.fetcher.process_fetcher.PassiveDataFetcher import PassiveDataFetcher
-from src.fetcher.process_fetcher.Threads.PassiveDataCollectionThread import PassiveDataCollectionThread
-from src.fetcher.process_fetcher.process_observer.metrics_observer.DataObserver import DataObserver
 from src.model.Model import Model
 from src.model.core.DataEntry import DataEntry
 from src.model.core.Metric import Metric
@@ -20,6 +15,7 @@ from src.model.core.Project import Project
 from src.model.core.SourceFile import SourceFile
 
 total_metric_accesses: int = 0
+
 
 class PassiveDataCollectionThreadMock:
     def __init__(self):
@@ -31,10 +27,13 @@ class PassiveDataCollectionThreadMock:
 
     def start(self):
         pass
+
     def stop(self):
         pass
+
     def has_work(self) -> bool:
         return False
+
     def add_work(self):
         if self.__model.current_project.source_files and random.random() > 0.5:
             sourcefile = random.choice(self.__model.current_project.source_files)
@@ -44,56 +43,74 @@ class PassiveDataCollectionThreadMock:
             sourcefile.path, time.time(), [Metric(random.random(), MetricName.CPU), Metric(random.random(), MetricName.RAM)]))
         self.time_till_false = time.time() + 35
 
+
 class ProcessFindingThreadMock:
     def __init__(self):
         pass
+
     def __call__(self, *args, **kwargs):
         self.collector = args[1][0]
         return self
+
     def start(self):
         pass
+
     def stop(self):
         pass
+
     def set_work(self, pid_list):
         self.collector.add_work()
+
 
 class ProcessCollectorThreadMock:
     def __init__(self):
         self.time_till_false = 0
+
     def __call__(self, *args, **kwargs):
         self.model = args[2]
         self.fetcher = args[5][0]
         return self
+
     def start(self):
         pass
+
     def stop(self):
         pass
+
     def add_work(self):
         if self.model.current_project is None:
             self.model.add_project(Project("test_dir", "test_name", "test_save_path"), Mock())
         self.fetcher.add_work()
         self.time_till_false = time.time() + 45
 
+
 class ProcessMock:
     def __init__(self):
         self.index = 0
+
     def __call__(self, *args, **kwargs):
         return self
+
     def cpu_percent(self):
         global total_metric_accesses
         total_metric_accesses += 1
         return random.random() + 1
+
     def memory_info(self):
         mock = MagicMock()
         mock.configure_mock(vms=1000000)
         return mock
+
     def cwd(self):
         return "test_dir"
+
     def is_running(self):
         return True
+
     def cmdline(self):
         self.index += 1
         return ["g++", "-arg1", "-arg2", f"test_file_{self.index % 10}.o"]
+
 
 class PopenMock:
     def __call__(self, *args, **kwargs):
