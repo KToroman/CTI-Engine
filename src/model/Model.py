@@ -1,3 +1,4 @@
+from code import compile_command
 import os.path
 from multiprocessing import Event, Queue
 from typing import Dict, List, Optional, cast
@@ -33,8 +34,11 @@ class Model(ModelReadViewInterface):
             raise ProjectNotFoundException
         cfile: CFile = self.current_project.get_sourcefile(data_point.path)
         cfile.data_entries.append(data_point)
+        compile_command=""
+        if cfile.compile_command is not None:
+            compile_command = cfile.compile_command
         self.current_project.add_to_delta(
-            path=cfile.path, parent_or_compile_command="", data_entry=data_point, hierarchy_level=0
+            path=cfile.path, parent_or_compile_command=compile_command, data_entry=data_point, grand_parent="", hierarchy_level=0
         )
 
     def insert_datapoint_header(self, data_entry: DataEntry) -> None:
@@ -54,13 +58,16 @@ class Model(ModelReadViewInterface):
         header = self.current_project.get_header(data_entry.path,
                                                  self.current_project.get_sourcefile(
                                                      self.current_project.current_sourcefile))
+        grand_parent = ""
+        if header.parent.parent is not None:
+            grand_parent = header.parent.parent.path
         if header is not None:
             header.data_entries.append(data_entry)
             self.current_project.add_to_delta(
                 path=header.path,
                 parent_or_compile_command=header.parent.path,
                 data_entry=data_entry,
-                hierarchy_level=header.hierarchy_level)
+                hierarchy_level=header.hierarchy_level, grand_parent=grand_parent)
 
     def project_in_semaphore_list(self, project_dir: str) -> bool:
         for semaphore in self.semaphore_list:

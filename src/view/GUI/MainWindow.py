@@ -167,9 +167,11 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
         cfile_list: List[CFileReadViewInterface] = project.get_cfiles()
         file_count: int = 1
         displayable_list: List[DisplayableHolder] = []
+        self.counter = 0
         for cfile in cfile_list:
             file_count += 1
             displayable_list.append(self.__create_displayable(cfile, 0, None))
+        print(f"MainWindow:  added {self.counter} displayables")
         self.current_table.insert_values(displayables=displayable_list)
         self.lower_limit.setMaximum(file_count)
         self.upper_limit.setMaximum(file_count)
@@ -286,6 +288,7 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
 
     def __create_displayable(self, cfile: CFileReadViewInterface, depth_p: int, color) -> DisplayableHolder:
         """turns given cfile into displayable"""
+        self.counter += 1
         parent_list: List[CFileReadViewInterface] = list()
         self.__get_parent_list(cfile, parent_list)
 
@@ -435,4 +438,3 @@ class MainWindow(QMainWindow, UIInterface, metaclass=MainWindowMeta):
     def closeEvent(self, event: QCloseEvent) -> None:
         self.shutdown_event.set()
         event.accept()
-

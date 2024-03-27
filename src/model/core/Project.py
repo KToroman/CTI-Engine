@@ -73,25 +73,31 @@ class Project(ProjectReadViewInterface):
         new_header = Header(header.path, parent, hierarchy)
         parent.headers.append(new_header)
         self.file_dict.add_file(new_header)
+        if parent.parent is None:
+            grand_parent = ""
+        else:
+            grand_parent = parent.parent.path
+       
+            
         self.add_to_delta(hierarchy_level=hierarchy, path=new_header.path,
-                          parent_or_compile_command=parent.path,
+                          parent_or_compile_command=parent.path, grand_parent=grand_parent,
                           data_entry=None)
-        for headers in header.headers:
-            self.update_headers(headers, new_header, hierarchy + 1)
+        for header in header.headers:
+            self.update_headers(header, new_header, hierarchy + 1)
 
     def update_source_file(self, path, compile_command: str) -> CFile:
         source_file = typing.cast(SourceFile, self.get_sourcefile(path))
         source_file.compile_command = compile_command
         self.add_to_delta(hierarchy_level=0, path=path,
-                          parent_or_compile_command=compile_command, data_entry=None)
+                          parent_or_compile_command=compile_command, grand_parent="",data_entry=None)
         return source_file
 
     def add_to_delta(
-            self, hierarchy_level: int, path: str, parent_or_compile_command: str, data_entry: DataEntry | None
+            self, hierarchy_level: int, path: str, parent_or_compile_command: str, grand_parent: str, data_entry: DataEntry | None
     ) -> None:
         if data_entry is None:
             self.delta_entries.append(DataBaseEntry(
-                path, parent_or_compile_command, None, None, hierarchy_level))
+                path, parent_or_compile_command, None, None, grand_parent, hierarchy_level))
         else:
             self.delta_entries.append(
                 DataBaseEntry(
@@ -99,6 +105,7 @@ class Project(ProjectReadViewInterface):
                     parent_or_compile_command,
                     data_entry.timestamp,
                     data_entry.metrics,
+                    grand_parent,
                     hierarchy_level,
                 )
             )
@@ -129,6 +136,7 @@ class Project(ProjectReadViewInterface):
 
     def get_header(self, name: str, parent: CFile):
         for header in parent.headers:
+            header = typing.cast(Header, header)
             if header.get_name() == name and not header.has_been_build:
                 return header
             temp = self.get_header(name, header)

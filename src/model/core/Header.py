@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Self
 from src.model.core.CFile import CFile
 from src.model.core.CFileReadViewInterface import CFileReadViewInterface
 from src.model.core.DataEntry import DataEntry
@@ -13,7 +13,7 @@ class Header(CFile):
         self, path: str, parent: Optional[CFile], hierarchy_level: int
     ) -> None:
         self.data_entries: List[DataEntry] = []
-        self.headers: List[CFileReadViewInterface] = []
+        self.headers: List[Self] = []
         self.path: str = path
         self.error: bool = False
         self.build_file_name: str = ""
