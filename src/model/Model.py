@@ -38,7 +38,7 @@ class Model(ModelReadViewInterface):
         if cfile.compile_command is not None:
             compile_command = cfile.compile_command
         self.current_project.add_to_delta(
-            path=cfile.path, parent_or_compile_command=compile_command, data_entry=data_point, grand_parent="", hierarchy_level=0
+            path=cfile.path, parent = "", compile_command=compile_command, data_entry=data_point, grand_parent="", hierarchy_level=0
         )
 
     def insert_datapoint_header(self, data_entry: DataEntry) -> None:
@@ -65,7 +65,8 @@ class Model(ModelReadViewInterface):
             header.data_entries.append(data_entry)
             self.current_project.add_to_delta(
                 path=header.path,
-                parent_or_compile_command=header.parent.path,
+                compile_command="",
+                parent=header.parent.path,
                 data_entry=data_entry,
                 hierarchy_level=header.hierarchy_level, grand_parent=grand_parent)
 

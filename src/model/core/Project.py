@@ -80,7 +80,7 @@ class Project(ProjectReadViewInterface):
        
             
         self.add_to_delta(hierarchy_level=hierarchy, path=new_header.path,
-                          parent_or_compile_command=parent.path, grand_parent=grand_parent,
+                          parent= parent.path, compile_command="", grand_parent=grand_parent,
                           data_entry=None)
         for header in header.headers:
             self.update_headers(header, new_header, hierarchy + 1)
@@ -89,20 +89,21 @@ class Project(ProjectReadViewInterface):
         source_file = typing.cast(SourceFile, self.get_sourcefile(path))
         source_file.compile_command = compile_command
         self.add_to_delta(hierarchy_level=0, path=path,
-                          parent_or_compile_command=compile_command, grand_parent="",data_entry=None)
+                          parent="" ,compile_command=compile_command, grand_parent="",data_entry=None)
         return source_file
 
     def add_to_delta(
-            self, hierarchy_level: int, path: str, parent_or_compile_command: str, grand_parent: str, data_entry: DataEntry | None
+            self, hierarchy_level: int, path: str, compile_command: str, parent: str, grand_parent: str, data_entry: DataEntry | None
     ) -> None:
         if data_entry is None:
             self.delta_entries.append(DataBaseEntry(
-                path, parent_or_compile_command, None, None, grand_parent, hierarchy_level))
+                path, parent, compile_command, None, None, grand_parent, hierarchy_level))
         else:
             self.delta_entries.append(
                 DataBaseEntry(
                     path,
-                    parent_or_compile_command,
+                    parent,
+                    compile_command,
                     data_entry.timestamp,
                     data_entry.metrics,
                     grand_parent,

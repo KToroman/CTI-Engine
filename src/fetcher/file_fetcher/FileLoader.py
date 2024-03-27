@@ -37,7 +37,8 @@ class FileLoader(FetcherInterface):
         self.__hierarchy = 0
         self.__found_cfile = None
         self.__timestamp = 0
-        self.__parent_or_compile_command: str = ""
+        self.__parent: str = ""
+        self.__compile_command: str = ""
         self.__project: Project
         
 
@@ -46,8 +47,9 @@ class FileLoader(FetcherInterface):
             self.__db = Rdict(self.__dir_path)
             self.__iter: RdictIter = self.__db.iter()
             self.__project = self.__create_project()
-            self.__insert_values()
             self.__add_files()
+            self.__insert_values()
+
             with self.__model_lock:
                 self.__model.add_project(self.__project, None)
                 self.__model.current_project = self.__project
@@ -56,6 +58,7 @@ class FileLoader(FetcherInterface):
             self.__db.close()
             num_files = len(self.__all_cfiles)
             print(f"there are now {num_files} files")
+            print(f"there are {len(self.__project.source_files)} source files")
             return False
         raise FileNotFoundError(
             "Couldn't find any saved projects on the given path")
@@ -66,64 +69,74 @@ class FileLoader(FetcherInterface):
             key = self.__iter.key()
             value = self.__iter.value()
             self.__decode_key(key)
-            self.__add_to_project(value)
+            if value is not None:
+                self.__add_to_project(value)
             self.__iter.next()
 
     def __add_files(self):
-        self.__iter.seek_to_first()
-        counter = 0
-        while self.__iter.valid():
-            key = self.__iter.key()
-            value = self.__iter.value()
-            self.__decode_key(key)
-            if value is None:
-                counter += 1
-                self.__divide_files()
-            self.__iter.next()
-        print(f"added {counter}-files")
+        self.counter = 0
+        for i in range(0,3):
+            self.__iter.seek_to_first()
+            while self.__iter.valid():
+                key = self.__iter.key()
+                value = self.__iter.value()
+                self.__decode_key(key)
+                if value is None:
+                    self.counter += 1
+                    self.__divide_files(i)
+                self.__iter.next()
+        print(f"added {self.counter}-files")
 
-    def __divide_files(self):
-        if self.__hierarchy == 0:
-            file = SourceFile(self.__path)
-        if self.__hierarchy == 1:
-            file = Header(self.__path, None, 1)
-        if self.__hierarchy == 2:
-            file = Header(self.__path, None, 2)
-        self.__all_cfiles[self.__file_identifier] = file
+    def __divide_files(self, hierarchy_level: int):
+        if hierarchy_level == 0:
+            if self.__hierarchy == hierarchy_level:
+                file = SourceFile(self.__path)
+                self.__project.source_files.append(file)
+                self.__all_cfiles[self.__file_identifier] = file
+
+        else :
+            if self.__hierarchy == hierarchy_level:
+                file = Header(self.__path, None, self.__hierarchy)
+                parent_key = f"{self.__parent}\n{self.__grand_parent}\n"
+                parent = self.__all_cfiles.get(parent_key, None)
+                file.parent = parent
+                parent.headers.append(file)
+                self.__all_cfiles[self.__file_identifier] = file
 
     def __decode_key(self, key: str):
         keys: List[str] = key.split("\n")
         self.__path = keys[0]
-        self.__parent_or_compile_command = keys[1]
-        self.__grand_parent = keys[2]
-        self.__hierarchy: int = int(keys[3])
-        self.__timestamp: float = float(keys[4])
+        self.__compile_command = keys[1]
+        self.__parent = keys[2]
+        self.__grand_parent = keys[3]
+        self.__hierarchy: int = int(keys[4])
+        self.__timestamp: float = float(keys[5])
         self.__found_cfile = self.__all_cfiles.get(self.__path, None)
-        self.__file_identifier = f"{self.__path}\n{self.__parent_or_compile_command}\n{self.__grand_parent}"
+        self.__file_identifier = f"{self.__path}\n{self.__parent}\n{self.__grand_parent}"
 
     def __add_to_project(self, value: List[Any]):
         self.__found_cfile = self.__all_cfiles.get(self.__file_identifier)
         if self.__found_cfile is None:
-            self.__found_cfile = self.__add_cfile_to_project(
-            )
+            self.__found_cfile = self.__add_cfile_to_project()
+            raise Exception
         if self.__hierarchy > 0:
-            self.__check_parent()
+            #self.__check_parent()
+            pass
         self.__add_data_entry(value)
 
 
     def __check_parent(self):
-        parent = self.__all_cfiles.get(f"{self.__parent_or_compile_command}\n{self.__grand_parent}", None)
+        parent = self.__all_cfiles.get(f"{self.__parent}\n{self.__grand_parent}\n", None)
         if parent is None:
             header_path = self.__path
-            self.__path = self.__parent_or_compile_command
+            self.__path = self.__parent
             parent = self.__add_cfile_to_project()
             self.__path = header_path
         for header in parent.headers:
             if header.path == self.__path:
                 return
         parent.headers.append(self.__found_cfile)
-        
-
+    
 
     def __add_data_entry(self, value: List[Any]):
         if self.__found_cfile is None:
@@ -139,23 +152,15 @@ class FileLoader(FetcherInterface):
         self,
     ) -> CFile:
         '''to be called if no cfile with path==path was found yet. '''
+        self.counter += 1
         new_sourcefile: SourceFile = SourceFile(self.__path)
-        if not self.__parent_or_compile_command == "":
-            new_sourcefile.compile_command = self.__parent_or_compile_command
+        if not self.__compile_command == "":
+            new_sourcefile.compile_command = self.__compile_command
         self.__project.source_files.append(new_sourcefile)
         self.__project.file_dict.add_file(new_sourcefile)
         self.__all_cfiles[self.__path] = new_sourcefile
         return new_sourcefile
 
-    def __add_parent(self) -> CFile:
-        if self.__hierarchy == 1:
-            parent = SourceFile(self.__parent_or_compile_command)
-            self.__project.source_files.append(parent)
-            self.__project.file_dict.add_file(parent)
-        if self.__hierarchy == 2:
-            parent = Header(path=self.__path, parent=None, hierarchy_level=1)
-        self.__all_cfiles[self.__parent_or_compile_command] = parent
-        return parent
 
     def __extract_dataentry(self, value: List[Any] | None, cfile_path: str, timestamp: float) -> Optional[DataEntry]:
         if value is None:
