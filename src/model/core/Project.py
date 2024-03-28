@@ -1,8 +1,6 @@
 import time
+from typing import List
 import typing
-from typing import List, Optional
-import typing
-from src.exceptions.CFileNotFoundError import CFileNotFoundError
 from src.model.DataBaseEntry import DataBaseEntry
 from src.model.core.CFile import CFile
 from src.model.core.CFileReadViewInterface import CFileReadViewInterface
@@ -31,6 +29,8 @@ class Project(ProjectReadViewInterface):
         self.path_to_save = f"{path_to_save}/{self.working_dir}/CTI_Engine_{time_stamp_str}"
         self.delta_entries: List[DataBaseEntry] = list()
         self.count_headers = 0
+        self.__failed: bool = False
+        self.current_sourcefile: str = ""
 
     def get_sourcefile(self, name: str) -> SourceFile:
         cfile = self.file_dict.get_cfile_by_name(name)
@@ -38,7 +38,10 @@ class Project(ProjectReadViewInterface):
             cfile = SourceFile(path=name)
             self.file_dict.add_file(cfile)
             self.source_files.append(cfile)
+            if self.__failed:
+                cfile.error = True
         return typing.cast(SourceFile, cfile)
+
     def get_header_by_name(self, name: str) -> CFile:
         cfile = self.file_dict.get_cfile_by_name(name)
         if cfile is None:
@@ -58,52 +61,68 @@ class Project(ProjectReadViewInterface):
                 self.file_dict.add_file(cfile)
         return cfile
 
-    def update_header(self, header_path: str, parent_path: str, hierarchy_level: int):
-        header = self.get_header_by_name(header_path)
-        if header.parent is not None and header.parent.path != parent_path:
-            header = Header(header_path, None, 1)
-        parent = self.get_unkown_cfile(
-            path=parent_path, hierarchy_level=hierarchy_level-1)
-        header.parent = parent
-        if header not in parent.headers:
-            parent.headers.append(header)
-        header.hierarchy_level = hierarchy_level
-        self.add_to_delta(hierarchy_level=hierarchy_level, path=header.path,
-                          parent_or_compile_command=parent.path,
-                          data_entry=None)
+    def set_failed(self):
+        self.__failed = True
+        for source_file in self.source_files:
+            if source_file.compile_command == "":
+                source_file.error = True
 
+    def update_headers(self, header: Header, parent: CFile, hierarchy: int):
+        if hierarchy > 2:
+            return
+        new_header = Header(header.path, parent, hierarchy)
+        parent.headers.append(new_header)
+        self.file_dict.add_file(new_header)
+        if parent.parent is None:
+            grand_parent = ""
+        else:
+            grand_parent = parent.parent.path
+       
+            
+        self.add_to_delta(hierarchy_level=hierarchy, path=new_header.path,
+                          parent= parent.path, compile_command="", grand_parent=grand_parent,
+                          data_entry=None)
+        for header in header.headers:
+            self.update_headers(header, new_header, hierarchy + 1)
 
     def update_source_file(self, path, compile_command: str) -> CFile:
         source_file = typing.cast(SourceFile, self.get_sourcefile(path))
         source_file.compile_command = compile_command
         self.add_to_delta(hierarchy_level=0, path=path,
-                          parent_or_compile_command=compile_command, data_entry=None)
+                          parent="" ,compile_command=compile_command, grand_parent="",data_entry=None)
         return source_file
 
     def add_to_delta(
-            self, hierarchy_level: int, path: str, parent_or_compile_command: str, data_entry: DataEntry | None
+            self, hierarchy_level: int, path: str, compile_command: str, parent: str, grand_parent: str, data_entry: DataEntry | None
     ) -> None:
         if data_entry is None:
             self.delta_entries.append(DataBaseEntry(
-                path, parent_or_compile_command, None, None, hierarchy_level))
+                path, parent, compile_command, None, None, grand_parent, hierarchy_level))
         else:
             self.delta_entries.append(
                 DataBaseEntry(
                     path,
-                    parent_or_compile_command,
+                    parent,
+                    compile_command,
                     data_entry.timestamp,
                     data_entry.metrics,
+                    grand_parent,
                     hierarchy_level,
                 )
             )
 
     def get_project_time(self) -> float:
-        '''returns project's first measured timestamp'''
+        """returns project's first measured timestamp"""
         starting_points: list[float] = list()
         for source_file in self.source_files:
-            starting_points.append(source_file.get_min_timestamps())
+            if source_file.get_min_timestamps() > 0:
+                starting_points.append(source_file.get_min_timestamps())
         starting_points.sort()
-        return starting_points[0]
+
+        if starting_points:
+            return starting_points[0]
+        else:
+            return 0
 
     def get_project_name(self) -> str:
         return self.name
@@ -115,3 +134,12 @@ class Project(ProjectReadViewInterface):
 
     def __str__(self) -> str:
         return f"<Project '{self.name}' with dir '{self.working_dir}'>"
+
+    def get_header(self, name: str, parent: CFile):
+        for header in parent.headers:
+            header = typing.cast(Header, header)
+            if header.get_name() == name and not header.has_been_build:
+                return header
+            temp = self.get_header(name, header)
+            if temp is not None:
+                return temp

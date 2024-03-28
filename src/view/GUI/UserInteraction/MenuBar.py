@@ -2,11 +2,8 @@ import typing
 from multiprocessing import Queue
 from multiprocessing.synchronize import Event as SyncEvent
 from typing import List
-from PyQt5.QtWidgets import QPushButton, QInputDialog, QTextEdit, QScrollArea, QWidget, QVBoxLayout, QComboBox
-
-from src.model.core.ProjectReadViewInterface import ProjectReadViewInterface
-from src.view.AppRequestsInterface import AppRequestsInterface
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtWidgets import QComboBox
+from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtWidgets import QPushButton, QInputDialog, QScrollArea, QWidget, QVBoxLayout
 from src.view.GUI.UserInteraction.ProjectNameButtonWrapper import ProjectNameButton
 
@@ -42,6 +39,7 @@ class MenuBar:
 
         self.scroll_widget: QWidget = QWidget()
         self.scroll_layout: QVBoxLayout = QVBoxLayout(self.scroll_widget)
+        self.scroll_layout.setAlignment(Qt.AlignTop)
         self.scroll_layout.setSpacing(2)
         self.scroll_bar.setWidget(self.scroll_widget)
 
@@ -50,7 +48,6 @@ class MenuBar:
         self.scroll_button.toggled.connect(lambda: self.__toggle_scrollbar())
 
         self.project_buttons: List[QPushButton] = []
-
 
     def __show_input_dialog(self) -> None:
         """opens an input dialog to enter a path of a project"""
@@ -70,7 +67,7 @@ class MenuBar:
     def update_scrollbar(self, project_names: List[str]) -> None:
         """updates the scroll area when a new project is about to be visualized so all loaded projects are
             correctly displayed in the scroll area"""
-        #delete and disconnect the existing buttons in the scroll area
+        # delete and disconnect the existing buttons in the scroll area
         if self.scroll_layout.count() > 0:
             for i in range(self.scroll_layout.count()):
                 self.scroll_layout.itemAt(i).widget().disconnect()
@@ -83,16 +80,11 @@ class MenuBar:
                     pass
         # split the displayed name to only the last part
         for name in project_names:
-            if name.split(" ").__len__() > 2:
-                show_name = name.split(" ")[0] + " " + name.split(" ")[-1]
-            else:
-                show_name = name.split(" ")[0]
+            show_name = name.split("__")[0]
             # put new buttons in
-            if name.split("/").__len__() > 2:
-                show_name = name.split("/")[-2] + " " + name.split("/")[-1]
             new_button = ProjectNameButton(self.project_buttons, show_name, name, self.__project_queue,
                                            self.__visualize_event, self.index_queue, self.change_table_signal)
-            self.scroll_layout.addWidget(new_button)
+            self.scroll_layout.addWidget(new_button, alignment=Qt.AlignTop)
             self.project_buttons.append(new_button)
 
     def set_stylesheet(self, style: str) -> None:
@@ -101,13 +93,16 @@ class MenuBar:
             self.pause_resume_button.setStyleSheet("background-color: #476eed;")
             self.cancel_button.setStyleSheet("background-color: #476eed;")
             self.scroll_button.setStyleSheet("background-color: #476eed;")
+            self.scroll_widget.setStyleSheet("background-color: #252526;")
         if style == "Dark Mode" or style == "Basic":
             self.load_file_button.setStyleSheet("background-color: #23868B;")
             self.pause_resume_button.setStyleSheet("background-color: #23868B;")
             self.cancel_button.setStyleSheet("background-color: #23868B;")
             self.scroll_button.setStyleSheet("background-color: #23868B;")
+            self.scroll_widget.setStyleSheet("background-color: #252526;")
         if style == "Light Mode":
             self.load_file_button.setStyleSheet("background-color: #8D9FD0;")
             self.pause_resume_button.setStyleSheet("background-color: #8D9FD0;")
             self.cancel_button.setStyleSheet("background-color: #8D9FD0;")
             self.scroll_button.setStyleSheet("background-color: #8D9FD0;")
+            self.scroll_widget.setStyleSheet("background-color: #252526;")

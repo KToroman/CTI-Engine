@@ -8,7 +8,6 @@ from multiprocessing.synchronize import Lock as SyncLock
 from src.model.DataBaseEntry import DataBaseEntry
 from src.model.Model import Model
 
-
 from src.model.core.Project import Project
 from src.saving.SaveInterface import SaveInterface
 
@@ -48,7 +47,7 @@ class SaveToDatabase(SaveInterface):
                 timestamp = time.time()
             else:
                 timestamp = entry.timestamp
-            key = f"{entry.path}\n{entry.parent_or_compile_command}\n{entry.hierarchy_level}\n{timestamp}"
+            key = f"{entry.path}\n{entry.compile_command}\n{entry.parent}\n{entry.grand_parent}\n{entry.hierarchy_level}\n{timestamp}"
             if entry.metrics is None:
                 value = None
             else:

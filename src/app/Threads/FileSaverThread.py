@@ -1,19 +1,12 @@
-from copy import copy, deepcopy
-from multiprocessing import Queue, Lock
+from multiprocessing import Queue
 from threading import Thread
 from multiprocessing.synchronize import Lock as SyncLock
 import time
 
 from typing import List, Optional
 from multiprocessing.synchronize import Event as SyncEvent
-
-from click import Option
-
-from src.model.DataBaseEntry import DataBaseEntry
 from src.model.Model import Model
 from src.saving.SaveInterface import SaveInterface
-
-
 
 
 class FileSaverThread:

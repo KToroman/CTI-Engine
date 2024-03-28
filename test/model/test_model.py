@@ -1,7 +1,6 @@
 import unittest
 from datetime import datetime
 import time
-from src.model.core.CFile import CFile
 from src.model.core.DataEntry import DataEntry
 from src.model.core.Header import Header
 from src.model.core.Metric import Metric

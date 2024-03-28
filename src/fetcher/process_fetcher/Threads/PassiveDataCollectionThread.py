@@ -2,7 +2,7 @@ import os
 import time
 from os.path import join
 from threading import Thread
-from typing import List, Optional
+from typing import List
 from multiprocessing.synchronize import Event as SyncEvent
 from multiprocessing.synchronize import Lock as SyncLock
 
@@ -16,7 +16,8 @@ from src.model.core.ProcessPoint import ProcessPoint
 
 
 class PassiveDataCollectionThread:
-    def __init__(self, process_list: List[psutil.Process], process_list_lock: SyncLock, model: Model, model_lock: SyncLock,
+    def __init__(self, process_list: List[psutil.Process], process_list_lock: SyncLock, model: Model,
+                 model_lock: SyncLock,
                  data_observer: DataObserver, process_count: int, shutdown: SyncEvent, active_event: SyncEvent) -> None:
 
         self._thread: Thread
@@ -31,8 +32,6 @@ class PassiveDataCollectionThread:
         self._process_count = process_count
         self._active_event = active_event
 
-
-
         self.time_till_false: float = 0
 
     def _run(self) -> None:
@@ -43,7 +42,8 @@ class PassiveDataCollectionThread:
                         self._make_entry(self._data_observer.observe(process))
                     else:
                         with self._process_list_lock:
-                            self._process_list.remove(process)
+                            if self._process_list:
+                                self._process_list.remove(process)
                         self._current_processes.remove(process)
                         self._is_full = False
                 except NoSuchProcess:
@@ -52,10 +52,12 @@ class PassiveDataCollectionThread:
                     self._current_processes.remove(process)
                     self._is_full = False
                     continue
+        self.time_till_false = 0
 
         self._current_processes.clear()
         with self._process_list_lock:
             self._process_list.clear()
+        self._current_processes.clear()
 
     def add_work(self, process: psutil.Process) -> None:
         if len(self._current_processes) < self._process_count:
@@ -71,6 +73,7 @@ class PassiveDataCollectionThread:
 
     def stop(self) -> None:
         self._thread.join()
+        self.time_till_false = 0
 
     def has_work(self) -> bool:
         return self._is_full
@@ -79,7 +82,7 @@ class PassiveDataCollectionThread:
         time.sleep(0.01)
         with self._model_lock:
             self._model.insert_datapoint(data_entry)
-            self.time_till_false = time.time() + 45
+            self.time_till_false = time.time() + 90
 
     def _make_entry(self, process_point: ProcessPoint) -> None:
         try:

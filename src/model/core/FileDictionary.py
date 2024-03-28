@@ -1,8 +1,6 @@
 from typing import Dict
 from src.model.core.CFile import CFile
 
-from src.model.core.SourceFile import SourceFile
-
 
 class FileDictionary:
     """a simple wrapper for a dictionary that stores the cfiles according to name"""

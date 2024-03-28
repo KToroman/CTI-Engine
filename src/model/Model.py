@@ -1,3 +1,4 @@
+from code import compile_command
 import os.path
 from multiprocessing import Event, Queue
 from typing import Dict, List, Optional, cast
@@ -25,6 +26,7 @@ class Model(ModelReadViewInterface):
         self.current_project: Optional[Project] = None
         self.projects: List[Project] = list()
         self.semaphore_list: List[ProjectFinishedSemaphore] = list()
+        self.visible_project: str = ""
 
     def insert_datapoint(self, data_point: DataEntry) -> None:
         """inserts datapoint to sourcefile according to their paths to the current project"""
@@ -32,11 +34,15 @@ class Model(ModelReadViewInterface):
             raise ProjectNotFoundException
         cfile: CFile = self.current_project.get_sourcefile(data_point.path)
         cfile.data_entries.append(data_point)
+        compile_command=""
+        if cfile.compile_command is not None:
+            compile_command = cfile.compile_command
         self.current_project.add_to_delta(
-            path=cfile.path, parent_or_compile_command="", data_entry=data_point, hierarchy_level=0
+            path=cfile.path, parent = "", compile_command=compile_command, data_entry=data_point, grand_parent="", hierarchy_level=0
         )
 
     def insert_datapoint_header(self, data_entry: DataEntry) -> None:
+        """
         if self.current_project is None:
             raise ProjectNotFoundException
         header = self.current_project.get_header_by_name(data_entry.path)
@@ -48,12 +54,21 @@ class Model(ModelReadViewInterface):
         parent = header.parent
         if parent is None:
             raise CFileNotFoundError
-        self.current_project.add_to_delta(
-            path=header.path,
-            parent_or_compile_command=parent.path,
-            data_entry=data_entry,
-            hierarchy_level=header.hierarchy_level,
-        )
+        """
+        header = self.current_project.get_header(data_entry.path,
+                                                 self.current_project.get_sourcefile(
+                                                     self.current_project.current_sourcefile))
+        grand_parent = ""
+        if header.parent.parent is not None:
+            grand_parent = header.parent.parent.path
+        if header is not None:
+            header.data_entries.append(data_entry)
+            self.current_project.add_to_delta(
+                path=header.path,
+                compile_command="",
+                parent=header.parent.path,
+                data_entry=data_entry,
+                hierarchy_level=header.hierarchy_level, grand_parent=grand_parent)
 
     def project_in_semaphore_list(self, project_dir: str) -> bool:
         for semaphore in self.semaphore_list:
@@ -85,15 +100,13 @@ class Model(ModelReadViewInterface):
             self, project: Project, semaphore: Optional[ProjectFinishedSemaphore]
     ) -> None:
         """adds new project to model"""
-
-        if (
-                not self.project_in_list(project.name)
-                and os.getcwd().split("/")[-1] not in project.working_dir
-        ):
+        if (not self.project_in_list(project.name)
+                and os.getcwd().split("/")[-1] not in project.working_dir):
             self.projects.append(project)
             if semaphore is not None:
                 self.semaphore_list.append(semaphore)
             self.current_project = project
+            print("[Model]  new project")
 
     def project_in_list(self, name: str) -> bool:
         for p in self.projects:
@@ -115,7 +128,8 @@ class Model(ModelReadViewInterface):
     def get_all_project_names(self) -> List[str]:
         return_list: List[str] = list()
         for project in self.projects:
-            return_list.append(project.name)
+            if not self.__project_name_in_semaphore(project.name):
+                return_list.append(project.name)
         return return_list
 
     def wait_for_project(self) -> None:
@@ -127,3 +141,12 @@ class Model(ModelReadViewInterface):
         if self.current_project is None:
             raise ProjectNotFoundException
         return self.current_project.name
+
+    def __project_name_in_semaphore(self, name: str) -> bool:
+        for semaphore in self.semaphore_list:
+            if semaphore.project_name == name:
+                return True
+        return False
+
+    def set_visible_project(self, name: str):
+        self.visible_project = name

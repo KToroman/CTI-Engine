@@ -72,8 +72,3 @@ QTreeWidget QHeaderView {
     color: #CCCCCC;
     font: bold 14px;
 }
-
-QWidget#GraphWidget {
-    background-color: #3d3d3d;
-}
-

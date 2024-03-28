@@ -1,9 +1,5 @@
-import multiprocessing
-import os.path
-import threading
 import time
 from multiprocessing import Queue, Lock
-from os.path import join
 from multiprocessing.synchronize import Lock as SyncLock
 from typing import List
 from multiprocessing.synchronize import Event as SyncEvent
@@ -17,7 +13,6 @@ from src.fetcher.process_fetcher.Threads.ProcessCollectorThread import ProcessCo
 from src.fetcher.process_fetcher.Threads.ProcessFindingThread import ProcessFindingThread
 
 from src.fetcher.process_fetcher.process_observer.metrics_observer.DataObserver import DataObserver
-from src.model.DataBaseEntry import DataBaseEntry
 from src.model.Model import Model
 from src.model.core.Project import Project
 
@@ -27,7 +22,8 @@ class PassiveDataFetcher(DataFetcher):
     def __init__(self, model: Model, model_lock: SyncLock, saver_queue: "Queue[str]", hierarchy_queue: "Queue[Project]",
                  shutdown: SyncEvent, save_path: str, project_queue: "Queue[str]", finished_event: pyqtSignal,
                  project_finished_event: SyncEvent, passive_mode_event: SyncEvent, pid_queue: "Queue[str]",
-                 process_finder_count: int = 2, process_collector_count: int = 2, fetcher_count: int = 2, fetcher_process_count: int = 15) -> None:
+                 process_finder_count: int = 2, process_collector_count: int = 2, fetcher_count: int = 2,
+                 fetcher_process_count: int = 15) -> None:
 
         self.__model = model
         self.__model_lock = model_lock
@@ -66,8 +62,9 @@ class PassiveDataFetcher(DataFetcher):
 
     def update_project(self) -> bool:
         current_project = ""
-        if self.__model.current_project is not None:
-            current_project = self.__model.current_project.working_dir
+        with self.__model_lock:
+            if self.__model.current_project is not None and self.__model.project_in_semaphore_list(self.__model.current_project.working_dir):
+                current_project = self.__model.current_project.working_dir
         while not self.__pid_queue.empty():
             item = self.__pid_queue.get()
             self.__pid_list.append(item)
@@ -93,8 +90,13 @@ class PassiveDataFetcher(DataFetcher):
         with self.__model_lock:
             if self.__model.current_project is not None and self.__model.project_in_semaphore_list(self.__model.get_current_working_directory()):
                 with self.__model.get_semaphore_by_name(self.__model.current_project.name).set_lock:
-                    #self.__saver_queue.put(self.__model.current_project)
                     self.__model.get_semaphore_by_name(self.__model.current_project.name).stop_fetcher_set()
+
+    def cancel(self):
+        if not self.__done_fetching:
+            self.__done_fetching = True
+        for sem in self.__model.semaphore_list:
+            sem.stop_fetcher_set()
 
     def __time_keeper(self) -> bool:
         if self.__get_time_till_false() < time.time():

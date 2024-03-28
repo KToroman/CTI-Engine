@@ -45,6 +45,7 @@ class GUICommunicationManager:
 
             if self.__active_measurement_active.is_set():
                 self.__passive_mode_event.clear()
+                self.__hierarchy_fetching_event.clear()
             if self.__cancel_event.is_set():
                 self.__cancel_event.clear()
                 if self.__passive_mode_event.is_set() or self.__active_measurement_active.is_set():

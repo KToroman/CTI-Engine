@@ -1,6 +1,4 @@
 from typing import Protocol
-
-from src.model.core.CFile import CFile
 from src.model.core.Header import Header
 
 

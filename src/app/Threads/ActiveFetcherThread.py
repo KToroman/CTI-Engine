@@ -7,7 +7,6 @@ from multiprocessing.synchronize import Lock as SyncLock
 from PyQt5.QtCore import pyqtSignal
 
 from src.fetcher.process_fetcher.ActiveDataFetcher import ActiveDataFetcher
-from src.model.DataBaseEntry import DataBaseEntry
 from src.model.Model import Model
 
 
@@ -38,6 +37,7 @@ class ActiveFetcherThread:
         self.__save_path: str = save_path
         self.__visualise_signal: pyqtSignal = visualise_event  # type: ignore[call-overload]
         self.__visualise_project_queue = visualise_project_queue
+        self.is_measuring: bool = False
 
     def start(self) -> None:
         self.__thread = Thread(target=self.__run)
@@ -46,28 +46,50 @@ class ActiveFetcherThread:
     def __run(self) -> None:
         while not self.__shutdown_event.is_set():
             if not self.__source_file_name_queue.empty():
+                if self.is_measuring:
+                    continue
                 self.__active_measurement_active.set()
                 self.__start_new_measurement()
             self.__active_measurement_active.clear()
 
     def __start_new_measurement(self) -> None:
+        self.is_measuring = True
+        with self.__model_lock:
+            self.__model.current_project = self.__model.get_project_by_name(self.__model.visible_project)
         source_file_name: str = self.__source_file_name_queue.get(True, 10)
-
+        if not source_file_name.endswith(".o"):
+            self.__error_queue.put(Exception("[ActiveFetcherThread] You can not build a single header!"))
+            self.__active_measurement_active.clear()
+            self.is_measuring = False
+            return
         if source_file_name == None:
             timeout_error: TimeoutError = TimeoutError(
                 "[ActiveFetcherThread] Active Fetcher Thread could not access its source-file-queue."
             )
             self.__error_queue.put(timeout_error, True, 1)
+            self.__active_measurement_active.clear()
+            self.is_measuring = False
             return
+        with self.__model_lock:
+            compile_command = self.__model.current_project.get_sourcefile(source_file_name).compile_command
+            print("[ActiveFetcherThread]     compile-commmand: "+ self.__model.current_project.get_sourcefile(source_file_name).compile_command)
+
+        if compile_command == "":
+            self.__error_queue.put(Exception("[ActiveFetcherThread] This SourceFile has no compile_command!"))
+            self.__active_measurement_active.clear()
+            self.is_measuring = False
+            return
+
+        self.__model.current_project.current_sourcefile = source_file_name
         active_data_fetcher: ActiveDataFetcher
         with ActiveDataFetcher(
-            source_file_name=source_file_name,
-            model=self.__model,
-            saver_queue=self.__saver_queue,
-            save_path=self.__save_path,
-            build_dir_path=self.__build_dir_path,
-            model_lock=self.__model_lock,
-            hierarchy_queue=Queue(),
+                source_file_name=source_file_name,
+                model=self.__model,
+                saver_queue=self.__saver_queue,
+                save_path=self.__save_path,
+                build_dir_path=self.__build_dir_path,
+                model_lock=self.__model_lock,
+                hierarchy_queue=Queue(),
         ) as active_data_fetcher:
             self.measure_source_file(active_data_fetcher)
 
@@ -81,6 +103,7 @@ class ActiveFetcherThread:
                 pass
         self.__visualise_project_queue.put(curr_proj.get_project_name())
         self.__active_measurement_active.clear()
+        self.is_measuring = False
         self.__visualise_signal.emit()  # type: ignore[attr-defined]
 
     def measure_source_file(self, active_data_fetcher: ActiveDataFetcher) -> None:

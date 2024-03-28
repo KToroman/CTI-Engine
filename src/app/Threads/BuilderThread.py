@@ -1,11 +1,8 @@
 import multiprocessing
 from multiprocessing.synchronize import Event as SyncEvent
-import threading
 from multiprocessing import Queue
 
 from src.builder.BuilderInterface import BuilderInterface
-from src.builder.header_builder.CompilingTool import CompilingTool
-from src.model.core.SourceFile import SourceFile
 
 
 class BuilderThread:
@@ -18,7 +15,7 @@ class BuilderThread:
         self.__grep_command_queue: "Queue[str]" = grep_command_queue
         self.__finished_event: SyncEvent = finished_event
 
-        self.__process: multiprocessing.Process = multiprocessing.Process(target=self.__run)
+        self.__process: multiprocessing.Process = multiprocessing.Process(target=self.__run, daemon=True)
 
     def __run(self) -> None:
         while not self.__shutdown_event.is_set():

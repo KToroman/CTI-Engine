@@ -1,4 +1,3 @@
-import threading
 import multiprocessing
 import time
 from multiprocessing import Queue
@@ -23,11 +22,7 @@ from src.fetcher.process_fetcher.Threads.ActiveDataCollectionThread import (
 from src.fetcher.process_fetcher.process_observer.metrics_observer.DataObserver import (
     DataObserver,
 )
-from src.model.DataBaseEntry import DataBaseEntry
 from src.model.Model import Model
-from src.model.core.CFile import CFile
-from src.model.core.CFileReadViewInterface import CFileReadViewInterface
-from src.model.core.Project import Project
 from src.model.core.SourceFile import SourceFile
 from src.fetcher.process_fetcher.Threads.ProcessFindingThread import (
     ProcessFindingThread,
@@ -44,18 +39,18 @@ class ActiveDataFetcher(FetcherInterface):
     __seconds__to_move_on = 3
 
     def __init__(
-        self,
-        source_file_name: str,
-        model: Model,
-        build_dir_path: str,
-        saver_queue: "multiprocessing.Queue[str]",
-        save_path: str,
-        hierarchy_queue: "multiprocessing.Queue[Any]",
-        model_lock: SyncLock,
-        fetcher_count: int = 5,
-        fetcher_process_count: int = 10,
-        process_collector_count: int = 20,
-        process_finder_count: int = 15,
+            self,
+            source_file_name: str,
+            model: Model,
+            build_dir_path: str,
+            saver_queue: "multiprocessing.Queue[str]",
+            save_path: str,
+            hierarchy_queue: "multiprocessing.Queue[Any]",
+            model_lock: SyncLock,
+            fetcher_count: int = 5,
+            fetcher_process_count: int = 10,
+            process_collector_count: int = 20,
+            process_finder_count: int = 15,
     ) -> None:
         self.__model = model
         self.__model_lock = model_lock
@@ -67,6 +62,7 @@ class ActiveDataFetcher(FetcherInterface):
             )
         if model.current_project is None:
             raise ProjectNotFoundException
+
         self.__compiling_tool: BuilderInterface = CompilingTool(
             curr_project_dir=model.current_project.working_dir,
             source_file=self.__source_file,
@@ -100,18 +96,32 @@ class ActiveDataFetcher(FetcherInterface):
 
     def update_project(self) -> bool:
         """Main method of the active data fetcher. Returns True if this method should be called again."""
-        #if not self.__header_error_queue.empty():
+        # if not self.__header_error_queue.empty():
         self.__building_event.set()
         while self.__building_event.is_set() or not self.__header_error_queue.empty():
             if not self.__header_error_queue.empty():
                 header = self.__header_error_queue.get()
+                if header == "fin":
+                    time.sleep(0.01)
+                    header = self.__header_error_queue.get()
+                    with self.__model_lock:
+                        model_header = self.__model.current_project.get_header(header,
+                                                                               self.__model.current_project.get_sourcefile(
+                                                                                   self.__model.current_project.current_sourcefile))
+                        if model_header is not None:
+                            model_header.has_been_build = True
+                    continue
                 if header == "ERROR":
                     self.__finished_event.set()
                     self.__building_event.clear()
                     break
-                model_header = self.__model.current_project.get_header_by_name(header)
+                with self.__model_lock:
+                    model_header = self.__model.current_project.get_header(header,
+                                                                           self.__model.current_project.get_sourcefile(
+                                                                               self.__model.current_project.current_sourcefile))
                 if model_header is not None:
                     model_header.error = True
+                    model_header.has_been_build = True
             for finder in self.__process_finder_list:
                 if self.__shutdown_event.is_set():
                     break
@@ -122,7 +132,8 @@ class ActiveDataFetcher(FetcherInterface):
         else:
             return True
 
-    # enter and exit define a context manager (with). each instance of ActiveDataFetcher should only exist in one with-Context
+    # enter and exit define a context manager (with).
+    # each instance of ActiveDataFetcher should only exist in one with-Context
 
     def __enter__(self) -> Self:
         # required threads should be started here
@@ -186,12 +197,6 @@ class ActiveDataFetcher(FetcherInterface):
         )
         self.__building_thread.start()
         return self
-
-    def get_header(self, name: str, cfile: CFileReadViewInterface) -> CFileReadViewInterface:
-        if name.split("/")[-1].split(".")[0] == cfile.get_name().split("/")[-1].split(".")[0]:
-            return cfile
-        for header in cfile.get_headers():
-            self.get_header(name, header)
 
     def __exit__(self, exc_type: Any, exc_val: Any, traceback: Any) -> typing_extensions.Literal[False]:
         # required threads should be stopped here

@@ -36,7 +36,7 @@ class FileFetcherThread:
                                          self.__project_queue)
                 file_loader.update_project()
                 with self.__model_lock:
-                    project: Project = self.__model.get_project_by_name(self.__model.get_current_project_name())
+                    project: Project = self.__model.current_project
                     for source_file in project.source_files:
                         source_file.error = True
             except FileNotFoundError as e:
