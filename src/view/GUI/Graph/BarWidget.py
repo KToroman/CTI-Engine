@@ -49,11 +49,12 @@ class BarWidget(QWidget):
 
     def remove_bar(self, plot: Plot) -> None:
         """Removes bar from bar chart."""
-        if plot.name not in self.categories:
-            return
-        self.categories.remove(plot.name)
-        self.values.remove(plot.y_values[0])
-        self.colors.remove(plot.color)
+        if plot.name in self.categories:
+            self.categories.remove(plot.name)
+        if plot.y_values[0] in self.values:
+            self.values.remove(plot.y_values[0])
+        if plot.color in self.colors:
+            self.colors.remove(plot.color)
         if self.count:
             self.count.pop(-1)
             self.counter -= 1
