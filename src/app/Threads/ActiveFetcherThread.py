@@ -72,6 +72,8 @@ class ActiveFetcherThread:
             return
         with self.__model_lock:
             compile_command = self.__model.current_project.get_sourcefile(source_file_name).compile_command
+            print("[ActiveFetcherThread]     compile-commmand: "+ self.__model.current_project.get_sourcefile(source_file_name).compile_command)
+
         if compile_command == "":
             self.__error_queue.put(Exception("[ActiveFetcherThread] This SourceFile has not compile_command!"))
             self.__active_measurement_active.clear()

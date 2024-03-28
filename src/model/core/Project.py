@@ -63,9 +63,9 @@ class Project(ProjectReadViewInterface):
 
     def set_failed(self):
         self.__failed = True
-        for source_files in self.source_files:
-            if source_files.compile_command == "":
-                source_files.error = True
+        for source_file in self.source_files:
+            if source_file.compile_command == "":
+                source_file.error = True
 
     def update_headers(self, header: Header, parent: CFile, hierarchy: int):
         if hierarchy > 2:

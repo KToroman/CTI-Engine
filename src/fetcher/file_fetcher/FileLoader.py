@@ -52,13 +52,9 @@ class FileLoader(FetcherInterface):
 
             with self.__model_lock:
                 self.__model.add_project(self.__project, None)
-                self.__model.current_project = self.__project
             self.__project_queue.put(self.__project.name)
             self.__visualize_signal.emit()  # type: ignore[attr-defined]
             self.__db.close()
-            num_files = len(self.__all_cfiles)
-            print(f"there are now {num_files} files")
-            print(f"there are {len(self.__project.source_files)} source files")
             return False
         raise FileNotFoundError(
             "Couldn't find any saved projects on the given path")
@@ -74,7 +70,6 @@ class FileLoader(FetcherInterface):
             self.__iter.next()
 
     def __add_files(self):
-        self.counter = 0
         for i in range(0,3):
             self.__iter.seek_to_first()
             while self.__iter.valid():
@@ -82,26 +77,25 @@ class FileLoader(FetcherInterface):
                 value = self.__iter.value()
                 self.__decode_key(key)
                 if value is None:
-                    self.counter += 1
                     self.__divide_files(i)
                 self.__iter.next()
-        print(f"added {self.counter}-files")
-
+                
     def __divide_files(self, hierarchy_level: int):
         if hierarchy_level == 0:
             if self.__hierarchy == hierarchy_level:
                 file = SourceFile(self.__path)
                 self.__project.source_files.append(file)
+                if self.__compile_command != "":
+                    file.compile_command = self.__compile_command
                 self.__all_cfiles[self.__file_identifier] = file
 
-        else :
-            if self.__hierarchy == hierarchy_level:
-                file = Header(self.__path, None, self.__hierarchy)
-                parent_key = f"{self.__parent}\n{self.__grand_parent}\n"
-                parent = self.__all_cfiles.get(parent_key, None)
-                file.parent = parent
-                parent.headers.append(file)
-                self.__all_cfiles[self.__file_identifier] = file
+        elif self.__hierarchy == hierarchy_level:
+            parent_key = f"{self.__parent}\n{self.__grand_parent}\n"
+            parent = self.__all_cfiles.get(parent_key, None)
+            file = Header(self.__path, None, self.__hierarchy)
+            file.parent = parent
+            parent.headers.append(file)
+            self.__all_cfiles[self.__file_identifier] = file
 
     def __decode_key(self, key: str):
         keys: List[str] = key.split("\n")
@@ -118,7 +112,6 @@ class FileLoader(FetcherInterface):
         self.__found_cfile = self.__all_cfiles.get(self.__file_identifier)
         if self.__found_cfile is None:
             self.__found_cfile = self.__add_cfile_to_project()
-            raise Exception
         if self.__hierarchy > 0:
             #self.__check_parent()
             pass
