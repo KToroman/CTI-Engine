@@ -1,11 +1,9 @@
 import os
-from multiprocessing import Queue
 import subprocess
 import time
 from re import split
 from threading import Thread
 from multiprocessing import Lock
-from multiprocessing.synchronize import Event as SyncEvent
 from multiprocessing.synchronize import Lock as SyncLock
 
 
@@ -57,7 +55,8 @@ class ProcessFindingThread:
                 self.__pid_list.extend(pid_list)
 
     def __fetch_process(self) -> None:
-        grep: subprocess.Popen[str] = subprocess.Popen(self.__grep_command, stdout=subprocess.PIPE, shell=True, encoding='utf-8')
+        grep: subprocess.Popen[str] = subprocess.Popen(self.__grep_command, stdout=subprocess.PIPE, shell=True,
+                                                       encoding='utf-8')
         temp_counter = 0
         if grep is None:
             return

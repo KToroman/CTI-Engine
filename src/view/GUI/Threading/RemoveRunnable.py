@@ -1,5 +1,4 @@
 from PyQt5.QtCore import QRunnable, QMutex
-
 from src.view.GUI.Graph.BarWidget import BarWidget
 from src.view.GUI.Graph.GraphWidget import GraphWidget
 from src.view.GUI.UserInteraction.Displayable import Displayable

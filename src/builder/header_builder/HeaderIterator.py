@@ -4,8 +4,6 @@ from typing import cast
 from typing_extensions import Self
 
 
-
-
 class HeaderIterator:
     """iterator class for headers in a source file to a given depth
 
@@ -25,7 +23,7 @@ class HeaderIterator:
         header_ranks[0] = cast(list[Header], self.source_file.headers)
         if depth > 0:
             for x in range(1, depth + 1):
-                for header in header_ranks[x-1]:
+                for header in header_ranks[x - 1]:
                     header_ranks[x].extend(cast(list[Header], header.headers))
 
         for rank in header_ranks:
@@ -36,7 +34,7 @@ class HeaderIterator:
     def get_next_header(self) -> Header:
         """returns the next header from the source file"""
         return self.headers[self.index]
-    
+
     def pop_next_header(self) -> Header:
         """returns the next header from the source file"""
         self.index += 1

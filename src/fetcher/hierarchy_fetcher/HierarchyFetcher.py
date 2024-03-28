@@ -1,18 +1,15 @@
 import concurrent.futures
-import threading
 import time
 import typing
 from multiprocessing import Queue
 from subprocess import CalledProcessError
 from concurrent.futures import ThreadPoolExecutor, Future
 from multiprocessing.synchronize import Event as SyncEvent
-from multiprocessing.synchronize import Lock as SyncLock
 
 from src.exceptions.ProjectNotFoundException import ProjectNotFoundException
 from src.fetcher.FetcherInterface import FetcherInterface
 from src.fetcher.hierarchy_fetcher.GCCCommandExecutor import GCCCommandExecutor
 from src.fetcher.hierarchy_fetcher.CompileCommandGetter import CompileCommandGetter
-from src.model.Model import Model
 from src.model.core.Project import Project
 from src.model.core.SourceFile import SourceFile
 from src.model.core.CFile import CFile
@@ -50,10 +47,11 @@ class HierarchyFetcher(FetcherInterface):
             self.command_getter = CompileCommandGetter(self.project.working_dir)
             self.__open_timeout = 0
         except FileNotFoundError as e:
-            time.sleep(15)
+            timer: float = (time.time() + 15)
+            while not (time.time() > timer or self.__shutdown_event.is_set()) and self.__hierarchy_fetching_event.is_set():
+                time.sleep(0.1)
             if self.__open_timeout > 2:
                 self.__open_timeout = 0
-                self.source_file_queue.put(SourceFile(self.project.name))
                 raise e
             else:
                 self.__open_timeout += 1
@@ -72,9 +70,7 @@ class HierarchyFetcher(FetcherInterface):
         futures: dict[Future[str], SourceFile] = {}
         failed_source_files: int = 0
         for source_file in source_files:
-            if (
-                not self.__hierarchy_fetching_event.is_set()
-            ) or self.__shutdown_event.is_set():
+            if (not self.__hierarchy_fetching_event.is_set()) or self.__shutdown_event.is_set():
                 return
             try:
                 self.__set_compile_command(source_file)
@@ -214,4 +210,3 @@ class HierarchyFetcher(FetcherInterface):
 
     def __del__(self) -> None:
         self.worker_thread_pool.shutdown(wait=True, cancel_futures=True)
-        print("[HierarchyFetcher]   Workers shut down")

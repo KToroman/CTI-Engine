@@ -1,5 +1,4 @@
 from multiprocessing import Queue
-import os
 from multiprocessing.synchronize import Event as SyncEvent
 from multiprocessing.synchronize import Lock as SyncLock
 from typing import List
@@ -13,7 +12,6 @@ from src.fetcher.process_fetcher.Threads.PassiveDataCollectionThread import (
 from src.fetcher.process_fetcher.process_observer.metrics_observer.DataObserver import (
     DataObserver,
 )
-from src.model.DataBaseEntry import DataBaseEntry
 from src.model.Model import Model
 from src.model.core.DataEntry import DataEntry
 from src.model.core.ProcessPoint import ProcessPoint
@@ -74,6 +72,7 @@ class ActiveDataCollectionThread(PassiveDataCollectionThread):
                     break
             if not has_o:
                 return
+
             entry: DataEntry = DataEntry(
                 path, process_point.timestamp, process_point.metrics
             )

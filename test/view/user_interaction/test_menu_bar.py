@@ -6,12 +6,8 @@ from unittest.mock import Mock
 
 import pytest
 from PyQt5.QtCore import pyqtSignal
-
-from src.app.App import App
 from src.app.Threads.FileFetcherThread import FileFetcherThread
-from src.app.Threads.GUICommunicationManager import GUICommunicationManager
 from src.model.Model import Model
-from src.model.core.StatusSettings import StatusSettings
 from src.view.GUI.prepare_gui import prepare_gui
 
 

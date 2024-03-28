@@ -1,20 +1,20 @@
-import subprocess, shutil, threading
+import shutil
+import subprocess
 from multiprocessing import Queue
 from pathlib import Path
+from subprocess import CompletedProcess, CalledProcessError
 
 from src.builder.BuilderInterface import BuilderInterface
-from src.model.core.SourceFile import SourceFile
-from src.model.core.Header import Header
 from src.builder.header_builder.FileBuilder import FileBuilder
 from src.builder.header_builder.HeaderIterator import HeaderIterator
-
-from subprocess import CompletedProcess, CalledProcessError
+from src.model.core.Header import Header
+from src.model.core.SourceFile import SourceFile
 
 
 class CompilingTool(BuilderInterface):
     """Class for building the Header files included in a Source File"""
 
-    DEFAULT_HEADER_DEPTH: int = 1
+    DEFAULT_HEADER_DEPTH: int = 2
 
     def __init__(self,
                  curr_project_dir: str,
@@ -33,20 +33,22 @@ class CompilingTool(BuilderInterface):
         self.__header_error_queue = header_error_queue
         self.__build_path = path
         self.__curr_project_dir = curr_project_dir
+
         self.__file_builder = FileBuilder(curr_project_dir=curr_project_dir,
                                           compile_command=self.source_file.compile_command,
                                           source_file_name=source_file.get_name(),
                                           build_path=path)
         self.__header_iterator = HeaderIterator(self.source_file, header_depth)
-        
 
     def build(self) -> bool:
         """returns true if there is another header to be built"""
         if not self.__header_iterator.has_next_header():
             return False
         header: Header = self.__header_iterator.pop_next_header()
-
         self.build_header(header)
+        if not header.error:
+            self.__header_error_queue.put("fin")
+            self.__header_error_queue.put(header.get_name())
 
         return self.__header_iterator.has_next_header()
 
@@ -57,6 +59,7 @@ class CompilingTool(BuilderInterface):
         try:
             proc.check_returncode()
         except CalledProcessError:
+            header.error = True
             self.__header_error_queue.put(header.get_name())
 
     def __compile(self, file_name: Path) -> CompletedProcess[bytes]:
@@ -72,7 +75,8 @@ class CompilingTool(BuilderInterface):
 
     def clear_directory(self) -> None:
         try:
-            path: Path = (Path(self.__build_path) / Path(self.__curr_project_dir) /"Active_Mode_Build" / "temp").resolve()
+            path: Path = (Path(self.__build_path) / Path(
+                self.__curr_project_dir) / "Active_Mode_Build" / "temp").resolve()
             shutil.rmtree(path)
         except FileNotFoundError:
             pass

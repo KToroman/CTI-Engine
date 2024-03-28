@@ -2,8 +2,10 @@ from multiprocessing import Event, Queue
 from multiprocessing.synchronize import Event as SyncEvent
 from typing import Protocol
 
-'''An interface for passing requests to the App'''
+
 class AppRequestsInterface(Protocol):
+    """an interface for passing requests to the App."""
+
     # Events for GUI
     shutdown_event: SyncEvent = Event()
     active_mode_event: SyncEvent = Event()

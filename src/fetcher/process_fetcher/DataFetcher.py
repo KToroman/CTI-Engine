@@ -3,8 +3,6 @@ from typing import Protocol
 import psutil
 
 from src.fetcher.FetcherInterface import FetcherInterface
-from src.fetcher.process_fetcher.process_observer.metrics_observer.DataObserver import DataObserver
-from src.model.Model import Model
 from src.model.core.DataEntry import DataEntry
 from src.model.core.ProcessPoint import ProcessPoint
 

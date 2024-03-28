@@ -5,7 +5,6 @@ from src.builder.BuilderInterface import BuilderInterface
 from src.builder.header_builder.CompilingTool import CompilingTool
 from src.model.Model import Model
 from src.model.core.Project import Project
-from src.model.core.ProjectFinishedSemaphore import ProjectFinishedSemaphore
 from src.model.core.SourceFile import SourceFile
 
 BUILD_PATH: str = "/common/homes/students/uruoe_sauer/Documents/PSE/Building"

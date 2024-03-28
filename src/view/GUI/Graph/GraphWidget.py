@@ -1,16 +1,14 @@
-
-
 from typing import List
 
 from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtGui import QIcon
 from matplotlib import pyplot as plt
 from PyQt5.QtWidgets import QVBoxLayout, QWidget
 from matplotlib.backend_bases import PickEvent
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas # type: ignore[attr-defined]
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas  # type: ignore[attr-defined]
 from matplotlib.lines import Line2D
 
-from src.view.GUI.Graph.CustomToolbar import CustomToolbar
+from src.view.GUI.Graph.Toolbars.ToolbarRAM import ToolbarRAM
+from src.view.GUI.Graph.Toolbars.ToolbarCPU import ToolbarCPU
 from src.view.GUI.Graph.Plot import Plot
 
 
@@ -34,8 +32,12 @@ class GraphWidget(QWidget):
         # Add layout
         self.canvas: FigureCanvas = FigureCanvas(self.figure)  # type: ignore[no-untyped-call]
         self.layout: QVBoxLayout = QVBoxLayout()  # type: ignore[assignment]
-        self.toolbar: CustomToolbar = CustomToolbar(self.canvas, self)  # type: ignore[no-untyped-call]
-        self.layout.addWidget(self.toolbar)
+        if axis_label == "RAM (in mb)":
+            self.toolbar: ToolbarRAM = ToolbarRAM(self.canvas)  # type: ignore[no-untyped-call]
+            self.layout.addWidget(self.toolbar)
+        else:
+            self.toolbar: ToolbarCPU = ToolbarCPU(self.canvas)  # type: ignore
+            self.layout.addWidget(self.toolbar)
         self.layout.addWidget(self.canvas)
         self.setLayout(self.layout)
         self.canvas.draw()  # type: ignore[no-untyped-call]

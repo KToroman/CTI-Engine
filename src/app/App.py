@@ -1,8 +1,6 @@
 from multiprocessing import Queue, Event, Lock
 from multiprocessing.synchronize import Event as SyncEvent
 from multiprocessing.synchronize import Lock as SyncLock
-import os
-from os.path import join
 from typing import List, Any
 
 from PyQt5.QtCore import pyqtSignal
@@ -14,18 +12,14 @@ from src.app.Threads.FileSaverThread import FileSaverThread
 from src.app.Threads.HierarchyProcess import HierarchyProcess
 from src.app.Threads.HierarchyThread import HierarchyThread
 from src.app.Threads.PassiveDataThread import PassiveDataThread
-from src.fetcher.file_fetcher.FileLoader import FileLoader
-from src.fetcher.hierarchy_fetcher.HierarchyFetcher import HierarchyFetcher
 from src.fetcher.process_fetcher.PassiveDataFetcher import PassiveDataFetcher
 from src.app.Threads.GUICommunicationManager import GUICommunicationManager
-from src.model.DataBaseEntry import DataBaseEntry
 from src.model.Model import Model
 from src.model.core.Project import Project
 from src.model.core.SourceFile import SourceFile
 from src.model.core.StatusSettings import StatusSettings
 from src.saving.SaveInterface import SaveInterface
 from src.saving.SaveToDatabase import SaveToDatabase
-from src.saving.SaveToJSON import SaveToJSON
 
 from src.view.AppRequestsInterface import AppRequestsInterface
 
@@ -131,21 +125,15 @@ class App(AppRequestsInterface):
             self.fetching_passive_data,
         )
 
-        self.hierarchy_fetcher = HierarchyFetcher(
-            self.__hierarchy_fetching_event,
-            self.shutdown_event,
-            self.source_file_queue,
-            self.__pid_queue,
-            max_workers=self.config.hierarchy_fetcher_worker_count,
-        )
 
     def prepare_threads(self) -> None:
+
         self.hierarchy_process: HierarchyProcess = HierarchyProcess(
             self.hierarchy_process_shutdown,
-            self.hierarchy_fetcher,
             self.__error_queue,
             self.__hierarchy_fetcher_work_queue,
-            self.__hierarchy_fetching_event,
+            self.__hierarchy_fetching_event, self.source_file_queue,
+            self.__pid_queue, max_workers=self.config.hierarchy_fetcher_worker_count
         )
         self.hierarchy_thread: HierarchyThread = HierarchyThread(
             self.shutdown_event,
@@ -229,7 +217,6 @@ class App(AppRequestsInterface):
 
         for q in self.queue_list:
             q.close()
-        self.hierarchy_fetcher.__del__()
 
     @classmethod
     def __get_config_path(cls) -> str:

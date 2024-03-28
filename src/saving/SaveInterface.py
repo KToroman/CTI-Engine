@@ -1,5 +1,4 @@
-from typing import List, Protocol
-from src.model.DataBaseEntry import DataBaseEntry
+from typing import Protocol
 from src.model.core.Project import Project
 
 

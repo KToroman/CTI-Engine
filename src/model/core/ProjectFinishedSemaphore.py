@@ -7,8 +7,6 @@ from typing import List
 
 from PyQt5.QtCore import pyqtSignal
 
-from src.model.core.Project import Project
-
 
 class ProjectFinishedSemaphore:
 
@@ -43,7 +41,7 @@ class ProjectFinishedSemaphore:
     def __semaphore_check(self) -> None:
         if self.__semaphore == 0:
             self.__semaphore_list.remove(self)
-
+            print("[PROJECT]    Project finished " + self.project_name)
             self.__project_queue.put(self.project_name)
             self.__visualize_event.emit()  # type: ignore[attr-defined]
             self.__project_finished_event.set()

@@ -7,9 +7,9 @@ class FileBuilder:
     def __init__(self, curr_project_dir: str, compile_command: str, source_file_name: str, build_path: str) -> None:
         self.__original_compile_command: str = compile_command
         self.__source_file_name: str = source_file_name
-        self.__build_path: Path = Path(build_path)/ Path(curr_project_dir)/ "CTI_Engine_Active_Mode_Build" / "temp" / source_file_name.replace("/", "#")
+        self.__build_path: Path = Path(build_path) / Path(
+            curr_project_dir) / "CTI_Engine_Active_Mode_Build" / "temp" / source_file_name.replace("/", "#")
         self.__curr_project_dir: str = curr_project_dir
-
 
     def generate_source_file(self, header: Header) -> Path:
         """generates a source file that includes the given header
@@ -33,7 +33,8 @@ class FileBuilder:
         return content
 
     def get_compile_command(self, file_path: Path) -> list[str]:
-        """amends the original compile command of the Source File (passed in the constructor) to compile the header at the given path"""
+        """amends the original compile command of the Source File (passed in the constructor) to compile the header
+         at the given path"""
         command: list[str] = shlex.split(self.__original_compile_command)
 
         delindex: int = -1
@@ -41,13 +42,13 @@ class FileBuilder:
             raise BaseException
         for i in range(len(command)):
             if command[i] == "-o":
-                command[i+1] = file_path.resolve().__str__() + ".o"
+                command[i + 1] = file_path.resolve().__str__() + ".o"
             elif command[i] == "-Werror":
                 delindex = i
         if delindex != -1:
             del command[delindex]
 
-        try :
+        try:
             del command[-1]
         except:
             return

@@ -1,4 +1,4 @@
-from multiprocessing import Queue, Event
+from multiprocessing import Queue
 from multiprocessing.synchronize import Event as SyncEvent
 from PyQt5.QtCore import pyqtSignal
 

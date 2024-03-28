@@ -1,12 +1,9 @@
 import json, shlex
-import threading
 import typing
 from io import TextIOWrapper
-from os.path import join
 from src.model.core.SourceFile import SourceFile
 from os.path import join
 from src.exceptions.CompileCommandError import CompileCommandError
-from multiprocessing.synchronize import Lock as SyncLock
 
 
 
